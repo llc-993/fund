@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.stock.mapper.StockMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.stock.model.Stock">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="symbol" property="symbol" />
+        <result column="is_cfd" property="isCfd" />
+        <result column="high" property="high" />
+        <result column="low" property="low" />
+        <result column="last" property="last" />
+        <result column="last_pair_decimal" property="lastPairDecimal" />
+        <result column="chg" property="chg" />
+        <result column="chg_pct" property="chgPct" />
+        <result column="volume" property="volume" />
+        <result column="avg_volume" property="avgVolume" />
+        <result column="time" property="time" />
+        <result column="is_open" property="isOpen" />
+        <result column="url" property="url" />
+        <result column="flag" property="flag" />
+        <result column="country_name_translated" property="countryNameTranslated" />
+        <result column="exchange_id" property="exchangeId" />
+        <result column="performance_day" property="performanceDay" />
+        <result column="performance_week" property="performanceWeek" />
+        <result column="performance_month" property="performanceMonth" />
+        <result column="performance_ytd" property="performanceYtd" />
+        <result column="performance_year" property="performanceYear" />
+        <result column="performance_3year" property="performance3year" />
+        <result column="technical_hour" property="technicalHour" />
+        <result column="technical_day" property="technicalDay" />
+        <result column="technical_week" property="technicalWeek" />
+        <result column="technical_month" property="technicalMonth" />
+        <result column="fundamental_market_cap" property="fundamentalMarketCap" />
+        <result column="fundamental_revenue" property="fundamentalRevenue" />
+        <result column="fundamental_ratio" property="fundamentalRatio" />
+        <result column="fundamental_beta" property="fundamentalBeta" />
+        <result column="pair_type" property="pairType" />
+        <result column="p_id" property="pId" />
+        <result column="source_type" property="sourceType" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, symbol, is_cfd, high, low, last, last_pair_decimal, chg, chg_pct, volume, avg_volume, time, is_open, url, flag, country_name_translated, exchange_id, performance_day, performance_week, performance_month, performance_ytd, performance_year, performance_3year, technical_hour, technical_day, technical_week, technical_month, fundamental_market_cap, fundamental_revenue, fundamental_ratio, fundamental_beta, pair_type
+    </sql>
+
+</mapper>

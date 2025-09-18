@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.wallet.mapper.AppUserFinanceStatsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.wallet.model.AppUserFinanceStats">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="top_user_id" property="topUserId" />
+        <result column="total_recharge" property="totalRecharge" />
+        <result column="total_withdraw" property="totalWithdraw" />
+        <result column="total_income" property="totalIncome" />
+        <result column="total_commission" property="totalCommission" />
+        <result column="total_trading_volume" property="totalTradingVolume" />
+        <result column="last_recharge_time" property="lastRechargeTime" />
+        <result column="last_withdraw_time" property="lastWithdrawTime" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user_id, top_user_id, total_recharge, total_withdraw, total_income, total_commission, 
+        total_trading_volume, last_recharge_time, last_withdraw_time, create_time, update_time
+    </sql>
+
+</mapper>

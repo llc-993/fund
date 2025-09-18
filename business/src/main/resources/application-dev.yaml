@@ -1,0 +1,34 @@
+spring:
+  jackson:
+    time-zone: Asia/Shanghai
+    date-format: yyyy-MM-dd HH:mm:ss
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://localhost:3306/blind-box?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    druid:
+      initial-size: 20
+      max-active: 30
+      min-idle: 2
+      stat-view-servlet:
+        url-pattern: /druid/*
+        login-username: druid
+        login-password: qawe123!q
+      filter:
+        stat:
+          log-slow-sql: true #慢SQL记录
+          enabled: true
+          slow-sql-millis: 1000
+          merge-sql: true
+        wall:
+          config:
+            multi-statement-allow: false
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+     # password: Aq23-hjPwFB3mBDNFp3W1

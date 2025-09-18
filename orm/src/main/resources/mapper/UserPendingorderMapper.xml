@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.stock.mapper.UserPendingOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.stock.model.UserPendingOrder">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="stock_id" property="stockId" />
+        <result column="buy_num" property="buyNum" />
+        <result column="buy_type" property="buyType" />
+        <result column="lever" property="lever" />
+        <result column="profit_target" property="profitTarget" />
+        <result column="stop_target" property="stopTarget" />
+        <result column="now_price" property="nowPrice" />
+        <result column="target_price" property="targetPrice" />
+        <result column="add_time" property="addTime" />
+        <result column="status" property="status" />
+        <result column="fail_reason" property="failReason" />
+        <result column="stock_type" property="stockType" />
+        <result column="order_no" property="orderNo" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user_id, stock_id, buy_num, buy_type, lever, profit_target, stop_target, now_price, target_price, add_time, status, fail_reason, stock_type, order_no
+    </sql>
+
+</mapper>

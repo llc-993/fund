@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.stock.mapper.UserPositionMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.stock.model.UserPosition">
+        <id column="id" property="id" />
+        <result column="position_type" property="positionType" />
+        <result column="position_sn" property="positionSn" />
+        <result column="user_id" property="userId" />
+        <result column="nick_name" property="nickName" />
+        <result column="agent_id" property="agentId" />
+        <result column="stock_name" property="stockName" />
+        <result column="stock_code" property="stockCode" />
+        <result column="stock_type" property="stockType" />
+        <result column="stock_gid" property="stockGid" />
+        <result column="stock_spell" property="stockSpell" />
+        <result column="buy_order_id" property="buyOrderId" />
+        <result column="buy_order_time" property="buyOrderTime" />
+        <result column="buy_order_price" property="buyOrderPrice" />
+        <result column="sell_order_id" property="sellOrderId" />
+        <result column="sell_order_time" property="sellOrderTime" />
+        <result column="sell_order_price" property="sellOrderPrice" />
+        <result column="sell_fail_reason" property="sellFailReason" />
+        <result column="profit_target_price" property="profitTargetPrice" />
+        <result column="stop_target_price" property="stopTargetPrice" />
+        <result column="order_direction" property="orderDirection" />
+        <result column="order_num" property="orderNum" />
+        <result column="order_lever" property="orderLever" />
+        <result column="order_total_price" property="orderTotalPrice" />
+        <result column="order_fee" property="orderFee" />
+        <result column="order_spread" property="orderSpread" />
+        <result column="order_stay_fee" property="orderStayFee" />
+        <result column="order_stay_days" property="orderStayDays" />
+        <result column="profit_and_lose" property="profitAndLose" />
+        <result column="all_profit_and_lose" property="allProfitAndLose" />
+        <result column="is_lock" property="isLock" />
+        <result column="lock_msg" property="lockMsg" />
+        <result column="stock_plate" property="stockPlate" />
+        <result column="spread_rate_price" property="spreadRatePrice" />
+        <result column="margin_add" property="marginAdd" />
+        <result column="status" property="status" />
+        <result column="lot_unit" property="lotUnit" />
+        <result column="pendingorder_no" property="pendingorderNo" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, position_type, position_sn, user_id, nick_name, agent_id, stock_name, stock_code, stock_type, stock_gid, stock_spell, buy_order_id, buy_order_time, buy_order_price, sell_order_id, sell_order_time, sell_order_price, sell_fail_reason, profit_target_price, stop_target_price, order_direction, order_num, order_lever, order_total_price, order_fee, order_spread, order_stay_fee, order_stay_days, profit_and_lose, all_profit_and_lose, is_lock, lock_msg, stock_plate, spread_rate_price, margin_add, status, lot_unit, pendingorder_no
+    </sql>
+
+</mapper>

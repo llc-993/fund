@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.wallet.mapper.AppWalletOperationLogMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.wallet.model.AppWalletOperationLog">
+        <id column="id" property="id" />
+        <result column="serial_no" property="serialNo" />
+        <result column="user_id" property="userId" />
+        <result column="wallet_type" property="walletType" />
+        <result column="operation_type" property="operationType" />
+        <result column="amount" property="amount" />
+        <result column="before_balance" property="beforeBalance" />
+        <result column="after_balance" property="afterBalance" />
+        <result column="related_id" property="relatedId" />
+        <result column="related_type" property="relatedType" />
+        <result column="status" property="status" />
+        <result column="remark" property="remark" />
+        <result column="create_time" property="createTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, serial_no, user_id, wallet_type, operation_type, amount, before_balance, after_balance, 
+        related_id, related_type, status, remark, create_time
+    </sql>
+
+</mapper>

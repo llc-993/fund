@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.agent.mapper.AppAgentRelationMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.agent.model.AppAgentRelation">
+        <id column="id" property="id" />
+        <result column="ori_user_id" property="oriUserId" />
+        <result column="ori_share_code" property="oriShareCode" />
+        <result column="ori_account" property="oriAccount" />
+        <result column="top_user_id" property="topUserId" />
+        <result column="top_share_code" property="topShareCode" />
+        <result column="level" property="level" />
+        <result column="user_group" property="userGroup" />
+        <result column="p1_id" property="p1Id" />
+        <result column="p1_code" property="p1Code" />
+        <result column="p1_account" property="p1Account" />
+        <result column="p2_id" property="p2Id" />
+        <result column="p2_code" property="p2Code" />
+        <result column="p2_account" property="p2Account" />
+        <result column="p3_id" property="p3Id" />
+        <result column="p3_code" property="p3Code" />
+        <result column="p3_account" property="p3Account" />
+        <result column="create_by" property="createBy" />
+        <result column="create_time" property="createTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, ori_user_id, ori_share_code, ori_account, top_user_id, top_share_code, level, user_group, p1_id, p1_code, p1_account, p2_id, p2_code, p2_account, p3_id, p3_code, p3_account, create_by, create_time, update_by, update_time
+    </sql>
+
+</mapper>
