@@ -1,6 +1,6 @@
 package com.fund.common.entity
 
-class IdReq {
+open class IdReq {
 
     var id: Long? = null
 

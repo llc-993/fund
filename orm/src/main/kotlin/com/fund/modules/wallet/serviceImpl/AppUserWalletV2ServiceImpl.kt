@@ -62,8 +62,8 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun addAvailableBalance(userId: Long, walletType: Int, amount: BigDecimal, operationType: String, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType) 
+    override fun addAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         
         val beforeBalance = wallet.availableBalance ?: BigDecimal.ZERO
@@ -93,8 +93,8 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun subtractAvailableBalance(userId: Long, walletType: Int, amount: BigDecimal, operationType: String, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType) 
+    override fun subtractAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         
         val beforeBalance = wallet.availableBalance ?: BigDecimal.ZERO
@@ -128,8 +128,8 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun freezeBalance(userId: Long, walletType: Int, amount: BigDecimal, operationType: String, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType) 
+    override fun freezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         
         val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
@@ -167,8 +167,8 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun unfreezeBalance(userId: Long, walletType: Int, amount: BigDecimal, operationType: String, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType) 
+    override fun unfreezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         
         val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
@@ -205,8 +205,8 @@ open class AppUserWalletV2ServiceImpl(
         return true
     }
 
-    override fun checkBalanceSufficient(userId: Long, walletType: Int, amount: BigDecimal): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType) ?: return false
+    override fun checkBalanceSufficient(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal): Boolean {
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) ?: return false
         val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
         return availableBalance.compareTo(amount) >= 0
     }

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.ipo.mapper.StockSubscriptionMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.ipo.model.StockSubscription">
+        <id column="id" property="id" />
+        <result column="order_no" property="orderNo" />
+        <result column="user_id" property="userId" />
+        <result column="top_user_id" property="topUserId" />
+        <result column="name" property="name" />
+        <result column="buy_price" property="buyPrice" />
+        <result column="symbol" property="symbol" />
+        <result column="apply_nums" property="applyNums" />
+        <result column="allotment_quantity" property="allotmentQuantity" />
+        <result column="status" property="status" />
+        <result column="create_time" property="createTime" />
+        <result column="submit_time" property="submitTime" />
+        <result column="allotment_time" property="allotmentTime" />
+        <result column="fix_time" property="fixTime" />
+        <result column="remarks" property="remarks" />
+        <result column="type" property="type" />
+        <result column="stock_type" property="stockType" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, order_no, user_id, top_user_id, name, buy_price, symbol, apply_nums, allotment_quantity, status, create_time, submit_time, allotment_time, fix_time, remarks, type, stock_type
+    </sql>
+
+</mapper>

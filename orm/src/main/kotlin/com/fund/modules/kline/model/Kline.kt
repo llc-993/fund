@@ -9,7 +9,7 @@ import java.math.BigDecimal
  * 集合名称格式: kline_{market}_{symbol}_{interval}
  * 例如: kline_US_AAPL_1min, kline_CN_000001_1day
  */
-@Document(collection = "kline")
+//@Document(collection = "kline")
 data class Kline(
     @Id
     val id: String? = null, // MongoDB文档ID

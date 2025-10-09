@@ -15,6 +15,9 @@ object RedisKeys {
     
     // 股票消息队列
     const val STOCK_MESSAGE_QUEUE = "stock_message_queue"
+    
+    // K线消息队列
+    const val KLINE_MESSAGE_QUEUE = "kline_message_queue"
 
     const val APPCONFIG = "app_config"
 
@@ -23,6 +26,9 @@ object RedisKeys {
     const val COUNTRY_KEY = "country:"
 
     const val BUY_KEY = "buy:"
+    const val SELL_KEY = "sell:"
+
+    const val PENDING_ORDER_KEY = "pending_order:"
     
     // 订单检查相关
     const val CHECK_ORDER_KEY = "check_order:%s"
@@ -32,4 +38,6 @@ object RedisKeys {
     const val USER_POSITION_CACHE_KEY = "user_position_cache:%s"
 
     const val PROCESS_USER_POSITION_LOCK_KEY = "process_user_position_lock:"
+
+    const val IPO_APPLY_LOCK_KEY = "ipo_apply_lock:"
 }

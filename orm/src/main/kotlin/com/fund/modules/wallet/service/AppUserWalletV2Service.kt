@@ -37,54 +37,59 @@ interface AppUserWalletV2Service : IService<AppUserWalletV2> {
      * 增加可用余额
      * @param userId 用户ID
      * @param walletType 钱包类型
+     * @param currencyCode 币种代码
      * @param amount 金额
      * @param operationType 操作类型
      * @param remark 备注
      * @return 是否成功
      */
-    fun addAvailableBalance(userId: Long, walletType: Int = 0, amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun addAvailableBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
 
     /**
      * 减少可用余额
      * @param userId 用户ID
      * @param walletType 钱包类型
+     * @param currencyCode 币种代码
      * @param amount 金额
      * @param operationType 操作类型
      * @param remark 备注
      * @return 是否成功
      */
-    fun subtractAvailableBalance(userId: Long, walletType: Int = 0, amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun subtractAvailableBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
 
     /**
      * 冻结余额
      * @param userId 用户ID
      * @param walletType 钱包类型
+     * @param currencyCode 币种代码
      * @param amount 金额
      * @param operationType 操作类型
      * @param remark 备注
      * @return 是否成功
      */
-    fun freezeBalance(userId: Long, walletType: Int = 0, amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun freezeBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
 
     /**
      * 解冻余额
      * @param userId 用户ID
      * @param walletType 钱包类型
+     * @param currencyCode 币种代码
      * @param amount 金额
      * @param operationType 操作类型
      * @param remark 备注
      * @return 是否成功
      */
-    fun unfreezeBalance(userId: Long, walletType: Int = 0, amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun unfreezeBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
 
     /**
      * 检查余额是否足够
      * @param userId 用户ID
      * @param walletType 钱包类型
+     * @param currencyCode 币种代码
      * @param amount 需要金额
      * @return 是否足够
      */
-    fun checkBalanceSufficient(userId: Long, walletType: Int = 0, amount: BigDecimal): Boolean
+    fun checkBalanceSufficient(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal): Boolean
 
 
     /**

@@ -2,6 +2,7 @@ package com.fund.modules.conf.enum
 
 import com.fund.modules.conf.ant.DefaultValue
 import com.fund.modules.conf.dto.BaseConfig
+import com.fund.modules.conf.dto.IpoConfig
 import com.fund.modules.conf.dto.StockMarketConfig
 import java.util.Arrays
 import java.util.stream.Collectors
@@ -72,6 +73,12 @@ enum class AppConfigCode(prop: KProperty<*>) {
 
     // 印花税费率
     DUTY_FEE_RATE(BaseConfig::dutyFeeRate),
+
+    // IPO最小申购数量
+    IPO_MIN_NUM(IpoConfig::ipoMinNum),
+
+    // IPO最大申购数量
+    IPO_MAX_NUM(IpoConfig::ipoMaxNum),
     ;
 
     var code: String
@@ -94,10 +101,8 @@ enum class AppConfigCode(prop: KProperty<*>) {
     init {
         // 从属性中获取字段名称作为 code
         this.code = prop.name
-        // 从属性中读取 DefaultValue注解
-        val ann = prop.findAnnotation<DefaultValue>()
-        // 如果注解存在，将注解中的值赋值给 当前枚举的defaultValue
-        ann?.let {
+        // 从属性中读取 DefaultValue注解，如果注解存在，将注解中的值赋值给 当前枚举的defaultValue
+        prop.findAnnotation<DefaultValue>()?.let {
             this.defaultValue = it.value
         }
         // 获取父级class, class作为分组。

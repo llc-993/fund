@@ -7,13 +7,18 @@ import com.fund.common.RedisKeys.STOCK_MESSAGE_QUEUE
 import com.fund.common.RedisKeys.CHECK_ORDER_KEY
 import com.fund.common.RedisKeys.CHECK_USER_POSITION_KEY
 import com.fund.common.RedisKeys.USER_POSITION_CACHE_KEY
+import com.fund.modules.kline.event.KlineEvent
 import com.fund.modules.stock.model.Stock
 import com.fund.modules.stock.model.UserPosition
+import com.fund.modules.stock.model.UserPendingOrder
 import com.fund.modules.stock.service.UserPositionService
+import com.fund.modules.stock.service.UserPendingOrderService
 import com.fund.modules.stock.service.StockService
+import com.fund.modules.stock.vo.UserOrderVo
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.I18nUtil
 import com.fund.utils.RedisLockService
+import com.lmax.disruptor.RingBuffer
 import mu.KotlinLogging
 import org.redisson.api.RedissonClient
 import org.redisson.api.listener.MessageListener
@@ -33,8 +38,10 @@ import java.util.concurrent.atomic.AtomicLong
 class PositionUserUpdListener(
     private val redissonClient: RedissonClient,
     private val userPositionService: UserPositionService,
+    private val userPendingOrderService: UserPendingOrderService,
     private val stockService: StockService,
     private val appUserWalletV2Service: AppUserWalletV2Service,
+    private val klineRingBuffer: RingBuffer<KlineEvent>,
     private val i18nUtil: I18nUtil
 ) : InitializingBean {
 
@@ -42,7 +49,6 @@ class PositionUserUpdListener(
 
     @Value("\${stock.position.listener.enabled:true}")
     private val listenerEnabled: Boolean = true
-
 
     @Value("\${stock.position.listener.max-retry:3}")
     private val maxRetry: Int = 3
@@ -57,8 +63,8 @@ class PositionUserUpdListener(
         }
 
         try {
+            // 初始化 Redis 消息监听器
             val rTopic = redissonClient.getTopic(STOCK_MESSAGE_QUEUE)
-
             rTopic.addListener(String::class.java, MessageListener { channel, msg ->
                 try {
                     processStockUpdateMessage(channel, msg)
@@ -72,6 +78,23 @@ class PositionUserUpdListener(
         } catch (e: Exception) {
             logger.error(e) { "初始化股票持仓监听器失败" }
             throw e
+        }
+    }
+
+    /**
+     * 发布 Stock 数据到 Disruptor
+     */
+    private fun publishToDisruptor(stock: Stock) {
+        try {
+            val sequence = klineRingBuffer.next()
+            try {
+                val event = klineRingBuffer[sequence]
+                event.setData(stock)
+            } finally {
+                klineRingBuffer.publish(sequence)
+            }
+        } catch (e: Exception) {
+            logger.error(e) { "发布 Stock 数据到 Disruptor 失败: ${stock.symbol}" }
         }
     }
 
@@ -91,19 +114,22 @@ class PositionUserUpdListener(
                 return
             }
 
-            logger.debug("收到股票更新消息: 股票ID=${stock.id}, 符号=${stock.symbol}, 价格=${stock.last}")
+            // 发布 Stock 数据到 Disruptor 进行 K线处理
+            publishToDisruptor(stock)
 
             // 检查是否有用户持仓该股票
             val cacheKey = String.format(CHECK_USER_POSITION_KEY, stock.flag + stock.symbol)
             val userSet = redissonClient.getSet<String>(cacheKey)
 
             if (!userSet.isExists) {
-                logger.debug("没有用户持仓股票: ${stock.symbol}")
                 return
             }
 
             // 批量处理用户持仓
             processUserPositions(stock, userSet)
+
+            // 检查并处理挂单
+            checkPendingOrders(stock)
 
             processedCount.incrementAndGet()
 
@@ -208,7 +234,6 @@ class PositionUserUpdListener(
                 }
             }
 
-            logger.debug("从缓存获取用户持仓: userId=$userId, stockSymbol=$stockSymbol, 数量=${positions.size}")
             return positions
 
         } catch (e: Exception) {
@@ -232,8 +257,6 @@ class PositionUserUpdListener(
             val stockPositionKey = "stock_positions:${position.stockCode}"
             val stockPositionSet = redissonClient.getSet<String>(stockPositionKey)
             stockPositionSet.add(position.id?.toString() ?: "")
-
-            logger.debug("缓存用户持仓: userId=${position.userId}, positionId=${position.id}, stockCode=${position.stockCode}")
 
         } catch (e: Exception) {
             logger.error(e) { "缓存用户持仓失败: userId=${position.userId}, positionId=${position.id}" }
@@ -259,9 +282,7 @@ class PositionUserUpdListener(
             userPositionService.updateById(position)
 
             // 更新缓存
-            updatePositionCache(position, stock)
-
-            logger.debug("更新持仓盈亏: userId=${position.userId}, positionId=${position.id}, 实时盈亏=$realTimeProfitLoss")
+            userPositionService.updatePositionCache(position, stock)
 
         } catch (e: Exception) {
             logger.error(e) { "更新持仓盈亏失败: userId=${position.userId}, positionId=${position.id}" }
@@ -296,75 +317,6 @@ class PositionUserUpdListener(
 
             else -> BigDecimal.ZERO
         }.setScale(2, RoundingMode.HALF_UP)
-    }
-
-    /**
-     * 钱包结算
-     */
-    private fun settleWalletBalance(position: UserPosition, stock: Stock, profitLoss: BigDecimal, reason: String) {
-        try {
-            val userId = position.userId?.toLong() ?: return
-            val coin = appUserWalletV2Service.getCoinByStockFlag(stock.flag)
-
-            // 查找用户钱包
-            val wallet = appUserWalletV2Service.findWalletByUserAndType(userId, 0, coin)
-            if (wallet == null) {
-                logger.warn("用户钱包不存在: userId=$userId, coin=$coin")
-                return
-            }
-
-            // 根据盈亏情况更新钱包余额
-            if (profitLoss.compareTo(BigDecimal.ZERO) > 0) {
-                // 盈利：增加可用余额
-                appUserWalletV2Service.addAvailableBalance(
-                    userId = userId,
-                    walletType = 0,
-                    amount = profitLoss,
-                    operationType = "STOCK_PROFIT",
-                    remark = "股票平仓盈利: ${stock.name}(${stock.symbol}), $reason, 盈利金额: $profitLoss"
-                )
-                logger.info("钱包结算-盈利: 用户=$userId, 股票=${stock.symbol}, 盈利=$profitLoss")
-            } else if (profitLoss.compareTo(BigDecimal.ZERO) < 0) {
-                // 亏损：从可用余额中扣除
-                val lossAmount = profitLoss.abs()
-                appUserWalletV2Service.subtractAvailableBalance(
-                    userId = userId,
-                    walletType = 0,
-                    amount = lossAmount,
-                    operationType = "STOCK_LOSS",
-                    remark = "股票平仓亏损: ${stock.name}(${stock.symbol}), $reason, 亏损金额: $lossAmount"
-                )
-                logger.info("钱包结算-亏损: 用户=$userId, 股票=${stock.symbol}, 亏损=$lossAmount")
-            } else {
-                // 盈亏为0：记录平仓操作
-                appUserWalletV2Service.addAvailableBalance(
-                    userId = userId,
-                    walletType = 0,
-                    amount = BigDecimal.ZERO,
-                    operationType = "STOCK_CLOSE",
-                    remark = "股票平仓: ${stock.name}(${stock.symbol}), $reason, 盈亏为0"
-                )
-                logger.info("钱包结算-平仓: 用户=$userId, 股票=${stock.symbol}, 盈亏为0")
-            }
-
-        } catch (e: Exception) {
-            logger.error(e) { "钱包结算失败: userId=${position.userId}, 股票=${stock.symbol}, 盈亏=$profitLoss" }
-        }
-    }
-
-
-    /**
-     * 更新持仓缓存
-     */
-    private fun updatePositionCache(position: UserPosition, stock: Stock) {
-        try {
-            userPositionService.updatePositionCache(position, stock)
-
-            logger.debug("调用 UserPositionServiceImpl.updatePositionCache 成功: positionId=${position.id}")
-
-        } catch (e: Exception) {
-            logger.error(e) { "调用 updatePositionCache 失败: positionId=${position.id}" }
-        }
     }
 
     /**
@@ -437,101 +389,159 @@ class PositionUserUpdListener(
      */
     private fun closePosition(position: UserPosition, stock: Stock, closePrice: BigDecimal, reason: String) {
         try {
-            logger.info("开始平仓: 用户=${position.userId}, 股票=${stock.symbol}, 价格=$closePrice, 原因=$reason")
+            logger.info("开始自动平仓: 用户=${position.userId}, 股票=${stock.symbol}, 价格=$closePrice, 原因=$reason")
 
-            // 计算盈亏
-            val profitLoss = calculateProfitLoss(position, closePrice)
+            // 1. 计算盈亏（调用公共方法）
+            val profitLoss = userPositionService.calculateCloseProfitLoss(position, closePrice)
+            logger.info("【自动平仓】盈亏计算: 买入价=${position.buyOrderPrice}, 平仓价=$closePrice, 盈亏=$profitLoss")
 
-            // 更新持仓状态
+            // 2. 计算卖出总金额
+            val buyNum = position.orderNum ?: BigDecimal.ZERO
+            val allBuyAmt = position.orderTotalPrice ?: BigDecimal.ZERO
+            val allSellAmt = closePrice.multiply(buyNum).multiply(BigDecimal(position.lotUnit ?: 1))
+                .setScale(2, RoundingMode.HALF_UP)
+
+            // 3. 计算总费用（调用公共方法）
+            val allFeeAmt = userPositionService.calculateCloseFees(position, allSellAmt)
+            logger.info("【自动平仓】费用计算: 卖出总额=$allSellAmt, 总费用=$allFeeAmt")
+
+            // 4. 更新持仓状态
             position.status = "2" // 已平仓
             position.sellOrderTime = LocalDateTime.now()
             position.sellOrderPrice = closePrice
             position.profitAndLose = profitLoss
-            position.allProfitAndLose = profitLoss
+            position.allProfitAndLose = profitLoss.subtract(allFeeAmt)
 
-            // 保存更新
+            // 5. 保存更新
             userPositionService.updateById(position)
 
-            // 钱包结算
-            settleWalletBalance(position, stock, profitLoss, reason)
+            // 6. 计算保证金
+            val freezAmt = allBuyAmt.divide(BigDecimal(position.orderLever ?: 1), 2, RoundingMode.HALF_UP)
 
-            // 清理止盈止损缓存
-            clearProfitStopCache(position, stock)
+            // 7. 钱包结算（调用公共方法）
+            val remark = "自动平仓($reason), id: ${position.id}(${position.stockCode}), 数量: $buyNum, 价格: $closePrice"
+            userPositionService.settleCloseWallet(position, stock, position.allProfitAndLose!!, freezAmt, remark)
 
-            // 清理用户持仓缓存
-            clearPositionCache(position, stock)
+            // 8. 清理缓存（调用公共方法）
+            userPositionService.clearCloseCache(position, stock)
 
-            logger.info("平仓完成: 用户=${position.userId}, 股票=${stock.symbol}, 盈亏=$profitLoss, 原因=$reason")
+            logger.info("平仓完成: 用户=${position.userId}, 股票=${stock.symbol}, 盈亏=${position.allProfitAndLose}, 原因=$reason")
 
         } catch (e: Exception) {
-            logger.error(e) { "平仓操作失败: 用户=${position.userId}, 股票=${stock.symbol}" }
+            logger.error(e) { "自动平仓操作失败: 用户=${position.userId}, 股票=${stock.symbol}" }
         }
     }
 
     /**
-     * 计算盈亏
+     * 检查并处理挂单
      */
-    private fun calculateProfitLoss(position: UserPosition, closePrice: BigDecimal): BigDecimal {
-        val buyPrice = position.buyOrderPrice ?: BigDecimal.ZERO
-        val orderNum = position.orderNum ?: BigDecimal.ZERO
-        val lotUnit = position.lotUnit ?: 1
-        val lever = position.orderLever ?: 1
-
-        return when (position.orderDirection) {
-            "买涨" -> {
-                // 买涨：(卖出价 - 买入价) * 数量 * Lot单位 * 杠杆
-                closePrice.subtract(buyPrice)
-                    .multiply(orderNum)
-                    .multiply(BigDecimal.valueOf(lotUnit.toLong()))
-                    .multiply(BigDecimal.valueOf(lever.toLong()))
-            }
-
-            "买跌" -> {
-                // 买跌：(买入价 - 卖出价) * 数量 * Lot单位 * 杠杆
-                buyPrice.subtract(closePrice)
-                    .multiply(orderNum)
-                    .multiply(BigDecimal.valueOf(lotUnit.toLong()))
-                    .multiply(BigDecimal.valueOf(lever.toLong()))
-            }
-
-            else -> BigDecimal.ZERO
-        }.setScale(2, RoundingMode.HALF_UP)
-    }
-
-
-    /**
-     * 清理止盈止损缓存
-     */
-    private fun clearProfitStopCache(position: UserPosition, stock: Stock) {
+    private fun checkPendingOrders(stock: Stock) {
         try {
+            // 从Redis中获取挂单信息
             val key = String.format(CHECK_ORDER_KEY, stock.flag + stock.symbol)
-            val cacheMap = redissonClient.getMap<String, String>(key)
+            val pendingOrderMap = redissonClient.getMap<String, String>(key)
 
-            // 清理止盈缓存
-            position.id?.let { positionId ->
-                cacheMap.remove("${positionId}2") // 止盈
-                cacheMap.remove("${positionId}3") // 止损
+            if (!pendingOrderMap.isExists || pendingOrderMap.isEmpty()) {
+                return
+            }
+
+            val currentPrice = stock.last ?: return
+
+            // 遍历所有挂单
+            for ((hKey, orderJson) in pendingOrderMap) {
+                try {
+                    // 只处理挂单类型（dataType=1），跳过止盈止损
+                    if (!hKey.endsWith("1")) {
+                        continue
+                    }
+
+                    val userOrderVo = JSON.parseObject(orderJson, UserOrderVo::class.java) ?: continue
+                    
+                    // 确认是挂单类型
+                    if (userOrderVo.dataType != "1") {
+                        continue
+                    }
+
+                    val targetPrice = userOrderVo.amount ?: continue
+                    val buyType = userOrderVo.buyType // "1"-买涨 "2"-买跌
+
+                    // 检查价格是否达到目标价格
+                    val shouldExecute = when (buyType) {
+                        "1" -> currentPrice.compareTo(targetPrice) <= 0 // 买涨：当前价 <= 目标价
+                        "2" -> currentPrice.compareTo(targetPrice) >= 0 // 买跌：当前价 >= 目标价
+                        else -> false
+                    }
+
+                    if (shouldExecute) {
+                        logger.info("挂单触发: 股票=${stock.symbol}, 用户=${userOrderVo.userId}, 目标价=$targetPrice, 当前价=$currentPrice, 类型=$buyType")
+                        
+                        // 执行挂单买入
+                        val lockKey = RedisKeys.PROCESS_USER_POSITION_LOCK_KEY + "pending_" + userOrderVo.id
+                        RedisLockService.lockTransaction(lockKey) {
+                            executePendingOrder(userOrderVo, stock, currentPrice)
+                        }
+                    }
+
+                } catch (e: Exception) {
+                    logger.error(e) { "处理单个挂单失败: hKey=$hKey" }
+                }
             }
 
         } catch (e: Exception) {
-            logger.error(e) { "清理止盈止损缓存失败: positionId=${position.id}" }
+            logger.error(e) { "检查挂单失败: 股票=${stock.symbol}" }
         }
     }
 
     /**
-     * 清理用户持仓缓存（调用 UserPositionServiceImpl 的方法）
+     * 执行挂单买入
      */
-    private fun clearPositionCache(position: UserPosition, stock: Stock) {
+    private fun executePendingOrder(userOrderVo: UserOrderVo, stock: Stock, currentPrice: BigDecimal) {
         try {
-            userPositionService.clearPositionCache(position, stock)
+            val userId = userOrderVo.userId?.toLongOrNull() ?: return
+            val pendingOrderId = userOrderVo.id?.toLongOrNull() ?: return
 
-            logger.debug("调用 UserPositionServiceImpl.clearPositionCache 成功: positionId=${position.id}")
+            logger.info("开始执行挂单买入: 用户=$userId, 挂单ID=$pendingOrderId, 股票=${stock.symbol}")
+
+            // 调用新的买入方法
+            val result = userPositionService.buyFromPendingOrder(pendingOrderId, userId, currentPrice)
+
+            if (result.code == 0) {
+                // 买入成功，更新挂单状态和清理Redis缓存
+                userPendingOrderService.updatePendingOrderStatus(pendingOrderId, 1, null)
+                
+                // 从Redis中删除挂单信息
+                val key = String.format(CHECK_ORDER_KEY, stock.flag + stock.symbol)
+                val hKey = "${pendingOrderId}1"
+                val pendingOrderMap = redissonClient.getMap<String, String>(key)
+                pendingOrderMap.remove(hKey)
+
+                logger.info("挂单执行成功: 用户=$userId, 挂单ID=$pendingOrderId, 股票=${stock.symbol}")
+            } else {
+                // 买入失败，更新挂单状态为失败
+                userPendingOrderService.updatePendingOrderStatus(pendingOrderId, 2, result.msg)
+                
+                // 从Redis中删除挂单信息
+                val key = String.format(CHECK_ORDER_KEY, stock.flag + stock.symbol)
+                val hKey = "${pendingOrderId}1"
+                val pendingOrderMap = redissonClient.getMap<String, String>(key)
+                pendingOrderMap.remove(hKey)
+
+                logger.warn("挂单执行失败: 用户=$userId, 挂单ID=$pendingOrderId, 原因=${result.msg}")
+            }
 
         } catch (e: Exception) {
-            logger.error(e) { "调用 clearPositionCache 失败: positionId=${position.id}" }
+            logger.error(e) { "执行挂单买入失败: 用户=${userOrderVo.userId}, 挂单ID=${userOrderVo.id}" }
+            // 更新挂单状态为失败
+            try {
+                val pendingOrderId = userOrderVo.id?.toLongOrNull()
+                if (pendingOrderId != null) {
+                    userPendingOrderService.updatePendingOrderStatus(pendingOrderId, 2, e.message)
+                }
+            } catch (ex: Exception) {
+                logger.error(ex) { "更新挂单失败状态时出错" }
+            }
         }
     }
-
 
     /**
      * 获取监听器统计信息

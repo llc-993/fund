@@ -24,7 +24,7 @@ class UserPendingOrder : Serializable {
      * 主键，自增ID
      */
     @TableId(value = "id", type = IdType.AUTO)
-    var id: Int? = null
+    var id: Long? = null
 
     /**
      * 用户ID，关联users表

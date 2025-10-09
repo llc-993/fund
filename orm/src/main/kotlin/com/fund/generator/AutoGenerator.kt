@@ -23,7 +23,7 @@ fun main() {
     val host = "localhost"
     val port = 3306
     val username = "root"
-    val password = "root"
+    val password = "12345678"
     val schema = "fund"
 
     val projectPath = System.getProperty("user.dir")

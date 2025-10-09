@@ -42,8 +42,14 @@ INSERT INTO app_config (code, value, remark, create_by, create_time, update_time
 ('usMinBuyAmount', '10', '美国市场最小购买金额', 'system', NOW(), NOW()),
 ('cnMinBuyAmount', '100', '中国市场最小购买金额', 'system', NOW(), NOW()),
 ('inMinBuyAmount', '10', '印度市场最小购买金额', 'system', NOW(), NOW()),
-('deMinBuyAmount', '10', '德国市场最小购买金额', 'system', NOW(), NOW())，
+('deMinBuyAmount', '10', '德国市场最小购买金额', 'system', NOW(), NOW()),
+
+-- 费率配置
 ('buyFeeRate', '0.001', '买入手续费率', 'system', NOW(), NOW()),
 ('stayFeeRate', '0.0001', '留仓费率', 'system', NOW(), NOW()),
-('dutyFeeRate', '0.001', '印花税费率', 'system', NOW(), NOW())
+('dutyFeeRate', '0.001', '印花税费率', 'system', NOW(), NOW()),
+
+-- IPO配置
+('ipoMinNum', '1', 'IPO最小申购数量', 'system', NOW(), NOW()),
+('ipoMaxNum', '10000', 'IPO最大申购数量', 'system', NOW(), NOW())
 ;

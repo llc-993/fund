@@ -28,7 +28,6 @@ class StockDataRedisService(
             val key = getStockDataKey(stockId)
             val bucket = redissonClient.getBucket<String>(key)
             bucket.set(JSON.toJSONString(stockData))
-            logger.debug("Saved StockData to Redis: stockId=$stockId, symbol=${stockData.code}")
         } catch (e: Exception) {
             logger.error(e) { "Error saving StockData to Redis: stockId=$stockId" }
         }

@@ -58,7 +58,5 @@ class StockDataUtil {
         
         // 更新时间戳
         stock.time = stockData.tick ?: stock.time
-        
-        logger.debug("Enriched stock from StockData: ${stock.symbol}")
     }
 }

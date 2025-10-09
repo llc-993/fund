@@ -6,6 +6,8 @@ package com.fund.constants
 object Constants {
 
     // 支持哪些市场
-     val marketList = listOf("NSE","BSE")
+     val marketMap: Map<String, String> = mapOf(
+         "IN" to "NSE,BSE"
+     )
 
 }

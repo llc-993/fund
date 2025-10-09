@@ -1,6 +1,7 @@
 package com.fund.modules.kline.service
 
 import com.fund.modules.kline.model.Kline
+import com.fund.modules.stock.model.Stock
 
 /**
  * K线数据服务接口
@@ -32,4 +33,10 @@ interface KlineService {
      * 删除过期的K线数据
      */
     fun deleteExpiredKlines(beforeTimestamp: Long)
+    
+    /**
+     * 处理K线消息
+     * @param stock 股票数据对象
+     */
+    fun processKlineMessage(stock: Stock)
 }

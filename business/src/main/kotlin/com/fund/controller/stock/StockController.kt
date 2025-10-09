@@ -6,7 +6,10 @@ import cn.dev33.satoken.stp.StpUtil
 import com.fund.common.entity.R
 import com.fund.modules.stock.QueryStockRequest
 import com.fund.modules.stock.StockBuyRequest
+import com.fund.modules.stock.StockAddOrderRequest
+import com.fund.modules.stock.UpdateProfitTargetRequest
 import com.fund.modules.stock.service.StockService
+import com.fund.modules.stock.service.UserPendingOrderService
 import com.fund.modules.stock.service.UserPositionService
 import com.fund.modules.stock.util.StockDataUtil
 import jakarta.servlet.http.HttpServletRequest
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController
 class StockController(
     private val stockService: StockService,
     private val userPositionService: UserPositionService,
+    private val userPendingOrderService: UserPendingOrderService,
     private val stockDataUtil: StockDataUtil
 ) {
 
@@ -40,10 +44,10 @@ class StockController(
         try {
             // 获取股票基本信息
             val stock = stockService.getStockById(id)
-            
+
             // 获取完整的StockData信息
             val stockData = stockDataUtil.getFullStockData(stock)
-            
+
             // 构建响应Map
             val response = mutableMapOf<String, Any>()
             response["stock"] = stock
@@ -65,11 +69,44 @@ class StockController(
         return stockService.countryList()
     }
 
+
     @SaCheckLogin
     @PostMapping("buy")
     fun buy(@RequestBody req: StockBuyRequest, request: HttpServletRequest): R<Any> {
         val userId = StpUtil.getLoginIdAsLong()
         return userPositionService.buy(req, userId, request)
     }
+
+
+    @SaCheckLogin
+    @PostMapping("sell")
+    fun sell(positionSn: String): R<Any> {
+        val userId = StpUtil.getLoginIdAsLong()
+        return userPositionService.sell(positionSn, userId, 1, "11")
+    }
+
+    @SaCheckLogin
+    @PostMapping("update-profit-target")
+    fun updateProfitTarget(@RequestBody req: UpdateProfitTargetRequest): R<Any> {
+        val userId = StpUtil.getLoginIdAsLong()
+        return userPositionService.updateProfitTarget(req, userId)
+    }
+
+    @SaCheckLogin
+    @PostMapping("add-order")
+    fun addOrder(@RequestBody req: StockAddOrderRequest): R<Any> {
+        val userId = StpUtil.getLoginIdAsLong()
+
+        // 这里可以调用相应的服务来处理下单请求
+        return userPendingOrderService.addOrder(req, userId)
+    }
+
+    @SaCheckLogin
+    @PostMapping("del-order")
+    fun delOrder(id: Long): R<Any> {
+        val userId = StpUtil.getLoginIdAsLong()
+        return userPendingOrderService.delOrder(id, userId)
+    }
+
 
 }

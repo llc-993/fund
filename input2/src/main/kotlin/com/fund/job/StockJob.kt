@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component
 //@Component
 class StockJob(
     private val apiConfig: ApiConfig,
-){
+) {
 
     private val logger = KotlinLogging.logger {}
 
@@ -29,10 +29,10 @@ class StockJob(
 
     @Autowired
     private lateinit var stockDataProcessor: StockDataProcessor
-    
+
     @Autowired
     private lateinit var stockDataRedisService: StockDataRedisService
-    
+
     @Autowired
     private lateinit var stockDataConverter: StockDataConverter
 
@@ -41,76 +41,75 @@ class StockJob(
     fun loadStock() {
         logger.info("Loading stocks...")
         try {
-            for (str in Constants.marketList) {
-                val url = apiConfig.stock.getPricesUrlWithMarket(str)
-                logger.info("Requesting stock prices from: $url")
+            for (str in Constants.marketMap.keys) {
+                val s1 = Constants.marketMap.get(str)
+                for (str1 in s1!!.split(",")) {
+                    val url = apiConfig.stock.getPricesUrlWithMarket(str1)
+                    logger.info("Requesting stock prices from: $url")
 
-                val httpRequest = HttpUtil.createGet(url)
-                httpRequest.header(Header.AUTHORIZATION, apiConfig.stock.authorization)
+                    val httpRequest = HttpUtil.createGet(url)
+                    httpRequest.header(Header.AUTHORIZATION, apiConfig.stock.authorization)
 
-                val body = httpRequest.execute().body()
+                    val body = httpRequest.execute().body()
 
-                if (body == null) {
-                    continue
-                }
+                    if (body == null) {
+                        continue
+                    }
 
-                // 先解析为JsonBean列表，然后手动转换Msg字段
-                val stockList = JSON.parseArray(body, JsonBean::class.java)
+                    // 先解析为JsonBean列表，然后手动转换Msg字段
+                    val stockList = JSON.parseArray(body, JsonBean::class.java)
 
-                stockList?.let { list ->
-                    for (stockBean in list) {
-                        try {
-                            // 手动将msg字段转换为StockData对象
-                            val stockData = JSON.parseObject(JSON.toJSONString(stockBean.msg), StockData::class.java)
+                    stockList?.let { list ->
+                        for (stockBean in list) {
+                            try {
+                                // 手动将msg字段转换为StockData对象
+                                val stockData =
+                                    JSON.parseObject(stockBean.msg, StockData::class.java)
 
-                            // 使用适配器处理数据
-                            val stock = stockDataProcessor.processInputStockData(stockData, stockBean.code, null)
-                            
-                            if (stock != null) {
-                                // 构建买卖盘深度数据
-                                val askDepth = mutableMapOf<String, Any>()
-                                val bidDepth = mutableMapOf<String, Any>()
-                                
-                                // 处理卖盘数据 (S1-S5)
-                                stockData?.let { data ->
-                                    askDepth.put(data.s1!!, data.s1v!!)
-                                    bidDepth.put(data.s1!!, data.s1v!!)
-                                }
-                                
-                                // 设置深度数据到Stock对象
-                                stock.askDepth = askDepth
-                                stock.bidDepth = bidDepth
+                                // 使用适配器处理数据
+                                val stock = stockDataProcessor.processInputStockData(stockData, stockBean.code, null)
 
-                                // 调用upsertById方法保存或更新股票数据
-                                val result = stockService.upsertById(stock)
-                                if (result) {
-                                    logger.debug("Successfully upserted stock: ${stock.symbol}")
-                                    
-                                    // 保存StockData到Redis（包含所有字段）
-                                    if (stock.id != null && stockData != null) {
-                                        val stockDataModel = stockDataConverter.convertToStockDataModel(stockData)
-                                        stockDataRedisService.saveStockData(stockDataModel, stock.id!!)
-                                        logger.debug("Successfully saved StockData to Redis: ${stock.symbol}")
+                                if (stock != null) {
+                                    // 构建买卖盘深度数据
+                                    val askDepth = mutableMapOf<String, Any>()
+                                    val bidDepth = mutableMapOf<String, Any>()
+
+                                    // 处理卖盘数据 (S1-S5)
+                                    stockData?.let { data ->
+                                        askDepth.put(data.s1!!, data.s1v!!)
+                                        bidDepth.put(data.s1!!, data.s1v!!)
+                                    }
+
+                                    // 设置深度数据到Stock对象
+                                    stock.askDepth = askDepth
+                                    stock.bidDepth = bidDepth
+                                    stock.flag = str
+                                    // 调用upsertById方法保存或更新股票数据
+                                    val result = stockService.upsertById(stock)
+                                    if (result) {
+                                        logger.debug("Successfully upserted stock: ${stock.symbol}")
+
+                                        // 保存StockData到Redis（包含所有字段）
+                                        if (stock.id != null && stockData != null) {
+                                            val stockDataModel = stockDataConverter.convertToStockDataModel(stockData)
+                                            stockDataRedisService.saveStockData(stockDataModel, stock.id!!)
+                                            logger.debug("Successfully saved StockData to Redis: ${stock.symbol}")
+                                        }
+                                    } else {
+                                        logger.warn("Failed to upsert stock: ${stock.symbol}")
                                     }
                                 } else {
-                                    logger.warn("Failed to upsert stock: ${stock.symbol}")
+                                    logger.warn("Failed to process stock data for code: ${stockBean.code}")
                                 }
-                            } else {
-                                logger.warn("Failed to process stock data for code: ${stockBean.code}")
+                            } catch (e: Exception) {
+                                logger.error(e) { "Error processing stock: ${stockBean.code}" }
                             }
-                        } catch (e: Exception) {
-                            logger.error(e) { "Error processing stock: ${stockBean.code}" }
                         }
                     }
                 }
             }
-
         } catch (e: Exception) {
             logger.error(e) { "Error occurred while loading stocks." }
         }
     }
-
-
-
-
 }
