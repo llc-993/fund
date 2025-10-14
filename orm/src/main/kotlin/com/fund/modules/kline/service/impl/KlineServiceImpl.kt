@@ -186,7 +186,7 @@ class KlineServiceImpl @Autowired constructor(
         timestamp: Long
     ): Kline {
         val price = stock.last ?: BigDecimal.ZERO
-        val volume = stock.volume ?: BigDecimal.ZERO
+        val volume: Any = stock.volume ?: BigDecimal.ZERO
         
         return Kline(
             id = timestamp.toString(),
@@ -198,7 +198,7 @@ class KlineServiceImpl @Autowired constructor(
             high = price,
             low = price,
             close = price,
-            volume = volume,
+            volume = BigDecimal.valueOf(volume as Long) ,
             createTime = System.currentTimeMillis()
         )
     }
@@ -208,13 +208,13 @@ class KlineServiceImpl @Autowired constructor(
      */
     private fun updateKline(existingKline: Kline, stock: Stock): Kline {
         val currentPrice = stock.last ?: BigDecimal.ZERO
-        val currentVolume = stock.volume ?: BigDecimal.ZERO
+        val currentVolume: Any? = stock.volume ?: BigDecimal.ZERO
         
         return existingKline.copy(
             high = maxOf(existingKline.high, currentPrice),
             low = minOf(existingKline.low, currentPrice),
             close = currentPrice,
-            volume = existingKline.volume + currentVolume,
+            volume = existingKline.volume.add(BigDecimal.valueOf(currentVolume as Long) ),
             createTime = System.currentTimeMillis()
         )
     }

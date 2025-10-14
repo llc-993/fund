@@ -23,6 +23,9 @@ class IpoController(
     private val stockSubscriptionService: StockSubscriptionService
 ) {
 
+    /**
+     * 列表
+     */
     @GetMapping("list")
     fun list(): R<Any> {
         val ipos = ipoService.list(
@@ -32,18 +35,27 @@ class IpoController(
         return R.success(ipos)
     }
 
+    /**
+     * 申购
+     */
     @SaCheckLogin
     @PostMapping("apply")
     fun apply(@RequestBody req: IpoApplyRequest):R<Any> {
         return stockSubscriptionService.apply(req, StpUtil.getLoginIdAsLong())
     }
 
+    /**
+     * 申购历史
+     */
     @SaCheckLogin
     @GetMapping("history")
     fun history():R<Any> {
         return stockSubscriptionService.history(StpUtil.getLoginIdAsLong())
     }
 
+    /**
+     * 修改申购
+     */
     @SaCheckLogin
     @PostMapping("update")
     fun update(@RequestBody req: IpoUpdateRequest): R<Any> {

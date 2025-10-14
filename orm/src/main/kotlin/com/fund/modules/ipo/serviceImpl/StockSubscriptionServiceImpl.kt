@@ -96,6 +96,7 @@ open class StockSubscriptionServiceImpl(
                 subscription.submitTime = LocalDateTime.now()
                 subscription.allotmentTime = LocalDateTime.now()
                 subscription.stockType = ipo.country
+                subscription.ipoId = req.ipoId
 
                 this.save(subscription)
                 R.success()

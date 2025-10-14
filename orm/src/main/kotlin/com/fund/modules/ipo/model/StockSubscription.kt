@@ -27,6 +27,9 @@ class StockSubscription : Serializable {
     @TableId(value = "id", type = IdType.AUTO)
     var id: Long? = null
 
+    @TableField("ipo_id")
+    var ipoId: Long? = null
+
     /**
      * 订单号
      */

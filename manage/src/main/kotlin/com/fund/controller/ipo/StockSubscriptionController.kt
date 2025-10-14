@@ -1,0 +1,238 @@
+package com.fund.controller.ipo
+
+import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page
+import com.fund.common.entity.R
+import com.fund.modules.ipo.AdminSubscriptionQueryRequest
+import com.fund.modules.ipo.SubscriptionConversionRequest
+import com.fund.modules.ipo.model.StockSubscription
+import com.fund.modules.ipo.service.StockSubscriptionService
+import com.fund.modules.stock.model.Stock
+import com.fund.modules.stock.model.UserPosition
+import com.fund.modules.stock.service.StockService
+import com.fund.modules.stock.service.UserPositionService
+import com.fund.modules.user.model.AppUser
+import com.fund.modules.user.service.AppUserService
+import com.fund.modules.wallet.service.AppUserWalletV2Service
+import com.fund.utils.GeneratorIdUtil
+import mu.KotlinLogging
+import org.apache.commons.lang3.StringUtils
+import org.springframework.web.bind.annotation.*
+import java.math.BigDecimal
+import java.time.LocalDateTime
+
+/**
+ * 新股申购控制器
+ * 
+ * 提供IPO申购相关功能：
+ * - 申购列表查询
+ * - 申购转持仓（中签转化）
+ * 
+ * 状态说明：
+ * - status=1: 已认购
+ * - status=2: 未中签
+ * - status=3: 已中签
+ * - status=4: 已缴纳
+ * - status=5: 已转持仓
+ */
+@RestController
+@RequestMapping("/subscription")
+class StockSubscriptionController(
+    private val stockSubscriptionService: StockSubscriptionService,
+    private val appUserWalletV2Service: AppUserWalletV2Service,
+    private val userPositionService: UserPositionService,
+    private val stockService: StockService,
+    private val appUserService: AppUserService
+) {
+
+    private val logger = KotlinLogging.logger {}
+
+    /**
+     * 新股申购列表
+     */
+    @GetMapping("list")
+    fun list(@RequestBody req: AdminSubscriptionQueryRequest): R<Any> {
+        val page:Page<StockSubscription> = Page(req.pageNum, req.pageSize)
+
+        val page1 = this.stockSubscriptionService.page(
+            page, KtQueryWrapper(StockSubscription())
+                .eq(StringUtils.isNotBlank(req.symbol), StockSubscription::symbol, req.symbol)
+                .eq(StringUtils.isNotBlank(req.name), StockSubscription::name, req.name)
+                .orderByDesc(StockSubscription::id)
+        )
+        return R.success(page1)
+    }
+
+    /**
+     * 新股申购转化
+     * 
+     * 将中签的申购记录转化为用户持仓
+     * 
+     * 业务逻辑：
+     * 1. 校验申购记录ID和中签数量
+     * 2. 检查申购记录状态（只有status=1已认购或status=3已中签的才能转化）
+     * 3. 计算需支付金额 = 中签数量 * buyPrice
+     * 4. 检查用户钱包余额是否足够
+     *    - 余额不足：将申购记录状态改为2(未中签)，allotmentQuantity设为0，返回错误
+     *    - 余额充足：扣除钱包availableBalance，继续执行
+     * 5. 创建UserPosition持仓记录
+     * 6. 更新申购记录状态为5(已转持仓)，更新allotmentQuantity和allotmentTime
+     * 
+     * @param req 转化请求，包含申购记录ID和中签数量
+     * @return 成功返回创建的UserPosition对象，失败返回错误信息
+     */
+    @PostMapping("conversion")
+    fun conversion(@RequestBody req: SubscriptionConversionRequest): R<Any> {
+        try {
+            // 参数校验
+            if (req.id == null) {
+                return R.error("申购记录ID不能为空")
+            }
+            if (req.allotmentQuantity == null || req.allotmentQuantity!! <= BigDecimal.ZERO) {
+                return R.error("中签数量必须大于0")
+            }
+
+            // 查询申购记录
+            val subscription = stockSubscriptionService.getById(req.id)
+                ?: return R.error("申购记录不存在")
+
+            // 检查状态（只有已认购或已中签的才能转化）
+            if (subscription.status != 1 && subscription.status != 3) {
+                return R.error("当前状态不允许转化")
+            }
+
+            // 查询用户信息
+            val userId = subscription.userId ?: return R.error("用户信息不存在")
+            val user = appUserService.getById(userId)
+                ?: return R.error("用户不存在")
+
+            // 查询股票信息
+            val stock = stockService.getOne(
+                KtQueryWrapper(Stock())
+                    .eq(Stock::symbol, subscription.symbol)
+            ) ?: return R.error("股票信息不存在")
+
+            // 计算需要支付的金额 = 中签数量 * 买入价格
+            val buyPrice = subscription.buyPrice ?: return R.error("购买价格不存在")
+            val totalAmount = req.allotmentQuantity!!.multiply(buyPrice)
+
+            // 获取用户钱包
+            val coin = appUserWalletV2Service.getCoinByStockFlag(stock.flag)
+            val wallet = appUserWalletV2Service.findWalletByUserAndType(userId, 0, coin)
+                ?: return R.error("钱包不存在")
+
+            // 检查余额是否足够：如果不足，将状态改为未中签
+            val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
+            if (totalAmount > availableBalance) {
+                logger.warn("用户余额不足，转为未中签: userId=$userId, subscriptionId=${subscription.id}, 需要=$totalAmount, 可用=$availableBalance")
+                
+                // 余额不足处理：更新申购记录为未中签状态
+                subscription.status = 2  // 2 = 未中签
+                subscription.allotmentQuantity = BigDecimal.ZERO  // 中签数量清零
+                subscription.remarks = "余额不足，未中签"
+                stockSubscriptionService.updateById(subscription)
+                
+                return R.error("用户余额不足，已将状态更新为未中签")
+            }
+
+            // 扣除钱包余额
+            val deductSuccess = appUserWalletV2Service.subtractAvailableBalance(
+                userId = userId,
+                walletType = 0,
+                currencyCode = coin,
+                amount = totalAmount,
+                operationType = "IPO_CONVERSION",
+                remark = "IPO转持仓: ${subscription.name}(${subscription.symbol}), 数量: ${req.allotmentQuantity}"
+            )
+
+            if (!deductSuccess) {
+                return R.error("扣款失败")
+            }
+
+            // 创建用户持仓
+            val userPosition = createUserPositionFromSubscription(subscription, user, stock, req.allotmentQuantity!!)
+
+            // 保存持仓
+            val saveSuccess = userPositionService.save(userPosition)
+            if (!saveSuccess) {
+                return R.error("创建持仓失败")
+            }
+
+            // 更新申购记录状态：转化成功后标记为已转持仓
+            subscription.status = 5  // 5 = 已转持仓
+            subscription.allotmentQuantity = req.allotmentQuantity  // 记录最终中签数量
+            subscription.allotmentTime = LocalDateTime.now()  // 记录转化时间
+            stockSubscriptionService.updateById(subscription)
+
+            logger.info("IPO转化成功: subscriptionId=${subscription.id}, positionId=${userPosition.id}, userId=$userId, symbol=${subscription.symbol}, quantity=${req.allotmentQuantity}")
+            return R.success(userPosition)
+
+        } catch (e: Exception) {
+            logger.error(e) { "IPO转化异常" }
+            return R.error("IPO转化失败")
+        }
+    }
+
+    /**
+     * 从申购记录创建用户持仓
+     * 
+     * 将IPO申购转化为正式持仓记录
+     * 
+     * @param subscription 申购记录，包含股票代码、名称、购买价格等信息
+     * @param user 用户信息
+     * @param stock 股票信息
+     * @param allotmentQuantity 中签数量，作为持仓数量
+     * @return 创建的UserPosition对象
+     * 
+     * 注意：
+     * - IPO持仓默认为"买涨"方向
+     * - 不使用杠杆（orderLever = 1）
+     * - 不收取额外费用（orderFee、orderSpread等为0）
+     * - 使用申购订单号作为buyOrderId
+     */
+    private fun createUserPositionFromSubscription(
+        subscription: StockSubscription,
+        user: AppUser,
+        stock: Stock,
+        allotmentQuantity: BigDecimal
+    ): UserPosition {
+        return UserPosition().apply {
+            // 基础信息
+            marginAdd = BigDecimal.ZERO
+            positionType = 0 // 默认持仓类型
+            positionSn = GeneratorIdUtil.generateId()
+            userId = user.id?.toInt()
+            nickName = user.userName
+            agentId = user.topUserId?.toInt()
+
+            // 股票信息
+            stockCode = stock.symbol
+            stockType = stock.flag
+            stockName = stock.name
+
+            // 订单信息
+            buyOrderId = subscription.orderNo
+            buyOrderTime = LocalDateTime.now()
+            buyOrderPrice = subscription.buyPrice
+            orderDirection = "买涨" // IPO默认买涨
+            orderNum = allotmentQuantity
+            orderLever = 1 // IPO不使用杠杆
+            orderTotalPrice = allotmentQuantity.multiply(subscription.buyPrice)
+
+            // 费用（IPO转化暂不收取额外费用）
+            orderFee = BigDecimal.ZERO
+            orderSpread = BigDecimal.ZERO
+            orderStayFee = BigDecimal.ZERO
+            spreadRatePrice = BigDecimal.ZERO
+
+            // 持仓状态
+            isLock = 0
+            orderStayDays = 0
+            profitAndLose = BigDecimal.ZERO
+            allProfitAndLose = BigDecimal.ZERO
+            status = "1" // 持仓中
+            lotUnit = 1
+        }
+    }
+
+}

@@ -83,7 +83,7 @@ class Stock : Serializable {
      * 当日成交量
      */
     @TableField("volume")
-    var volume: long? = null
+    var volume: Long? = null
 
     /**
      * 平均成交量
