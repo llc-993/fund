@@ -12,7 +12,10 @@ import com.fund.modules.ipo.model.Ipo
 import com.fund.modules.ipo.service.IpoService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.time.Instant
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 import java.util.Date
 
 @Component
@@ -21,6 +24,28 @@ class IpoJob(
     private val ipoService: IpoService
 ) {
 
+    /**
+     * 将UTC时间戳字符串转换为本地时区的LocalDateTime
+     * @param timestampStr UTC时间戳字符串（秒）
+     * @return 本地时区的LocalDateTime，如果转换失败返回null
+     */
+    private fun convertUtcTimestampToLocalDateTime(timestampStr: String?): LocalDateTime? {
+        if (timestampStr.isNullOrBlank()) return null
+        
+        return try {
+            // 将字符串转换为Long类型的时间戳（秒）
+            val timestampSeconds = timestampStr.toLong()
+            
+            // 将时间戳转换为Instant（UTC时间）
+            val instant = Instant.ofEpochSecond(timestampSeconds)
+            
+            // 转换为系统默认时区的LocalDateTime
+            LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+        } catch (e: Exception) {
+            // 如果转换失败，返回null
+            null
+        }
+    }
 
     // @Scheduled(cron = "0 * * * * *")
     fun loadIpoData() {
@@ -53,9 +78,9 @@ class IpoJob(
                 symbol = ipoData.symbol
                 count = ipoData.issueSize?.toLong()
                 price = ipoData.issuePrice?.toBigDecimal()
-                closeDate = ipoData.closeDate.toLong()
-                listingDate = ipoData.listingDate.toLong()
-                openDate = ipoData.openDate.toLong()
+                closeDate = convertUtcTimestampToLocalDateTime(ipoData.closeDate)
+                listingDate = convertUtcTimestampToLocalDateTime(ipoData.listingDate)
+                openDate = convertUtcTimestampToLocalDateTime(ipoData.openDate)
                 createTime = LocalDateTime.now()
                 status = if (symbol != null) 2 else 1
             }

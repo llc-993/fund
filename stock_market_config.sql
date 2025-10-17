@@ -51,5 +51,9 @@ INSERT INTO app_config (code, value, remark, create_by, create_time, update_time
 
 -- IPO配置
 ('ipoMinNum', '1', 'IPO最小申购数量', 'system', NOW(), NOW()),
-('ipoMaxNum', '10000', 'IPO最大申购数量', 'system', NOW(), NOW())
+('ipoMaxNum', '10000', 'IPO最大申购数量', 'system', NOW(), NOW()),
+
+-- 涨跌板块配置
+('risingFallingMinNum', '1', '涨跌板块最小申购数量', 'system', NOW(), NOW()),
+('risingFallingMaxNum', '10000', '涨跌板块最大申购数量', 'system', NOW(), NOW())
 ;

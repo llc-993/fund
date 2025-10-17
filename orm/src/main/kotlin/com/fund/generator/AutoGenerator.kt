@@ -58,7 +58,7 @@ fun main() {
                 .enableKotlin() // 开启kotlin模式
         } // 包配置
         .packageConfig { scanner: Function<String?, String?>, builder: PackageConfig.Builder ->
-            builder.parent("com.fund") // 设置父包名
+            builder.parent("com.fund.modules") // 设置父包名
                  .moduleName(scanner.apply("请输入模块名")!!) // 设置父包模块名
                 .entity("model") // 设置Entity包名
                 .service("service") // 设置service包名

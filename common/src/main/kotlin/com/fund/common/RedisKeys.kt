@@ -42,4 +42,6 @@ object RedisKeys {
     const val IPO_APPLY_LOCK_KEY = "ipo_apply_lock:"
     
     const val BLOCK_TRADE_APPLY_LOCK_KEY = "block_trade_apply_lock:"
+    
+    const val RISING_FALLING_SECTORS_APPLY_LOCK_KEY = "rising_falling_sectors_apply_lock:"
 }

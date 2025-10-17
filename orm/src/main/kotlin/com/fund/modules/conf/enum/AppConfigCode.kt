@@ -3,9 +3,8 @@ package com.fund.modules.conf.enum
 import com.fund.modules.conf.ant.DefaultValue
 import com.fund.modules.conf.dto.BaseConfig
 import com.fund.modules.conf.dto.IpoConfig
+import com.fund.modules.conf.dto.RisingFallingConfig
 import com.fund.modules.conf.dto.StockMarketConfig
-import java.util.Arrays
-import java.util.stream.Collectors
 import kotlin.reflect.KProperty
 import kotlin.reflect.full.extensionReceiverParameter
 import kotlin.reflect.full.findAnnotation
@@ -79,6 +78,12 @@ enum class AppConfigCode(prop: KProperty<*>) {
 
     // IPO最大申购数量
     IPO_MAX_NUM(IpoConfig::ipoMaxNum),
+
+    // 涨跌板块最小申购数量
+    RISING_FALLING_MIN_NUM(RisingFallingConfig::risingFallingMinNum),
+
+    // 涨跌板块最大申购数量
+    RISING_FALLING_MAX_NUM(RisingFallingConfig::risingFallingMaxNum),
     ;
 
     var code: String
@@ -93,8 +98,7 @@ enum class AppConfigCode(prop: KProperty<*>) {
          * @return
          */
         fun getGroup(group: Class<*>?): List<AppConfigCode> {
-            return Arrays.stream(AppConfigCode.entries.toTypedArray()).filter { c: AppConfigCode -> group == c.group }
-                .collect(Collectors.toList())
+            return AppConfigCode.entries.filter { c -> group == c.group }
         }
     }
 

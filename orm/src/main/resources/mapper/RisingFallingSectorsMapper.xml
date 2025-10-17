@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.risingFalling.mapper.RisingFallingSectorsMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.risingFalling.model.RisingFallingSectors">
+        <id column="id" property="id" />
+        <result column="symbol" property="symbol" />
+        <result column="stock_id" property="stockId" />
+        <result column="stock_lock_status" property="stockLockStatus" />
+        <result column="display_status" property="displayStatus" />
+        <result column="open_time" property="openTime" />
+        <result column="end_time" property="endTime" />
+        <result column="start_sell_time" property="startSellTime" />
+        <result column="end_sell_time" property="endSellTime" />
+        <result column="create_time" property="createTime" />
+        <result column="pass_word" property="passWord" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, symbol, stock_id, stock_lock_status, display_status, open_time, end_time, start_sell_time, end_sell_time, create_time,pass_word
+    </sql>
+
+</mapper>

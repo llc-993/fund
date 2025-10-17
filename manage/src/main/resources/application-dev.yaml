@@ -6,9 +6,9 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:3306/blind-box?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://localhost:3306/fund?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=Asia/Shanghai
     username: root
-    password: root
+    password: 1234567
     druid:
       initial-size: 20
       max-active: 30
@@ -31,4 +31,4 @@ spring:
     redis:
       host: localhost
       port: 6379
-    #  password: Aq23-hjPwFB3mBDNFp3W1
+      password: Aq23-hjPwFB3mBDNFp3W1
