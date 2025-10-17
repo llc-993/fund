@@ -5,7 +5,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.R
 import com.fund.modules.ipo.AdminSubscriptionQueryRequest
 import com.fund.modules.ipo.SubscriptionConversionRequest
+import com.fund.modules.ipo.model.Ipo
 import com.fund.modules.ipo.model.StockSubscription
+import com.fund.modules.ipo.service.IpoService
 import com.fund.modules.ipo.service.StockSubscriptionService
 import com.fund.modules.stock.model.Stock
 import com.fund.modules.stock.model.UserPosition
@@ -23,11 +25,11 @@ import java.time.LocalDateTime
 
 /**
  * 新股申购控制器
- * 
+ *
  * 提供IPO申购相关功能：
  * - 申购列表查询
  * - 申购转持仓（中签转化）
- * 
+ *
  * 状态说明：
  * - status=1: 已认购
  * - status=2: 未中签
@@ -41,6 +43,7 @@ class StockSubscriptionController(
     private val stockSubscriptionService: StockSubscriptionService,
     private val appUserWalletV2Service: AppUserWalletV2Service,
     private val userPositionService: UserPositionService,
+    private val ipoService: IpoService,
     private val stockService: StockService,
     private val appUserService: AppUserService
 ) {
@@ -65,9 +68,9 @@ class StockSubscriptionController(
 
     /**
      * 新股申购转化
-     * 
+     *
      * 将中签的申购记录转化为用户持仓
-     * 
+     *
      * 业务逻辑：
      * 1. 校验申购记录ID和中签数量
      * 2. 检查申购记录状态（只有status=1已认购或status=3已中签的才能转化）
@@ -77,7 +80,7 @@ class StockSubscriptionController(
      *    - 余额充足：扣除钱包availableBalance，继续执行
      * 5. 创建UserPosition持仓记录
      * 6. 更新申购记录状态为5(已转持仓)，更新allotmentQuantity和allotmentTime
-     * 
+     *
      * @param req 转化请求，包含申购记录ID和中签数量
      * @return 成功返回创建的UserPosition对象，失败返回错误信息
      */
@@ -125,13 +128,13 @@ class StockSubscriptionController(
             val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
             if (totalAmount > availableBalance) {
                 logger.warn("用户余额不足，转为未中签: userId=$userId, subscriptionId=${subscription.id}, 需要=$totalAmount, 可用=$availableBalance")
-                
+
                 // 余额不足处理：更新申购记录为未中签状态
                 subscription.status = 2  // 2 = 未中签
                 subscription.allotmentQuantity = BigDecimal.ZERO  // 中签数量清零
                 subscription.remarks = "余额不足，未中签"
                 stockSubscriptionService.updateById(subscription)
-                
+
                 return R.error("用户余额不足，已将状态更新为未中签")
             }
 
@@ -149,8 +152,10 @@ class StockSubscriptionController(
                 return R.error("扣款失败")
             }
 
+            val ipo = ipoService.getById(subscription.ipoId)
+
             // 创建用户持仓
-            val userPosition = createUserPositionFromSubscription(subscription, user, stock, req.allotmentQuantity!!)
+            val userPosition = createUserPositionFromSubscription(subscription, user, stock, ipo,req.allotmentQuantity!!)
 
             // 保存持仓
             val saveSuccess = userPositionService.save(userPosition)
@@ -175,15 +180,15 @@ class StockSubscriptionController(
 
     /**
      * 从申购记录创建用户持仓
-     * 
+     *
      * 将IPO申购转化为正式持仓记录
-     * 
+     *
      * @param subscription 申购记录，包含股票代码、名称、购买价格等信息
      * @param user 用户信息
      * @param stock 股票信息
      * @param allotmentQuantity 中签数量，作为持仓数量
      * @return 创建的UserPosition对象
-     * 
+     *
      * 注意：
      * - IPO持仓默认为"买涨"方向
      * - 不使用杠杆（orderLever = 1）
@@ -194,8 +199,10 @@ class StockSubscriptionController(
         subscription: StockSubscription,
         user: AppUser,
         stock: Stock,
+        ipo: Ipo,
         allotmentQuantity: BigDecimal
     ): UserPosition {
+        val lotUnit1 = userPositionService.getLotUnit(stock.flag)
         return UserPosition().apply {
             // 基础信息
             marginAdd = BigDecimal.ZERO
@@ -226,12 +233,14 @@ class StockSubscriptionController(
             spreadRatePrice = BigDecimal.ZERO
 
             // 持仓状态
-            isLock = 0
+            // IPO的isLock: 0=未锁仓，1=锁仓
+            // UserPosition的isLock: 1=锁定，2=不锁定
+            isLock = if (ipo.isLock == 1) 1.toByte() else 2.toByte()
             orderStayDays = 0
             profitAndLose = BigDecimal.ZERO
             allProfitAndLose = BigDecimal.ZERO
             status = "1" // 持仓中
-            lotUnit = 1
+            lotUnit = lotUnit1
         }
     }
 

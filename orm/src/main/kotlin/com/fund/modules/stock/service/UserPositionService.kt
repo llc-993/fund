@@ -89,4 +89,6 @@ interface UserPositionService : IService<UserPosition> {
     fun clearCloseCache(position: UserPosition, stock: Stock)
 
     fun isTradingTime(stockFlag: String): Boolean
+
+    fun getLotUnit(marketFlag: String?): Int
 }

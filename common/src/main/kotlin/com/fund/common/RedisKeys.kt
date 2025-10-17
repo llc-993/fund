@@ -40,4 +40,6 @@ object RedisKeys {
     const val PROCESS_USER_POSITION_LOCK_KEY = "process_user_position_lock:"
 
     const val IPO_APPLY_LOCK_KEY = "ipo_apply_lock:"
+    
+    const val BLOCK_TRADE_APPLY_LOCK_KEY = "block_trade_apply_lock:"
 }

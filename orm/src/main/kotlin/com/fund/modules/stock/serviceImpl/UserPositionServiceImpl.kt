@@ -974,7 +974,7 @@ open class UserPositionServiceImpl(
          * @param marketFlag 市场标志 (US, CN, IN, DE)
          * @return Lot单位
          */
-        fun getLotUnit(marketFlag: String?): Int {
+        override fun getLotUnit(marketFlag: String?): Int {
             return try {
                 when (marketFlag?.uppercase()) {
                     "US" -> appConfigService.getValueOrDefault(AppConfigCode.US_LOT_UNIT)?.toInt() ?: 1

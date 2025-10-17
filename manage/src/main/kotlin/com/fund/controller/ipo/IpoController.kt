@@ -80,7 +80,6 @@ class IpoController(
 
             logger.info("新增IPO成功: symbol=${req.symbol}, name=${req.name}")
             return R.success(ipo)
-
         } catch (e: Exception) {
             logger.error(e) { "新增IPO异常" }
             return R.error("新增IPO失败")

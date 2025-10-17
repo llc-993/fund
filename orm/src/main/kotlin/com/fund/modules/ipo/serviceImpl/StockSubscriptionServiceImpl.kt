@@ -49,19 +49,19 @@ open class StockSubscriptionServiceImpl(
 
                 val ipo = ipoService.getById(req.ipoId) ?: throw BusinessException("ipo_null")
 
-                // 获取当前时间戳（毫秒）
-                val currentTime = System.currentTimeMillis()
+                // 获取当前时间
+                val currentTime = LocalDateTime.now()
 
                 // 如果设置了开放时间，检查 IPO 是否已经开始
                 ipo.openDate?.let { openDate ->
-                    if (currentTime < openDate) {
+                    if (currentTime.isBefore(openDate)) {
                         throw BusinessException("ipo_not_started")
                     }
                 }
 
                 // 如果设置了关闭时间，检查 IPO 是否已经结束
                 ipo.closeDate?.let { closeDate ->
-                    if (currentTime > closeDate) {
+                    if (currentTime.isAfter(closeDate)) {
                         throw BusinessException("ipo_has_ended")
                     }
                 }

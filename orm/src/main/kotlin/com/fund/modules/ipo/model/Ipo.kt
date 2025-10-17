@@ -1,11 +1,7 @@
 package com.fund.modules.ipo.model;
 
-import com.baomidou.mybatisplus.annotation.FieldFill
-import com.baomidou.mybatisplus.annotation.IdType
-import com.baomidou.mybatisplus.annotation.TableField
-import com.baomidou.mybatisplus.annotation.TableId
-import com.baomidou.mybatisplus.annotation.TableName
-
+import com.baomidou.mybatisplus.annotation.*
+import org.springframework.format.annotation.DateTimeFormat
 import java.io.Serializable
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -49,19 +45,19 @@ class Ipo : Serializable {
      * 开始时间
      */
     @TableField("open_date")
-    var openDate: Long? = null
+    var openDate: LocalDateTime? = null
 
     /**
      * 结束时间
      */
     @TableField("close_date")
-    var closeDate: Long? = null
+    var closeDate: LocalDateTime? = null
 
     /**
      * 上市时间
      */
     @TableField("listing_date")
-    var listingDate: Long? = null
+    var listingDate: LocalDateTime? = null
 
     /**
      * 价格
@@ -88,7 +84,7 @@ class Ipo : Serializable {
     var status: Int? = null
 
     /**
-     * 1: 新股， 2:线下配售
+     * 1: 新股， 2:线下配售、3:定额配售、4:IPO多配
      */
     @TableField("type")
     var type: Int? = 1
@@ -96,23 +92,40 @@ class Ipo : Serializable {
     /**
      * 创建时间
      */
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     var createTime: LocalDateTime? = null
 
+    /**
+     * 新股申购，已认缴后，转持仓是否锁仓
+     * 是否锁仓（0: 未锁仓, 1: 锁仓）
+     */
+    @TableField(value = "is_lock")
+    var isLock: Int = 0
+
+    /**
+     * 认缴时间
+     */
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @TableField(value = "subscription_time")
+    var subscriptionTime: LocalDateTime? = null
+
     override fun toString(): String {
         return "Ipo{" +
-        "id=" + id +
-        ", name=" + name +
-        ", country=" + country +
-        ", symbol=" + symbol +
-        ", openDate=" + openDate +
-        ", closeDate=" + closeDate +
-        ", listingDate=" + listingDate +
-        ", price=" + price +
-        ", count=" + count +
-        ", exchange=" + exchange +
-        ", status=" + status +
-        ", createTime=" + createTime +
-        "}"
+                "id=" + id +
+                ", name=" + name +
+                ", country=" + country +
+                ", symbol=" + symbol +
+                ", openDate=" + openDate +
+                ", closeDate=" + closeDate +
+                ", listingDate=" + listingDate +
+                ", price=" + price +
+                ", count=" + count +
+                ", exchange=" + exchange +
+                ", status=" + status +
+                ", createTime=" + createTime +
+                ", isLock=" + isLock +
+                ", subscriptionTime=" + subscriptionTime +
+                "}"
     }
 }
