@@ -55,5 +55,10 @@ INSERT INTO app_config (code, value, remark, create_by, create_time, update_time
 
 -- 涨跌板块配置
 ('risingFallingMinNum', '1', '涨跌板块最小申购数量', 'system', NOW(), NOW()),
-('risingFallingMaxNum', '10000', '涨跌板块最大申购数量', 'system', NOW(), NOW())
+('risingFallingMaxNum', '10000', '涨跌板块最大申购数量', 'system', NOW(), NOW()),
+
+-- 提现配置
+('cashOutMinAmount', '10', '最小提现金额', 'system', NOW(), NOW()),
+('cashOutMaxAmount', '1000000', '最大提现金额', 'system', NOW(), NOW()),
+('cashOutFeeRate', '0.01', '提现手续费率', 'system', NOW(), NOW())
 ;

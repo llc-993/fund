@@ -19,6 +19,15 @@ enum class GoldChangeEnum(var code: Int, var `enumName`: String, var prefix: Str
     TASK_CANCEL(777, "交易取消", "tc"), // 交易取消
     TASK_RETURN(699, "交易本金返还", "tn"), // 接单返还
     TASK_INCOME(688, "交易返佣", "te"), // 任务返佣
+
+    // IPO相关
+    IPO_CONVERSION(667, "IPO转持仓", "ic"), // IPO转持仓
+
+    // 大宗交易相关
+    BLOCK_TRADE_CONVERSION(668, "大宗交易转持仓", "btc"), // 大宗交易转持仓
+
+    // 涨跌板块相关
+    RISING_FALLING_SECTORS_CONVERSION(669, "涨跌板块转持仓", "rfsc"), // 伦敦板块转持仓
     ;
 
     companion object {

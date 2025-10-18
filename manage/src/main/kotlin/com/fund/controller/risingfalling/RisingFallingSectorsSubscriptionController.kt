@@ -15,6 +15,7 @@ import com.fund.modules.stock.service.StockService
 import com.fund.modules.stock.service.UserPositionService
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
 import mu.KotlinLogging
@@ -146,7 +147,7 @@ class RisingFallingSectorsSubscriptionController(
                 walletType = 0,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = "RISING_FALLING_SECTORS_CONVERSION",
+                operationType = GoldChangeEnum.RISING_FALLING_SECTORS_CONVERSION.enumName,
                 remark = "涨跌板块转持仓: ${subscription.name}, 数量: ${req.confirmQuantity}"
             )
 

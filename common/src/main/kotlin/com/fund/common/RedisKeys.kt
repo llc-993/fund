@@ -44,4 +44,10 @@ object RedisKeys {
     const val BLOCK_TRADE_APPLY_LOCK_KEY = "block_trade_apply_lock:"
     
     const val RISING_FALLING_SECTORS_APPLY_LOCK_KEY = "rising_falling_sectors_apply_lock:"
+
+    const val LOCK_CASH_OUT_REQUEST = "lock:cash_out:request:"
+    const val LOCK_CASH_IN_REQUEST = "lock:cash_in:request:"
+
+    // 顶级代理与用户id映射
+    const val TOP_AGENT_MAP_CACHE_KEY = "top_agent_maps"
 }

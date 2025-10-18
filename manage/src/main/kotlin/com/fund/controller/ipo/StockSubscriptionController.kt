@@ -15,6 +15,7 @@ import com.fund.modules.stock.service.StockService
 import com.fund.modules.stock.service.UserPositionService
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
 import mu.KotlinLogging
@@ -144,7 +145,7 @@ class StockSubscriptionController(
                 walletType = 0,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = "IPO_CONVERSION",
+                operationType = GoldChangeEnum.IPO_CONVERSION.enumName,
                 remark = "IPO转持仓: ${subscription.name}(${subscription.symbol}), 数量: ${req.allotmentQuantity}"
             )
 

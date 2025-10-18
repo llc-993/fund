@@ -22,4 +22,10 @@ interface AppAgentRelationService : IService<AppAgentRelation> {
     // 创建代理关系
     fun createMemAgentRelation(user: AppUser, ar: AppAgentRelation): AppAgentRelation
 
+    /**
+     * 从缓存中获取用户的顶级代理id
+     * @param userId
+     * @return
+     */
+    fun getTopIdByUserIdFromCache(userId: Long): Long
 }

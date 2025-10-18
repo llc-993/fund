@@ -84,6 +84,15 @@ enum class AppConfigCode(prop: KProperty<*>) {
 
     // 涨跌板块最大申购数量
     RISING_FALLING_MAX_NUM(RisingFallingConfig::risingFallingMaxNum),
+
+    // 最小提现金额
+    CASH_OUT_MIN_AMOUNT(BaseConfig::cashOutMinAmount),
+
+    // 最大提现金额
+    CASH_OUT_MAX_AMOUNT(BaseConfig::cashOutMaxAmount),
+
+    // 提现手续费率
+    CASH_OUT_FEE_RATE(BaseConfig::cashOutFeeRate),
     ;
 
     var code: String

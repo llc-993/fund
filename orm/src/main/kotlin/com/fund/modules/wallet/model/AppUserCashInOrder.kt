@@ -1,0 +1,140 @@
+package com.fund.modules.wallet.model;
+
+import com.baomidou.mybatisplus.annotation.FieldFill
+import com.baomidou.mybatisplus.annotation.IdType
+import com.baomidou.mybatisplus.annotation.TableField
+import com.baomidou.mybatisplus.annotation.TableId
+import com.baomidou.mybatisplus.annotation.TableName
+
+import java.io.Serializable
+import java.math.BigDecimal
+import java.time.LocalDateTime
+
+/**
+ * <p>
+ * 用户充值订单表
+ * </p>
+ *
+ * @author 书记
+ * @since 2025-10-18
+ */
+@TableName("app_user_cash_in_order")
+class AppUserCashInOrder : Serializable {
+
+    /**
+     * id
+     */
+    @TableId(value = "id", type = IdType.AUTO)
+    var id: Long? = null
+
+    /**
+     * 用户id
+     */
+    @TableField("user_id")
+    var userId: Long? = null
+
+    /**
+     * 正常 0 假人 1
+     */
+    @TableField("user_group")
+    var userGroup: Int? = null
+
+    /**
+     * 用户名
+     */
+    @TableField("user_account")
+    var userAccount: String? = null
+
+    /**
+     * 手机号
+     */
+    @TableField("mobile_phone")
+    var mobilePhone: String? = null
+
+    /**
+     * 总代用户ID
+     */
+    @TableField("top_user_id")
+    var topUserId: Long? = null
+
+    /**
+     * ip
+     */
+    @TableField("ip")
+    var ip: String? = null
+
+    /**
+     * 订单编号
+     */
+    @TableField("order_no")
+    var orderNo: String? = null
+
+    /**
+     * 申请时间
+     */
+    @TableField("apply_time")
+    var applyTime: LocalDateTime? = null
+
+    /**
+     * 申请提现金额
+     */
+    @TableField("apply_amount")
+    var applyAmount: BigDecimal? = null
+
+    /**
+     * 用户备注
+     */
+    @TableField("remark")
+    var remark: String? = null
+
+    /**
+     * 审核时间
+     */
+    @TableField("remit_time")
+    var remitTime: LocalDateTime? = null
+
+    /**
+     * 订单类型   1待处理 2已锁定 3已取消 4已拒绝 5已成功
+     */
+    @TableField("cash_status")
+    var cashStatus: Int? = null
+
+    /**
+     * 失败原因,如果有
+     */
+    @TableField("reason")
+    var reason: String? = null
+
+    /**
+     * 订单处理--操作人账号
+     */
+    @TableField("operator_user")
+    var operatorUser: String? = null
+
+    /**
+     * 更新时间
+     */
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
+    var updateTime: LocalDateTime? = null
+
+    override fun toString(): String {
+        return "AppUserCashInOrder{" +
+        "id=" + id +
+        ", userId=" + userId +
+        ", userGroup=" + userGroup +
+        ", userAccount=" + userAccount +
+        ", mobilePhone=" + mobilePhone +
+        ", topUserId=" + topUserId +
+        ", ip=" + ip +
+        ", orderNo=" + orderNo +
+        ", applyTime=" + applyTime +
+        ", applyAmount=" + applyAmount +
+        ", remark=" + remark +
+        ", remitTime=" + remitTime +
+        ", cashStatus=" + cashStatus +
+        ", reason=" + reason +
+        ", operatorUser=" + operatorUser +
+        ", updateTime=" + updateTime +
+        "}"
+    }
+}

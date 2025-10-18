@@ -7,8 +7,10 @@ import com.fund.modules.agent.model.AppAgentRelation;
 import com.fund.modules.agent.mapper.AppAgentRelationMapper;
 import com.fund.modules.agent.service.AppAgentRelationService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fund.common.RedisKeys
 import com.fund.modules.user.model.AppUser
 import com.fund.utils.RedisLockService
+import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Service;
 import java.time.LocalDateTime
 import kotlin.compareTo
@@ -23,7 +25,9 @@ import kotlin.text.contains
  * @since 2025-08-21
  */
 @Service
-open class AppAgentRelationServiceImpl : ServiceImpl<AppAgentRelationMapper, AppAgentRelation>(), AppAgentRelationService {
+open class AppAgentRelationServiceImpl(
+    private val redisTemplate: RedisTemplate<String, Any>,
+) : ServiceImpl<AppAgentRelationMapper, AppAgentRelation>(), AppAgentRelationService {
 
     override fun findAgentByCode(oriCode: String): AppAgentRelation? {
         return getOne(
@@ -91,6 +95,18 @@ open class AppAgentRelationServiceImpl : ServiceImpl<AppAgentRelationMapper, App
             } while (exits)
             code
         }
+    }
+
+    override fun getTopIdByUserIdFromCache(userId: Long): Long {
+        val value = redisTemplate.opsForHash<String, Number>().get(RedisKeys.TOP_AGENT_MAP_CACHE_KEY, userId.toString())
+        if (value == null) {
+            val topId:Long = baseMapper.getTopIdByOriUserId(userId) ?: -1L
+
+            redisTemplate.opsForHash<String, Long>().put(RedisKeys.TOP_AGENT_MAP_CACHE_KEY, userId.toString(), topId)
+            return topId
+        }
+
+        return value.toLong()
     }
 
 }

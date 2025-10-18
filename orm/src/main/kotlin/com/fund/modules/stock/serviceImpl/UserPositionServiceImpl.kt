@@ -25,6 +25,7 @@ import com.fund.modules.conf.enum.AppConfigCode
 import com.fund.modules.stock.StockAddOrderRequest
 import com.fund.modules.stock.UpdateProfitTargetRequest
 import com.fund.modules.stock.model.Stock
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.modules.wallet.service.AppUserFinanceStatsService
 import com.fund.modules.user.service.AppUserService
@@ -201,7 +202,7 @@ open class UserPositionServiceImpl(
                 walletType = 0,
                 currencyCode = currencyCode,
                 amount = totalCost,
-                operationType = "STOCK_BUY",
+                operationType = GoldChangeEnum.TASK.enumName,
                 remark = "股票买入: ${stock.name}(${stock.symbol}), 数量: ${req.buyNum}, 价格: $nowPrice"
             )
 
@@ -364,7 +365,7 @@ open class UserPositionServiceImpl(
                     walletType = 0,
                     currencyCode = currencyCode,
                     amount = totalCost,
-                    operationType = "STOCK_BUY_FROM_PENDING",
+                    operationType = GoldChangeEnum.TASK.enumName,
                     remark = "挂单买入: ${stock.name}(${stock.symbol}), 挂单ID: $pendingOrderId, 数量: ${pendingOrder.buyNum}, 价格: $nowPrice"
                 )
 

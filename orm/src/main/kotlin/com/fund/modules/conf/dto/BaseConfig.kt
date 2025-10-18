@@ -44,4 +44,22 @@ class BaseConfig {
     @DefaultValue("0.001")
     var dutyFeeRate: BigDecimal = BigDecimal("0.001")
 
+    /**
+     * 最小提现金额
+     */
+    @DefaultValue("10")
+    var cashOutMinAmount: String = "10"
+
+    /**
+     * 最大提现金额
+     */
+    @DefaultValue("1000000")
+    var cashOutMaxAmount: String = "1000000"
+
+    /**
+     * 提现手续费率
+     */
+    @DefaultValue("0.01")
+    var cashOutFeeRate: String = "0.01"
+
 }

@@ -32,4 +32,81 @@
         id, ori_user_id, ori_share_code, ori_account, top_user_id, top_share_code, level, user_group, p1_id, p1_code, p1_account, p2_id, p2_code, p2_account, p3_id, p3_code, p3_account, create_by, create_time, update_by, update_time
     </sql>
 
+    <select id="getTopIdByOriUserId" resultType="java.lang.Long">
+        SELECT top_user_id FROM app_agent_relation WHERE ori_user_id = #{userId}
+    </select>
+
+    <select id="queryAgentPage" resultType="org.lemon.api.modules.agent.domain.dto.AgentUserBase">
+        SELECT
+        ar.ori_user_id,
+        ar.ori_share_code,
+        ar.ori_account,
+        ar.p1_id,
+        b.register_time as reg_time,
+
+        (SELECT count(1) from app_agent_relation where p1_id = ar.ori_user_id ) as line_qty
+        FROM app_agent_relation ar
+        LEFT JOIN app_user b on b.id = ar.ori_user_id
+        <where>
+            <if test="topUserId != null">
+                AND ar.top_user_id = #{topUserId}
+            </if>
+            <if test="req.proxyId != null">
+                AND ar.p1_id = #{req.proxyId}
+            </if>
+            <if test="req.proxyUserName != null and req.proxyUserName != ''">
+                AND ar.p1_account = #{req.proxyUserName}
+            </if>
+            <if test="req.proxyShareCode != null and req.proxyShareCode != ''">
+                AND ar.p1_code = #{req.proxyShareCode}
+            </if>
+            <if test="req.oriShareCode != null and req.oriShareCode != ''">
+                AND ar.ori_share_code = #{req.oriShareCode}
+            </if>
+            <if test="req.userName != null and req.userName !=''">
+                AND ar.ori_account = #{req.userName}
+            </if>
+        </where>
+    </select>
+
+    <select id="queryAgentLinePage" resultType="org.lemon.api.modules.agent.domain.dto.AgentUserBase">
+        SELECT
+        ar.ori_user_id,
+        ar.ori_share_code,
+        ar.ori_account,
+        ar.p1_id,
+        b.register_time as reg_time,
+
+        (SELECT count(1) from app_agent_relation where p1_id = ar.ori_user_id ) as line_qty
+        FROM app_agent_relation ar
+        LEFT JOIN app_user b on b.id = ar.ori_user_id
+        <where>
+            <if test="topUserId != null" >
+                AND ar.top_user_id = #{topUserId}
+            </if>
+
+            <if test="query.proxyId != null">
+                AND ar.p1_id = #{query.proxyId}
+            </if>
+            <if test="query.userName != null and query.userName !=''">
+                AND ar.ori_account = #{query.userName}
+            </if>
+        </where>
+    </select>
+
+    <select id="countLine1ByUserId" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM app_agent_relation ar
+        where ar.p1_id = #{userId}
+    </select>
+
+    <select id="countLine2ByUserId" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM app_agent_relation ar
+        where ar.p2_id = #{userId}
+    </select>
+
+    <select id="countLine3ByUserId" resultType="java.lang.Integer">
+        SELECT COUNT(1) FROM app_agent_relation ar
+        where ar.p3_id = #{userId}
+    </select>
+
 </mapper>

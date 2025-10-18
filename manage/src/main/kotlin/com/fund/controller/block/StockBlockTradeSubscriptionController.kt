@@ -15,6 +15,7 @@ import com.fund.modules.stock.service.StockService
 import com.fund.modules.stock.service.UserPositionService
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
 import mu.KotlinLogging
@@ -145,7 +146,7 @@ class StockBlockTradeSubscriptionController(
                 walletType = 0,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = "BLOCK_TRADE_CONVERSION",
+                operationType = GoldChangeEnum.BLOCK_TRADE_CONVERSION.enumName,
                 remark = "大宗交易转持仓: ${subscription.name}, 数量: ${req.confirmQuantity}"
             )
 
