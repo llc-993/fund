@@ -74,7 +74,6 @@ class StockController(
     @PostMapping("buy")
     fun buy(@RequestBody req: StockBuyRequest, request: HttpServletRequest): R<Any> {
         val userId = StpUtil.getLoginIdAsLong()
-        StpUtil.checkLogin()
         return userPositionService.buy(req, userId, request)
     }
 

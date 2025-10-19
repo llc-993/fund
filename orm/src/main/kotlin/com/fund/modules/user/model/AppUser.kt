@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
+import com.fund.modules.wallet.model.AppUserWalletV2
 
 import java.io.Serializable
 import java.time.LocalDateTime
@@ -172,6 +173,8 @@ class AppUser : Serializable {
     @TableField("last_login_time")
     var lastLoginTime: LocalDateTime? = null
 
+    @TableField(exist = false)
+    var wallet: List<AppUserWalletV2>? = null
 
     override fun toString(): String {
         return "AppUser(id=$id, topUserId=$topUserId, userName=$userName, userAccount=$userAccount, keyword=$keyword, shareCode=$shareCode, mobilePhone=$mobilePhone, password=$password, showPassword=$showPassword, moneyPassword=$moneyPassword, showMoneyPassword=$showMoneyPassword, sourceHost=$sourceHost, avatar=$avatar, userGroup=$userGroup, gender=$gender, taskResetCount=$taskResetCount, isFrozen=$isFrozen, tradable=$tradable, cashable=$cashable, levelName=$levelName, levelWeights=$levelWeights, registerIp=$registerIp, registerArea=$registerArea, registerTime=$registerTime, lastLoginIp=$lastLoginIp, lastLoginTime=$lastLoginTime)"

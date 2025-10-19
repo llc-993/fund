@@ -62,7 +62,9 @@ open class StockBlockTradeSubscriptionServiceImpl(
             return RedisLockService.lockTransaction(key) block@{
 
                 val appUser = appUserService.getById(userId) ?: throw BusinessException("user_null")
-
+                if (appUser.tradable!!) { // 不允许交易
+                    throw BusinessException("account_is_locked")
+                }
                 val blockTrade = stockBlockTradeService.getById(req.blockTradeId) ?: throw BusinessException("block_trade_null")
 
                 // 检查状态（1=开放中）
