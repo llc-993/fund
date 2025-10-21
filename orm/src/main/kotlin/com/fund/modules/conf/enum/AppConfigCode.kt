@@ -2,6 +2,7 @@ package com.fund.modules.conf.enum
 
 import com.fund.modules.conf.ant.DefaultValue
 import com.fund.modules.conf.dto.BaseConfig
+import com.fund.modules.conf.dto.GmailConfig
 import com.fund.modules.conf.dto.IpoConfig
 import com.fund.modules.conf.dto.RisingFallingConfig
 import com.fund.modules.conf.dto.StockMarketConfig
@@ -93,6 +94,12 @@ enum class AppConfigCode(prop: KProperty<*>) {
 
     // 提现手续费率
     CASH_OUT_FEE_RATE(BaseConfig::cashOutFeeRate),
+
+    // google邮箱配置
+    SMTP_HOST(GmailConfig::smtpHost),
+    GMAIL_USERNAME(GmailConfig::gmailUsername),
+    GMAIL_PASSWORD(GmailConfig::gmailPassword),
+    GMAIL_DEBUG(GmailConfig::gmailDebug),
     ;
 
     var code: String

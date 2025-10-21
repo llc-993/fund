@@ -11,4 +11,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @author 书记
  * @since 2025-10-19
  */
-interface SysOptLogService : IService<SysOptLog>
+interface SysOptLogService : IService<SysOptLog> {
+
+    fun addLog(adminId: Long, remark: String, json: String)
+}

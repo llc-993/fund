@@ -50,4 +50,6 @@ object RedisKeys {
 
     // 顶级代理与用户id映射
     const val TOP_AGENT_MAP_CACHE_KEY = "top_agent_maps"
+
+    const val App_EMAIL_TEMPLATE_CONFIG = "app_email_template_config"
 }
