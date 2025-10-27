@@ -8,6 +8,8 @@ import com.fund.modules.agent.mapper.AppAgentRelationMapper;
 import com.fund.modules.agent.service.AppAgentRelationService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fund.common.RedisKeys
+import com.fund.modules.sys.model.SysUser
+import com.fund.modules.sys.service.SysUserService
 import com.fund.modules.user.model.AppUser
 import com.fund.utils.RedisLockService
 import org.springframework.data.redis.core.RedisTemplate
@@ -27,6 +29,7 @@ import kotlin.text.contains
 @Service
 open class AppAgentRelationServiceImpl(
     private val redisTemplate: RedisTemplate<String, Any>,
+    private val sysUserService: SysUserService,
 ) : ServiceImpl<AppAgentRelationMapper, AppAgentRelation>(), AppAgentRelationService {
 
     override fun findAgentByCode(oriCode: String): AppAgentRelation? {
@@ -109,4 +112,42 @@ open class AppAgentRelationServiceImpl(
         return value.toLong()
     }
 
+    override fun getShareCodeByOriUserId(userId: Long): String? {
+        val ar = getOne(
+            KtQueryWrapper(AppAgentRelation())
+                .select(AppAgentRelation::oriShareCode)
+                .eq(AppAgentRelation::oriUserId, userId)
+                .last("limit 1")
+        )
+        return ar?.oriShareCode
+    }
+
+    override fun createTopAgentRelation(
+        adminId: Long,
+        sysUser: SysUser
+    ): AppAgentRelation {
+        val admin = sysUserService.getById(adminId)
+        val userId = sysUser.id
+        val account = sysUser.username
+        // 生成邀请码
+        val ag = AppAgentRelation()
+        val code = genShareCode() // GeneratorIdUtil.generateForId(userId)
+        ag.topUserId = userId
+        ag.topShareCode = code
+
+        ag.oriUserId = userId
+        ag.oriShareCode = code
+        ag.oriAccount = account
+
+        // 级别 : (0)-总代 (1)-一级代理 (2)-二级代理 (3-无限)-会员
+        ag.level = 0
+        // 总代的用户组默认是正式组
+        ag.userGroup = sysUser.userGroup
+
+        ag.createBy = admin.username
+        ag.createTime = LocalDateTime.now()
+        ag.updateBy = admin.username
+        ag.updateTime = LocalDateTime.now()
+        return ag
+    }
 }

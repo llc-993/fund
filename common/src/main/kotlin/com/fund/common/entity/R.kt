@@ -1,9 +1,19 @@
 package com.fund.common.entity
 
 import com.fund.common.Constants
+import io.swagger.v3.oas.annotations.media.Schema
 
-
-data class R<T> (val data:T?, val msg:String,val code:Int){
+@Schema(description = "统一响应结果")
+data class R<T> (
+    @Schema(description = "响应数据", nullable = true)
+    val data: T?,
+    
+    @Schema(description = "响应消息", example = "success")
+    val msg: String,
+    
+    @Schema(description = "响应状态码", example = "200")
+    val code: Int
+) {
 
     companion object {
 

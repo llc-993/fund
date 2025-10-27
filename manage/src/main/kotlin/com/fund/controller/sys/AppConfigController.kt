@@ -11,13 +11,14 @@ import com.fund.modules.conf.dto.GmailConfig
 import com.fund.modules.conf.service.AppConfigService
 import com.fund.modules.conf.service.AppLargeTextConfigService
 import com.fund.modules.sys.service.SysOptLogService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
 
-/**
- * mange-系统配置
- */
+@Tag(name = "系统配置", description = "系统配置相关接口，包括Gmail配置、邮件模板配置等")
 @RestController
 @RequestMapping(value = ["/manage/config"])
 class AppConfigController(
@@ -26,17 +27,21 @@ class AppConfigController(
     private val largeTextConfigService: AppLargeTextConfigService
 ) {
 
-    /**
-     * 获取gmail配置
-     */
+    @Operation(
+        summary = "获取Gmail配置",
+        description = "获取系统Gmail邮箱配置"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @PostMapping("/getGmailConfig")
     fun selectGmailConfig(): R<GmailConfig> {
         return R.success(configService.getConfig(GmailConfig::class.java))
     }
 
-    /**
-     * 设置gmail配置
-     */
+    @Operation(
+        summary = "设置Gmail配置",
+        description = "设置系统Gmail邮箱配置，需要管理员权限"
+    )
+    @ApiResponse(responseCode = "200", description = "设置成功")
     @PostMapping("/setGmailConfig")
     @SaCheckOr(
         role = [SaCheckRole("root"), SaCheckRole("admin")]
@@ -46,17 +51,21 @@ class AppConfigController(
         return R.success()
     }
 
-    /**
-     * 获取邮件模板配置
-     */
+    @Operation(
+        summary = "获取邮件模板配置",
+        description = "获取系统邮件模板配置"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("/getEmailTemplateConfig")
     fun getEmailTemplateConfig(): R<EmailTemplateConfig> {
         return R.success(largeTextConfigService.getEmailTemplateConfig())
     }
 
-    /**
-     * 设置邮件模板配置
-     */
+    @Operation(
+        summary = "设置邮件模板配置",
+        description = "设置系统邮件模板配置，需要管理员权限"
+    )
+    @ApiResponse(responseCode = "200", description = "设置成功")
     @PostMapping("/setEmailTemplateConfig")
     @SaCheckOr(
         role = [SaCheckRole("root"), SaCheckRole("admin")]

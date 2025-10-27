@@ -11,11 +11,15 @@ import com.fund.modules.ipo.model.Ipo
 import com.fund.modules.ipo.model.StockSubscription
 import com.fund.modules.ipo.service.IpoService
 import com.fund.modules.ipo.service.StockSubscriptionService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
 
+@Tag(name = "IPO管理", description = "IPO列表查询、新增、修改、删除等接口")
 @RestController
 @RequestMapping("/ipo")
 class IpoController(
@@ -25,9 +29,11 @@ class IpoController(
 
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * 分页查询IPO列表
-     */
+    @Operation(
+        summary = "分页查询IPO列表",
+        description = "分页查询IPO列表，支持按股票代码和名称筛选"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
     fun list(@RequestBody req: AdminIpoQueryRequest): R<Any> {
         val page: Page<Ipo> = Page(req.pageNum, req.pageSize)
@@ -42,9 +48,11 @@ class IpoController(
         return R.success(page1)
     }
 
-    /**
-     * 新增IPO
-     */
+    @Operation(
+        summary = "新增IPO",
+        description = "新增IPO信息，需要提供股票代码、名称、价格等信息"
+    )
+    @ApiResponse(responseCode = "200", description = "新增成功")
     @PostMapping("add")
     fun add(@RequestBody req: AdminIpoAddRequest): R<Any> {
         try {
@@ -86,9 +94,11 @@ class IpoController(
         }
     }
 
-    /**
-     * 修改IPO
-     */
+    @Operation(
+        summary = "修改IPO",
+        description = "修改IPO信息，需要提供IPO ID和要修改的字段"
+    )
+    @ApiResponse(responseCode = "200", description = "修改成功")
     @PostMapping("update")
     fun update(@RequestBody req: AdminIpoUpdateRequest): R<Any> {
         try {
@@ -131,9 +141,11 @@ class IpoController(
         }
     }
 
-    /**
-     * 删除IPO
-     */
+    @Operation(
+        summary = "删除IPO",
+        description = "删除IPO，已有用户认购的IPO不能删除"
+    )
+    @ApiResponse(responseCode = "200", description = "删除成功")
     @PostMapping("delete")
     fun delete(@RequestBody req: IdReq): R<Any> {
         try {
@@ -169,9 +181,11 @@ class IpoController(
         }
     }
 
-    /**
-     * 根据ID查询IPO详情
-     */
+    @Operation(
+        summary = "查询IPO详情",
+        description = "根据ID查询IPO详细信息"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("detail/{id}")
     fun detail(@PathVariable id: Long): R<Any> {
         try {

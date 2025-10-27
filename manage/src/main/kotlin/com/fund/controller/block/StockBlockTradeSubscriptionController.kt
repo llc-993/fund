@@ -18,25 +18,16 @@ import com.fund.modules.user.service.AppUserService
 import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-/**
- * 大宗交易申购控制器
- *
- * 提供大宗交易申购相关功能：
- * - 申购列表查询
- * - 申购转持仓（确认转化）
- *
- * 状态说明：
- * - status=1: 已申购
- * - status=2: 已取消
- * - status=3: 已确认
- * - status=4: 已转持仓
- */
+@Tag(name = "大宗交易申购管理", description = "大宗交易申购列表查询、申购转持仓等功能接口")
 @RestController
 @RequestMapping("/block/subscription")
 class StockBlockTradeSubscriptionController(
@@ -50,9 +41,11 @@ class StockBlockTradeSubscriptionController(
 
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * 大宗交易申购列表
-     */
+    @Operation(
+        summary = "大宗交易申购列表",
+        description = "分页查询大宗交易申购列表，支持按股票名称、用户ID、状态筛选"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
     fun list(@RequestBody req: AdminBlockTradeSubscriptionQueryRequest): R<Any> {
         val page: Page<StockBlockTradeSubscription> = Page(req.pageNum, req.pageSize)
@@ -67,24 +60,11 @@ class StockBlockTradeSubscriptionController(
         return R.success(page1)
     }
 
-    /**
-     * 大宗交易申购转化
-     *
-     * 将申购记录转化为用户持仓
-     *
-     * 业务逻辑：
-     * 1. 校验申购记录ID和确认数量
-     * 2. 检查申购记录状态（只有status=1已申购或status=3已确认的才能转化）
-     * 3. 计算需支付金额 = 确认数量 * buyPrice
-     * 4. 检查用户钱包余额是否足够
-     *    - 余额不足：将申购记录状态改为2(已取消)，返回错误
-     *    - 余额充足：扣除钱包availableBalance，继续执行
-     * 5. 创建UserPosition持仓记录
-     * 6. 更新申购记录状态为4(已转持仓)，更新确认时间
-     *
-     * @param req 转化请求，包含申购记录ID和确认数量
-     * @return 成功返回创建的UserPosition对象，失败返回错误信息
-     */
+    @Operation(
+        summary = "大宗交易申购转化",
+        description = "将申购记录转化为用户持仓。业务逻辑：1.校验申购记录状态；2.计算需支付金额；3.检查钱包余额；4.创建持仓记录；5.更新申购状态。只有status=1(已申购)或status=3(已确认)的记录才能转化"
+    )
+    @ApiResponse(responseCode = "200", description = "转化成功")
     @PostMapping("conversion")
     fun conversion(@RequestBody req: BlockTradeConversionRequest): R<Any> {
         try {

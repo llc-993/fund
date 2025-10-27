@@ -1,5 +1,6 @@
 package com.fund.modules.sys.model;
 
+import cn.hutool.core.util.StrUtil
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
@@ -56,5 +57,10 @@ class SysRole : Serializable {
         ", roleStatus=" + roleStatus +
         ", menuIds=" + menuIds +
         "}"
+    }
+
+    fun getMenuIdList(): List<Long> {
+        val strIdList:List<String> = menuIds?.let{StrUtil.splitTrim(it, ",")} ?: emptyList<String>()
+        return strIdList.stream().map { it.toLong() }.toList()
     }
 }

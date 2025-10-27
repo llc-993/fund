@@ -11,11 +11,15 @@ import com.fund.modules.risingFalling.model.RisingFallingSectors
 import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription
 import com.fund.modules.risingFalling.service.RisingFallingSectorsService
 import com.fund.modules.risingFalling.service.RisingFallingSectorsSubscriptionService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
 
+@Tag(name = "涨跌板块管理", description = "涨跌板块列表查询、新增、修改、删除等接口")
 @RestController
 @RequestMapping("/risingFallingSectors")
 class RisingFallingSectorsController(
@@ -25,9 +29,11 @@ class RisingFallingSectorsController(
 
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * 分页查询涨跌板块列表
-     */
+    @Operation(
+        summary = "分页查询涨跌板块列表",
+        description = "分页查询涨跌板块列表，支持按股票代码、锁定状态、显示状态筛选"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
     fun list(@RequestBody req: AdminRisingFallingSectorsQueryRequest): R<Any> {
         val page: Page<RisingFallingSectors> = Page(req.pageNum, req.pageSize)
@@ -43,9 +49,11 @@ class RisingFallingSectorsController(
         return R.success(page1)
     }
 
-    /**
-     * 新增涨跌板块
-     */
+    @Operation(
+        summary = "新增涨跌板块",
+        description = "新增涨跌板块信息，需要提供交易对、股票ID等信息"
+    )
+    @ApiResponse(responseCode = "200", description = "新增成功")
     @PostMapping("add")
     fun add(@RequestBody req: AdminRisingFallingSectorsAddRequest): R<Any> {
         try {
@@ -75,9 +83,11 @@ class RisingFallingSectorsController(
         }
     }
 
-    /**
-     * 修改涨跌板块
-     */
+    @Operation(
+        summary = "修改涨跌板块",
+        description = "修改涨跌板块信息，需要提供涨跌板块ID和要修改的字段"
+    )
+    @ApiResponse(responseCode = "200", description = "修改成功")
     @PostMapping("update")
     fun update(@RequestBody req: AdminRisingFallingSectorsUpdateRequest): R<Any> {
         try {
@@ -108,9 +118,11 @@ class RisingFallingSectorsController(
         }
     }
 
-    /**
-     * 删除涨跌板块
-     */
+    @Operation(
+        summary = "删除涨跌板块",
+        description = "删除涨跌板块，已有用户申购的涨跌板块不能删除"
+    )
+    @ApiResponse(responseCode = "200", description = "删除成功")
     @PostMapping("delete")
     fun delete(@RequestBody req: IdReq): R<Any> {
         try {
@@ -147,9 +159,11 @@ class RisingFallingSectorsController(
         }
     }
 
-    /**
-     * 根据ID查询涨跌板块详情
-     */
+    @Operation(
+        summary = "查询涨跌板块详情",
+        description = "根据ID查询涨跌板块详细信息"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("detail/{id}")
     fun detail(@PathVariable id: Long): R<Any> {
         try {

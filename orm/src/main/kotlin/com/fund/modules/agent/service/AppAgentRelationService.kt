@@ -3,6 +3,7 @@ package com.fund.modules.agent.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.modules.agent.model.AppAgentRelation;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fund.modules.sys.model.SysUser
 import com.fund.modules.user.model.AppUser
 
 /**
@@ -28,4 +29,8 @@ interface AppAgentRelationService : IService<AppAgentRelation> {
      * @return
      */
     fun getTopIdByUserIdFromCache(userId: Long): Long
+
+    fun getShareCodeByOriUserId(userId: Long): String?
+
+    fun createTopAgentRelation(adminId:Long ,sysUser: SysUser): AppAgentRelation
 }

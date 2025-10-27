@@ -1,19 +1,21 @@
-package org.lemon.api.controller.sys
+package com.fund.controller.sys
 
 import cn.hutool.core.util.StrUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import org.lemon.api.common.domain.R
-import org.lemon.api.modules.sys.domain.co.QueryOptLogReq
-import org.lemon.api.modules.sys.domain.entity.SysOptLog
-import org.lemon.api.modules.sys.service.SysOptLogService
+import com.fund.common.entity.R
+import com.fund.modules.sys.menu.QueryOptLogReq
+import com.fund.modules.sys.model.SysOptLog
+import com.fund.modules.sys.service.SysOptLogService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-@Api(tags = ["mange-系统日志接口"])
+@Tag(name = "系统操作日志", description = "系统操作日志查询接口，用于查看和管理系统的操作记录")
 @RestController
 @RequestMapping(value = ["/manage/optlog"])
 class SysOptLogController(
@@ -21,8 +23,15 @@ class SysOptLogController(
 ) {
 
     @GetMapping("/page")
-    @ApiOperation("日志列表")
-    fun page(req: QueryOptLogReq) : R<Page<SysOptLog>> {
+    @Operation(
+        summary = "查询操作日志列表",
+        description = "分页查询系统操作日志，支持按备注信息模糊搜索，按创建时间降序排列"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
+    fun page(
+        @Parameter(description = "查询参数，支持按备注模糊搜索")
+        req: QueryOptLogReq
+    ) : R<Page<SysOptLog>> {
         val p = Page<SysOptLog>(req.pageNum, req.pageSize)
         val page = optLogService.page(
             p,

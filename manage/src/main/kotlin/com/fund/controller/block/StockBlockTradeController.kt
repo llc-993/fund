@@ -11,11 +11,15 @@ import com.fund.modules.block.model.StockBlockTrade
 import com.fund.modules.block.model.StockBlockTradeSubscription
 import com.fund.modules.block.service.StockBlockTradeService
 import com.fund.modules.block.service.StockBlockTradeSubscriptionService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
 
+@Tag(name = "大宗交易管理", description = "大宗交易列表查询、新增、修改、删除等接口")
 @RestController
 @RequestMapping("/block")
 class StockBlockTradeController(
@@ -25,9 +29,11 @@ class StockBlockTradeController(
 
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * 分页查询大宗交易列表
-     */
+    @Operation(
+        summary = "分页查询大宗交易列表",
+        description = "分页查询大宗交易列表，支持按名称和状态筛选"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
     fun list(@RequestBody req: AdminBlockTradeQueryRequest): R<Any> {
         val page: Page<StockBlockTrade> = Page(req.pageNum, req.pageSize)
@@ -42,9 +48,11 @@ class StockBlockTradeController(
         return R.success(page1)
     }
 
-    /**
-     * 新增大宗交易
-     */
+    @Operation(
+        summary = "新增大宗交易",
+        description = "新增大宗交易信息，需要提供股票名称、股票ID、折扣等信息"
+    )
+    @ApiResponse(responseCode = "200", description = "新增成功")
     @PostMapping("add")
     fun add(@RequestBody req: AdminBlockTradeAddRequest): R<Any> {
         try {
@@ -77,9 +85,11 @@ class StockBlockTradeController(
         }
     }
 
-    /**
-     * 修改大宗交易
-     */
+    @Operation(
+        summary = "修改大宗交易",
+        description = "修改大宗交易信息，需要提供大宗交易ID和要修改的字段"
+    )
+    @ApiResponse(responseCode = "200", description = "修改成功")
     @PostMapping("update")
     fun update(@RequestBody req: AdminBlockTradeUpdateRequest): R<Any> {
         try {
@@ -110,9 +120,11 @@ class StockBlockTradeController(
         }
     }
 
-    /**
-     * 删除大宗交易
-     */
+    @Operation(
+        summary = "删除大宗交易",
+        description = "删除大宗交易，已有用户申购的大宗交易不能删除"
+    )
+    @ApiResponse(responseCode = "200", description = "删除成功")
     @PostMapping("delete")
     fun delete(@RequestBody req: IdReq): R<Any> {
         try {
@@ -149,9 +161,11 @@ class StockBlockTradeController(
         }
     }
 
-    /**
-     * 根据ID查询大宗交易详情
-     */
+    @Operation(
+        summary = "查询大宗交易详情",
+        description = "根据ID查询大宗交易详细信息"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("detail/{id}")
     fun detail(@PathVariable id: Int): R<Any> {
         try {

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.financial.mapper.FinancialOrderMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.financial.model.FinancialOrder">
+        <id column="id" property="id" />
+        <result column="user_id" property="userId" />
+        <result column="product_code" property="productCode" />
+        <result column="product_name" property="productName" />
+        <result column="order_no" property="orderNo" />
+        <result column="order_type" property="orderType" />
+        <result column="current_rate" property="currentRate" />
+        <result column="term_rate" property="termRate" />
+        <result column="apply_time" property="applyTime" />
+        <result column="interest_start_day" property="interestStartDay" />
+        <result column="interest_end_day" property="interestEndDay" />
+        <result column="last_interest_day" property="lastInterestDay" />
+        <result column="amount" property="amount" />
+        <result column="account_type" property="accountType" />
+        <result column="last_amount" property="lastAmount" />
+        <result column="profit_amount" property="profitAmount" />
+        <result column="order_status" property="orderStatus" />
+        <result column="sell_time" property="sellTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, user_id, product_code, product_name, order_no, order_type, current_rate, term_rate, apply_time, interest_start_day, interest_end_day, last_interest_day, amount, account_type, last_amount, profit_amount, order_status, sell_time
+    </sql>
+
+</mapper>

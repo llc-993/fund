@@ -1,5 +1,6 @@
 package com.fund.modules.sys.model;
 
+import cn.hutool.core.util.StrUtil
 import com.baomidou.mybatisplus.annotation.FieldFill
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
@@ -21,7 +22,7 @@ import java.time.LocalDateTime
 class SysUser : Serializable {
 
     @TableId(value = "id", type = IdType.AUTO)
-    var id: Int? = null
+    var id: Long? = null
 
     /**
      * 用户名
@@ -63,7 +64,7 @@ class SysUser : Serializable {
      * 部门ID
      */
     @TableField("dept_id")
-    var deptId: Int? = null
+    var deptId: Long? = null
 
     /**
      * 用户头像
@@ -107,6 +108,12 @@ class SysUser : Serializable {
     @TableField("role_ids")
     var roleIds: String? = null
 
+    /**
+     * 邀请码
+     */
+    @TableField(exist = false)
+    var shareCode: String? = null
+
     override fun toString(): String {
         return "SysUser{" +
         "id=" + id +
@@ -125,5 +132,10 @@ class SysUser : Serializable {
         ", updateTime=" + updateTime +
         ", roleIds=" + roleIds +
         "}"
+    }
+
+    fun getRoleIdList() : List<Long> {
+        val strIdList:List<String> = roleIds?.let { StrUtil.splitTrim(it, ",") } ?: emptyList()
+        return strIdList.stream().map { it.toLong() }.toList()
     }
 }

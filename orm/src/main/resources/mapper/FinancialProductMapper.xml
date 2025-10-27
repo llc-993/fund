@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.financial.mapper.FinancialProductMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.financial.model.FinancialProduct">
+        <id column="id" property="id" />
+        <result column="product_name" property="productName" />
+        <result column="product_code" property="productCode" />
+        <result column="product_type" property="productType" />
+        <result column="current_rate" property="currentRate" />
+        <result column="term_rate" property="termRate" />
+        <result column="interest_day" property="interestDay" />
+        <result column="min_amount" property="minAmount" />
+        <result column="max_amount" property="maxAmount" />
+        <result column="product_status" property="productStatus" />
+        <result column="product_tip" property="productTip" />
+        <result column="sort" property="sort" />
+        <result column="create_time" property="createTime" />
+        <result column="create_by" property="createBy" />
+        <result column="update_time" property="updateTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="remark" property="remark" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, product_name, product_code, product_type, current_rate, term_rate, interest_day, min_amount, max_amount, product_status, product_tip, sort, create_time, create_by, update_time, update_by, remark
+    </sql>
+
+</mapper>

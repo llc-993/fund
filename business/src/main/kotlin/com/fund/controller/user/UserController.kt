@@ -7,11 +7,14 @@ import com.fund.common.entity.R
 import com.fund.modules.user.service.AppUserService
 import com.fund.modules.wallet.model.AppUserWalletV2
 import com.fund.modules.wallet.service.AppUserWalletV2Service
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 
-
+@Tag(name = "用户信息", description = "用户信息查询相关接口")
 @RestController
 @RequestMapping("/user")
 class UserController(
@@ -19,6 +22,11 @@ class UserController(
     private val appUserWalletV2Service: AppUserWalletV2Service
 ) {
 
+    @Operation(
+        summary = "获取用户信息",
+        description = "获取当前登录用户的详细信息，包括钱包信息，需要登录状态"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @SaCheckLogin
     @GetMapping("info")
     fun info(): R<Any> {

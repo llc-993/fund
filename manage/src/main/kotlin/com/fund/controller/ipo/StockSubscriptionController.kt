@@ -18,26 +18,17 @@ import com.fund.modules.user.service.AppUserService
 import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-/**
- * 新股申购控制器
- *
- * 提供IPO申购相关功能：
- * - 申购列表查询
- * - 申购转持仓（中签转化）
- *
- * 状态说明：
- * - status=1: 已认购
- * - status=2: 未中签
- * - status=3: 已中签
- * - status=4: 已缴纳
- * - status=5: 已转持仓
- */
+@Tag(name = "IPO申购管理", description = "IPO申购列表查询、申购转持仓等功能接口")
 @RestController
 @RequestMapping("/subscription")
 class StockSubscriptionController(
@@ -51,9 +42,11 @@ class StockSubscriptionController(
 
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * 新股申购列表
-     */
+    @Operation(
+        summary = "新股申购列表",
+        description = "分页查询新股申购列表，支持按股票代码和名称筛选"
+    )
+    @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
     fun list(@RequestBody req: AdminSubscriptionQueryRequest): R<Any> {
         val page:Page<StockSubscription> = Page(req.pageNum, req.pageSize)
@@ -67,24 +60,11 @@ class StockSubscriptionController(
         return R.success(page1)
     }
 
-    /**
-     * 新股申购转化
-     *
-     * 将中签的申购记录转化为用户持仓
-     *
-     * 业务逻辑：
-     * 1. 校验申购记录ID和中签数量
-     * 2. 检查申购记录状态（只有status=1已认购或status=3已中签的才能转化）
-     * 3. 计算需支付金额 = 中签数量 * buyPrice
-     * 4. 检查用户钱包余额是否足够
-     *    - 余额不足：将申购记录状态改为2(未中签)，allotmentQuantity设为0，返回错误
-     *    - 余额充足：扣除钱包availableBalance，继续执行
-     * 5. 创建UserPosition持仓记录
-     * 6. 更新申购记录状态为5(已转持仓)，更新allotmentQuantity和allotmentTime
-     *
-     * @param req 转化请求，包含申购记录ID和中签数量
-     * @return 成功返回创建的UserPosition对象，失败返回错误信息
-     */
+    @Operation(
+        summary = "新股申购转化",
+        description = "将中签的申购记录转化为用户持仓。业务逻辑：1.校验申购记录状态；2.计算需支付金额；3.检查钱包余额；4.创建持仓记录；5.更新申购状态。只有status=1(已认购)或status=3(已中签)的记录才能转化"
+    )
+    @ApiResponse(responseCode = "200", description = "转化成功")
     @PostMapping("conversion")
     fun conversion(@RequestBody req: SubscriptionConversionRequest): R<Any> {
         try {
