@@ -41,7 +41,7 @@ open class StockSubscriptionServiceImpl(
     private val logger = KotlinLogging.logger {}
 
     override fun apply(req: IpoApplyRequest, userId: Long): R<Any> {
-        try {
+
             val key = RedisKeys.IPO_APPLY_LOCK_KEY + userId
             return RedisLockService.lockTransaction(key) block@{
 
@@ -103,10 +103,6 @@ open class StockSubscriptionServiceImpl(
                 this.save(subscription)
                 R.success()
             }
-        } catch (e: Exception) {
-            logger.error(e) { "IPO申购异常 " }
-            throw BusinessException("fail")
-        }
     }
 
     override fun history(userId: Long): R<Any> {
@@ -119,7 +115,6 @@ open class StockSubscriptionServiceImpl(
     }
 
     override fun update(req: IpoUpdateRequest, userId: Long): R<Any> {
-        try {
             val subscriptionId = req.id ?: throw BusinessException("missing_key_parameter")
             
             val key = RedisKeys.IPO_APPLY_LOCK_KEY + subscriptionId
@@ -159,10 +154,7 @@ open class StockSubscriptionServiceImpl(
                 
                 R.success()
             }
-        } catch (e: Exception) {
-            logger.error(e) { "IPO修改申购异常 " }
-            throw BusinessException("fail")
-        }
+
     }
 
 

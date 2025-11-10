@@ -1,14 +1,14 @@
 spring:
   jackson:
-    time-zone: Asia/Shanghai
+    time-zone: Asia/Kolkata
     date-format: yyyy-MM-dd HH:mm:ss
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
-    url: jdbc:mysql://localhost:13306/blind-box?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=Asia/Shanghai
-    username: blind-box
-    password: ZmYwYzRHzLdcdhrL
+    url: jdbc:mysql://localhost:3306/fund?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&useSSL=true&serverTimezone=Asia/Kolkata
+    username: fund
+    password: YzA5JCEHXtkTpbTc
     druid:
       initial-size: 20
       max-active: 30
@@ -31,4 +31,4 @@ spring:
     redis:
       host: localhost
       port: 6379
-      password: Aq23-hjPwFB3mBDNFp3W1
+      password: qhb8JBgPrgR56RCq

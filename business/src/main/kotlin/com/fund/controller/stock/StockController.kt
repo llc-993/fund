@@ -18,9 +18,11 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 
@@ -41,7 +43,7 @@ class StockController(
     @ApiResponse(responseCode = "200", description = "查询成功")
     @SaIgnore
     @GetMapping("list")
-    fun list(req: QueryStockRequest): R<Any> {
+    fun list(@ModelAttribute req: QueryStockRequest): R<Any> {
         return stockService.list(req)
     }
 
@@ -53,7 +55,7 @@ class StockController(
     @SaIgnore
     @GetMapping("detail")
     fun detail(
-        @Parameter(description = "股票ID", required = true) id: Long
+        @Parameter(description = "股票ID", required = true) @RequestParam id: Long
     ): R<Any> {
         try {
             // 获取股票基本信息
@@ -108,7 +110,7 @@ class StockController(
     @SaCheckLogin
     @PostMapping("sell")
     fun sell(
-        @Parameter(description = "持仓编号", required = true) positionSn: String
+        @Parameter(description = "持仓编号", required = true) @RequestParam positionSn: String
     ): R<Any> {
         val userId = StpUtil.getLoginIdAsLong()
         return userPositionService.sell(positionSn, userId, 1, "11")
@@ -146,7 +148,7 @@ class StockController(
     @SaCheckLogin
     @PostMapping("del-order")
     fun delOrder(
-        @Parameter(description = "挂单ID", required = true) id: Long
+        @Parameter(description = "挂单ID", required = true) @RequestParam id: Long
     ): R<Any> {
         val userId = StpUtil.getLoginIdAsLong()
         return userPendingOrderService.delOrder(id, userId)

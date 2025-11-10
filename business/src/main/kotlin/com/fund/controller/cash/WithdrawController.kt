@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -45,7 +46,7 @@ class WithdrawController(
     @ApiResponse(responseCode = "200", description = "查询成功")
     @SaCheckLogin
     @GetMapping("/history")
-    fun history(@Parameter(hidden = true) req: PageReq): R<Any> {
+    fun history(@ModelAttribute req: PageReq): R<Any> {
         val page1: Page<AppUserCashOutOrder> = Page(req.pageNum, req.pageSize)
 
         val page = appUserCashOutOrderService.page(

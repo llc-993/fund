@@ -42,9 +42,9 @@ class OpenApiConfig {
             )
             .servers(
                 listOf(
-                    Server().url("http://localhost:$serverPort").description("本地开发环境"),
-                    Server().url("http://dev.business.example.com").description("开发环境"),
-                    Server().url("http://prod.business.example.com").description("生产环境")
+                    Server().url("http://localhost:$serverPort/api").description("本地开发环境"),
+                    Server().url("http://dev.business.example.com/api").description("开发环境"),
+                    Server().url("http://prod.business.example.com/api").description("生产环境")
                 )
             )
             .components(

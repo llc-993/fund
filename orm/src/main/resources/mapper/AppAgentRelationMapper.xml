@@ -36,7 +36,7 @@
         SELECT top_user_id FROM app_agent_relation WHERE ori_user_id = #{userId}
     </select>
 
-    <select id="queryAgentPage" resultType="org.lemon.api.modules.agent.domain.dto.AgentUserBase">
+    <select id="queryAgentPage" resultType="com.fund.modules.agent.model.dto.AgentUserBase">
         SELECT
         ar.ori_user_id,
         ar.ori_share_code,
@@ -69,7 +69,7 @@
         </where>
     </select>
 
-    <select id="queryAgentLinePage" resultType="org.lemon.api.modules.agent.domain.dto.AgentUserBase">
+    <select id="queryAgentLinePage" resultType="com.fund.modules.agent.model.dto.AgentUserBase">
         SELECT
         ar.ori_user_id,
         ar.ori_share_code,

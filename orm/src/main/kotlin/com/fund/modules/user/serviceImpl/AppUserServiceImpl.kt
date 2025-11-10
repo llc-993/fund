@@ -150,40 +150,37 @@ open class AppUserServiceImpl(
     }
 
     override fun login(req: UserLoginRequest, request: HttpServletRequest): R<Any> {
-        try {
-            req.userAccount = req.userAccount?.trim()
 
-            val appUser = this.findUserByAccount(req.userAccount!!)
-                ?: // 账号或密码不正确
-                throw BusinessException("account_or_password_is_incorrect")
-            if (MD5.create().digestHex(req.password!!)
-                    .lowercase(Locale.ROOT) != appUser.password!!.lowercase(Locale.ROOT)
-            ) {
-                // 账号或密码不正确
-                throw BusinessException("account_or_password_is_incorrect")
-            }
-            if (appUser.isFrozen!!) {
-                throw BusinessException("account_is_abnormal")
-            }
+        req.userAccount = req.userAccount?.trim()
 
-            val clientIP = IpUtils.getIpAddr()
-            // 更新登陆ip
-            update(
-                KtUpdateWrapper(AppUser())
-                    .eq(AppUser::id, appUser.id)
-                    .set(AppUser::lastLoginIp, clientIP)
-                    .set(AppUser::lastLoginTime, DateUtil.date())
-            )
-            StpUtil.login(appUser.id, req.rememberMe)
-            val info = AppLoginInfo()
-            info.account = appUser.userAccount
-            info.avatar = appUser.avatar
-            info.token = StpUtil.getTokenValue()
-            return R.success(info)
-        } catch (e: Exception) {
-            logger.error("登陆异常:{}", e)
-            throw BusinessException("fail")
+        val appUser = this.findUserByAccount(req.userAccount!!)
+            ?: // 账号或密码不正确
+            throw BusinessException("account_or_password_is_incorrect")
+        if (MD5.create().digestHex(req.password!!)
+                .lowercase(Locale.ROOT) != appUser.password!!.lowercase(Locale.ROOT)
+        ) {
+            // 账号或密码不正确
+            throw BusinessException("account_or_password_is_incorrect")
         }
+        if (appUser.isFrozen!!) {
+            throw BusinessException("account_is_abnormal")
+        }
+
+        val clientIP = IpUtils.getIpAddr()
+        // 更新登陆ip
+        update(
+            KtUpdateWrapper(AppUser())
+                .eq(AppUser::id, appUser.id)
+                .set(AppUser::lastLoginIp, clientIP)
+                .set(AppUser::lastLoginTime, DateUtil.date())
+        )
+        StpUtil.login(appUser.id, req.rememberMe)
+        val info = AppLoginInfo()
+        info.account = appUser.userAccount
+        info.avatar = appUser.avatar
+        info.token = StpUtil.getTokenValue()
+        return R.success(info)
+
     }
 
     override fun findUserByAccount(account: String): AppUser? {
@@ -197,33 +194,29 @@ open class AppUserServiceImpl(
 
     // 修改密码
     override fun changePassword(req: UserChangePasswordRequest, userId: Long): R<Unit> {
-        try {
-            if (StrUtil.isBlank(req.oldPassword)) {
-                throw BusinessException("the_original_password_cannot_be_empty")
-            }
-            if (req.newPassword != req.confirmPassword) {
-                throw BusinessException("the_confirmation_password_does_not_match")
-            }
-            val user = this.getById(userId)
 
-            val key = RedisKeys.CHANGE_PASSWORD_LIMIT + user.userAccount!!
-            val b = limitFunctionToday(key, 3)
-            if (b) {
-                throw BusinessException("can_only_try")
-            }
-
-            if (MD5.create().digestHex(req.oldPassword!!) != user.password!!.lowercase(Locale.ROOT)) {
-                throw BusinessException("incorrect_password")
-            }
-            user.password = MD5.create().digestHex(req.newPassword)
-            user.showPassword = req.newPassword
-            updateById(user)
-
-            return R.success()
-        } catch (e: Exception) {
-            logger.error("修改密码:{}", e)
-            throw BusinessException("fail")
+        if (StrUtil.isBlank(req.oldPassword)) {
+            throw BusinessException("the_original_password_cannot_be_empty")
         }
+        if (req.newPassword != req.confirmPassword) {
+            throw BusinessException("the_confirmation_password_does_not_match")
+        }
+        val user = this.getById(userId)
+
+        val key = RedisKeys.CHANGE_PASSWORD_LIMIT + user.userAccount!!
+        val b = limitFunctionToday(key, 3)
+        if (b) {
+            throw BusinessException("can_only_try")
+        }
+
+        if (MD5.create().digestHex(req.oldPassword!!) != user.password!!.lowercase(Locale.ROOT)) {
+            throw BusinessException("incorrect_password")
+        }
+        user.password = MD5.create().digestHex(req.newPassword)
+        user.showPassword = req.newPassword
+        updateById(user)
+
+        return R.success()
     }
 
 

@@ -11,6 +11,7 @@ import com.fund.modules.user.service.AppUserService
 import com.fund.modules.user.vo.AppLoginInfo
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
@@ -36,7 +37,7 @@ class AuthController(
     @SaIgnore
     @PostMapping("register")
     fun register(
-        @RequestBody @Validated userRegisterRequest: UserRegisterRequest,
+        @SwaggerRequestBody(description = "用户注册信息", required = true) @RequestBody @Validated userRegisterRequest: UserRegisterRequest,
         @Parameter(hidden = true) request: HttpServletRequest
     ): R<AppLoginInfo> {
         return userService.register(userRegisterRequest, request)
@@ -50,7 +51,7 @@ class AuthController(
     @SaIgnore
     @PostMapping("login")
     fun login(
-        @RequestBody @Validated req: UserLoginRequest,
+        @SwaggerRequestBody(description = "用户登录信息", required = true) @RequestBody @Validated req: UserLoginRequest,
         @Parameter(hidden = true) request: HttpServletRequest
     ): R<Any> {
         return userService.login(req, request)
@@ -75,7 +76,9 @@ class AuthController(
     @ApiResponse(responseCode = "200", description = "修改成功")
     @SaCheckLogin
     @PostMapping("/changePassword")
-    fun changePassword(@RequestBody @Validated req: UserChangePasswordRequest): R<Unit> {
+    fun changePassword(
+        @SwaggerRequestBody(description = "修改密码信息", required = true) @RequestBody @Validated req: UserChangePasswordRequest
+    ): R<Unit> {
         return userService.changePassword(req, StpUtil.getLoginIdAsLong())
     }
 

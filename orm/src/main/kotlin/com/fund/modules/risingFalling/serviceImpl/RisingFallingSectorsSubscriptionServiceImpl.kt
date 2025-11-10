@@ -62,7 +62,7 @@ open class RisingFallingSectorsSubscriptionServiceImpl(
      * - 涨跌板块: 支持交易密码校验，只有输入正确密码才能申购
      */
     override fun apply(req: RisingFallingSectorsApplyRequest, userId: Long): R<Any> {
-        try {
+
             val key = RedisKeys.RISING_FALLING_SECTORS_APPLY_LOCK_KEY + userId
             return RedisLockService.lockTransaction(key) block@{
 
@@ -149,10 +149,7 @@ open class RisingFallingSectorsSubscriptionServiceImpl(
                 this.save(subscription)
                 R.success()
             }
-        } catch (e: Exception) {
-            logger.error(e) { "涨跌板块申购异常 " }
-            throw BusinessException("fail")
-        }
+
     }
 
     override fun history(userId: Long): R<Any> {
@@ -165,7 +162,6 @@ open class RisingFallingSectorsSubscriptionServiceImpl(
     }
 
     override fun update(req: RisingFallingSectorsUpdateRequest, userId: Long): R<Any> {
-        try {
             val subscriptionId = req.id ?: throw BusinessException("missing_key_parameter")
             
             val key = RedisKeys.RISING_FALLING_SECTORS_APPLY_LOCK_KEY + subscriptionId
@@ -206,10 +202,6 @@ open class RisingFallingSectorsSubscriptionServiceImpl(
                 
                 R.success()
             }
-        } catch (e: Exception) {
-            logger.error(e) { "涨跌板块修改申购异常 " }
-            throw BusinessException("fail")
-        }
     }
 
 }

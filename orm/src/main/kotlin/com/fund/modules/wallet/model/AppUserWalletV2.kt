@@ -13,7 +13,7 @@ import java.time.LocalDateTime
  * @author 书记
  * @since 2025-01-27
  */
-@TableName("app_user_wallet_v2")
+@TableName("app_user_wallet")
 class AppUserWalletV2 : Serializable {
 
     /**

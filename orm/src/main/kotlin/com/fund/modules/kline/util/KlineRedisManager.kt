@@ -81,8 +81,6 @@ class KlineRedisManager(
             // 从 Redis 中删除这些数据
             sortedSet.removeRangeByRank(0, toRemoveCount - 1)
             
-            logger.info("从Redis移出 ${klineList.size} 条K线数据待持久化: $key")
-            
             return klineList
         } catch (e: Exception) {
             logger.error(e) { "持久化旧数据失败: $key" }
