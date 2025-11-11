@@ -1,10 +1,10 @@
 package com.fund.modules.financial.model;
 
+import com.baomidou.mybatisplus.annotation.FieldFill
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
-import io.swagger.v3.oas.annotations.media.Schema
 
 import java.io.Serializable
 import java.math.BigDecimal
@@ -12,141 +12,213 @@ import java.time.LocalDateTime
 
 /**
  * <p>
- * 理财订单
+ * 理财订单表
  * </p>
  *
  * @author 书记
- * @since 2025-10-27
+ * @since 2025-11-10
  */
-@Schema(description = "理财订单实体")
 @TableName("financial_order")
 class FinancialOrder : Serializable {
 
-    @Schema(description = "主键ID")
+    /**
+     * 主键ID
+     */
     @TableId(value = "id", type = IdType.AUTO)
     var id: Long? = null
 
     /**
      * 用户ID
      */
-    @Schema(description = "用户ID")
     @TableField("user_id")
     var userId: Long? = null
 
     /**
-     * 产品代码
+     * 订单编号
      */
-    @Schema(description = "产品代码")
-    @TableField("product_code")
-    var productCode: String? = null
-
-    /**
-     * 产品名称
-     */
-    @Schema(description = "产品名称")
-    @TableField("product_name")
-    var productName: String? = null
-
-    /**
-     * 订单号
-     */
-    @Schema(description = "订单号")
     @TableField("order_no")
     var orderNo: String? = null
 
     /**
-     * 订单类型(1-活期 2-定期)
+     * 理财产品ID
      */
-    @Schema(description = "订单类型(1-活期 2-定期)")
-    @TableField("order_type")
-    var orderType: String? = null
+    @TableField("product_id")
+    var productId: Long? = null
 
     /**
-     * 活期年利率
+     * 产品编码（冗余）
      */
-    @Schema(description = "活期年利率")
-    @TableField("current_rate")
-    var currentRate: BigDecimal? = null
+    @TableField("product_code")
+    var productCode: String? = null
 
     /**
-     * 定期年利率(存json)
+     * 产品名称（冗余）
      */
-    @Schema(description = "定期年利率(多语言JSON)")
-    @TableField("term_rate")
-    var termRate: String? = null
+    @TableField("product_name")
+    var productName: String? = null
 
     /**
-     * 申购时间
+     * 投资金额
      */
-    @Schema(description = "申购时间")
-    @TableField("apply_time")
-    var applyTime: LocalDateTime? = null
+    @TableField("invest_amount")
+    var investAmount: BigDecimal? = null
 
     /**
-     * 计息开始时间
+     * 投资期限（天数），活期可为空
      */
-    @Schema(description = "计息开始时间")
-    @TableField("interest_start_day")
-    var interestStartDay: LocalDateTime? = null
+    @TableField("invest_period")
+    var investPeriod: Int? = null
 
     /**
-     * 计息结束时间
+     * 结算币种
      */
-    @Schema(description = "计息结束时间")
-    @TableField("interest_end_day")
-    var interestEndDay: LocalDateTime? = null
+    @TableField("coin")
+    var coin: String? = null
 
     /**
-     * 最后计息时间
+     * 利率类型：1-活期 2-固定
      */
-    @Schema(description = "最后计息时间")
-    @TableField("last_interest_day")
-    var lastInterestDay: LocalDateTime? = null
+    @TableField("rate_type")
+    var rateType: Byte? = null
 
     /**
-     * 理财金额
+     * 最小利率
      */
-    @Schema(description = "理财金额")
-    @TableField("amount")
-    var amount: BigDecimal? = null
+    @TableField("min_rate")
+    var minRate: BigDecimal? = null
 
     /**
-     * 账户类型
+     * 最大利率
      */
-    @Schema(description = "账户类型")
-    @TableField("account_type")
-    var accountType: String? = null
+    @TableField("max_rate")
+    var maxRate: BigDecimal? = null
 
     /**
-     * 昨日收益
+     * 违约/基准利率
      */
-    @Schema(description = "昨日收益")
-    @TableField("last_amount")
-    var lastAmount: BigDecimal? = null
+    @TableField("default_rate")
+    var defaultRate: BigDecimal? = null
+
+    /**
+     * 实际生效利率
+     */
+    @TableField("actual_rate")
+    var actualRate: BigDecimal? = null
+
+    /**
+     * 订单状态：1-生效中 2-已平仓 3-已过期
+     */
+    @TableField("order_status")
+    var orderStatus: Byte? = null
+
+    /**
+     * 开始计息时间
+     */
+    @TableField("start_time")
+    var startTime: LocalDateTime? = null
+
+    /**
+     * 下次结算时间
+     */
+    @TableField("next_settle_time")
+    var nextSettleTime: LocalDateTime? = null
+
+    /**
+     * 到期时间（固定期限适用）
+     */
+    @TableField("expire_time")
+    var expireTime: LocalDateTime? = null
+
+    /**
+     * 实际平仓/结束时间
+     */
+    @TableField("close_time")
+    var closeTime: LocalDateTime? = null
 
     /**
      * 累计收益
      */
-    @Schema(description = "累计收益")
-    @TableField("profit_amount")
-    var profitAmount: BigDecimal? = null
+    @TableField("accumulated_profit")
+    var accumulatedProfit: BigDecimal? = null
 
     /**
-     * 订单状态(1-生效中 2-已平仓 3-已过期)
+     * 上次结算收益
      */
-    @Schema(description = "订单状态(1-生效中 2-已平仓 3-已过期)")
-    @TableField("order_status")
-    var orderStatus: String? = null
+    @TableField("last_profit")
+    var lastProfit: BigDecimal? = null
 
     /**
-     * 平仓时间
+     * 已结算次数
      */
-    @Schema(description = "平仓时间")
-    @TableField("sell_time")
-    var sellTime: LocalDateTime? = null
+    @TableField("settled_count")
+    var settledCount: Int? = null
+
+    /**
+     * 结算周期：daily/weekly/monthly
+     */
+    @TableField("settle_cycle")
+    var settleCycle: String? = null
+
+    /**
+     * 扣款钱包类型：0-主钱包 1-交易钱包
+     */
+    @TableField("wallet_type")
+    var walletType: Byte? = null
+
+    /**
+     * 订单备注
+     */
+    @TableField("remark")
+    var remark: String? = null
+
+    /**
+     * 申购时间
+     */
+    @TableField("apply_time")
+    var applyTime: LocalDateTime? = null
+
+    /**
+     * 创建时间
+     */
+    @TableField(value = "create_time", fill = FieldFill.INSERT)
+    var createTime: LocalDateTime? = null
+
+    /**
+     * 更新时间
+     */
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
+    var updateTime: LocalDateTime? = null
 
     override fun toString(): String {
-        return "FinancialOrder(id=$id, userId=$userId, productCode=$productCode, productName=$productName, orderNo=$orderNo, orderType=$orderType, currentRate=$currentRate, termRate=$termRate, applyTime=$applyTime, interestStartDay=$interestStartDay, interestEndDay=$interestEndDay, lastInterestDay=$lastInterestDay, amount=$amount, accountType=$accountType, lastAmount=$lastAmount, profitAmount=$profitAmount, orderStatus=$orderStatus, sellTime=$sellTime)"
+        return "FinancialOrder{" +
+        "id=" + id +
+        ", userId=" + userId +
+        ", orderNo=" + orderNo +
+        ", productId=" + productId +
+        ", productCode=" + productCode +
+        ", productName=" + productName +
+        ", investAmount=" + investAmount +
+        ", investPeriod=" + investPeriod +
+        ", coin=" + coin +
+        ", rateType=" + rateType +
+        ", minRate=" + minRate +
+        ", maxRate=" + maxRate +
+        ", defaultRate=" + defaultRate +
+        ", actualRate=" + actualRate +
+        ", orderStatus=" + orderStatus +
+        ", startTime=" + startTime +
+        ", nextSettleTime=" + nextSettleTime +
+        ", expireTime=" + expireTime +
+        ", closeTime=" + closeTime +
+        ", accumulatedProfit=" + accumulatedProfit +
+        ", lastProfit=" + lastProfit +
+        ", settledCount=" + settledCount +
+        ", settleCycle=" + settleCycle +
+        ", walletType=" + walletType +
+        ", remark=" + remark +
+        ", applyTime=" + applyTime +
+        ", createTime=" + createTime +
+        ", updateTime=" + updateTime +
+        "}"
     }
-
 }

@@ -10,7 +10,8 @@ import com.fund.modules.cash.CashOutReq
 import com.fund.modules.wallet.model.AppUserCashOutOrder
 import com.fund.modules.wallet.service.AppUserCashOutOrderService
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.validation.annotation.Validated
@@ -43,7 +44,8 @@ class WithdrawController(
         summary = "提现历史记录",
         description = "查询用户的提现历史记录，支持分页，需要登录状态"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = AppUserCashOutOrder::class))])
     @SaCheckLogin
     @GetMapping("/history")
     fun history(@ModelAttribute req: PageReq): R<Any> {

@@ -1,11 +1,10 @@
-package com.fund.modules.financial.model
+package com.fund.modules.financial.model;
 
 import com.baomidou.mybatisplus.annotation.FieldFill
 import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
-import io.swagger.v3.oas.annotations.media.Schema
 
 import java.io.Serializable
 import java.math.BigDecimal
@@ -13,134 +12,234 @@ import java.time.LocalDateTime
 
 /**
  * <p>
- * 理财产品
+ * 理财产品信息表
  * </p>
  *
  * @author 书记
- * @since 2025-10-27
+ * @since 2025-11-10
  */
-@Schema(description = "理财产品实体")
 @TableName("financial_product")
 class FinancialProduct : Serializable {
 
-    @Schema(description = "主键ID")
+    /**
+     * 主键ID
+     */
     @TableId(value = "id", type = IdType.AUTO)
     var id: Long? = null
 
     /**
-     * 产品名称(多语言,存json)
+     * 产品唯一编码
      */
-    @Schema(description = "产品名称(多语言JSON)")
-    @TableField("product_name")
-    var productName: String? = null
-
-    /**
-     * 产品代码
-     */
-    @Schema(description = "产品代码")
     @TableField("product_code")
     var productCode: String? = null
 
     /**
-     * 产品类型(多选,逗号分割)(1-活期 2-定期)
+     * 产品标题
      */
-    @Schema(description = "产品类型(逗号分隔，1-活期 2-定期)")
-    @TableField("product_type")
-    var productType: String? = null
+    @TableField("title")
+    var title: String? = null
 
     /**
-     * 活期年利率
+     * 产品图标
      */
-    @Schema(description = "活期年利率")
-    @TableField("current_rate")
-    var currentRate: BigDecimal? = null
+    @TableField("icon_url")
+    var iconUrl: String? = null
 
     /**
-     * 定期利率(存json)
+     * 状态：1-上架 0-下架
      */
-    @Schema(description = "定期利率(多语言JSON)")
-    @TableField("term_rate")
-    var termRate: String? = null
+    @TableField("status")
+    var status: Byte? = null
 
     /**
-     * 自申购日起n天计息
+     * 周期/天数；活期可为空
      */
-    @Schema(description = "自申购日起N天计息")
-    @TableField("interest_day")
-    var interestDay: String? = null
+    @TableField("days")
+    var days: Int? = null
 
     /**
-     * 最小申购金额(存json)
+     * 利率类型：1-活期 2-固定
      */
-    @Schema(description = "最小申购金额(多语言JSON)")
-    @TableField("min_amount")
-    var minAmount: String? = null
+    @TableField("rate_type")
+    var rateType: Byte? = null
 
     /**
-     * 最大申购金额(存json)
+     * 默认收益率(例如违约/目标年化)
      */
-    @Schema(description = "最大申购金额(多语言JSON)")
-    @TableField("max_amount")
-    var maxAmount: String? = null
+    @TableField("default_rate")
+    var defaultRate: BigDecimal? = null
 
     /**
-     * 产品状态(1-可申购 2-下架)
+     * 最低收益率或浮动下限
      */
-    @Schema(description = "产品状态(1-可申购 2-下架)")
-    @TableField("product_status")
-    var productStatus: String? = null
+    @TableField("min_rate")
+    var minRate: BigDecimal? = null
 
     /**
-     * 产品说明
+     * 最高收益率或浮动上限
      */
-    @Schema(description = "产品说明")
-    @TableField("product_tip")
-    var productTip: String? = null
+    @TableField("max_rate")
+    var maxRate: BigDecimal? = null
 
     /**
-     * 排序
+     * 限购类型：0-不限 1-限时 2-限量等业务自定义
      */
-    @Schema(description = "排序值，越大越靠前")
+    @TableField("time_limit")
+    var timeLimit: Byte? = null
+
+    /**
+     * 单笔最小申购金额
+     */
+    @TableField("limit_min_amount")
+    var limitMinAmount: BigDecimal? = null
+
+    /**
+     * 单笔最大申购金额
+     */
+    @TableField("limit_max_amount")
+    var limitMaxAmount: BigDecimal? = null
+
+    /**
+     * 结算币种
+     */
+    @TableField("coin")
+    var coin: String? = null
+
+    /**
+     * 自定义分类标签，如0-股票型
+     */
+    @TableField("classify")
+    var classify: String? = null
+
+    /**
+     * 是否热门：0-否 1-是
+     */
+    @TableField("is_hot")
+    var isHot: Byte? = null
+
+    /**
+     * 排序值，越大越靠前
+     */
     @TableField("sort")
     var sort: Int? = null
 
     /**
+     * 面向等级/用户组，可选
+     */
+    @TableField("level")
+    var level: Byte? = null
+
+    /**
+     * 基础筹资额（平台自有或基准）
+     */
+    @TableField("basic_invest_amount")
+    var basicInvestAmount: BigDecimal? = null
+
+    /**
+     * 目标筹资总额
+     */
+    @TableField("total_invest_amount")
+    var totalInvestAmount: BigDecimal? = null
+
+    /**
+     * 已购金额
+     */
+    @TableField("purchased_amount")
+    var purchasedAmount: BigDecimal? = null
+
+    /**
+     * 剩余可购金额
+     */
+    @TableField("remain_amount")
+    var remainAmount: BigDecimal? = null
+
+    /**
+     * 当前平均收益率(展示用)
+     */
+    @TableField("avg_rate")
+    var avgRate: BigDecimal? = null
+
+    /**
+     * 累计购买人数/笔数
+     */
+    @TableField("buy_purchase")
+    var buyPurchase: Long? = null
+
+    /**
+     * 备注/公告
+     */
+    @TableField("remark")
+    var remark: String? = null
+
+    /**
+     * 产品介绍
+     */
+    @TableField("product_intro")
+    var productIntro: String? = null
+
+    /**
+     * 问答/风险提示等
+     */
+    @TableField("faq")
+    var faq: String? = null
+
+    /**
+     * 平台违约率/风险提示用
+     */
+    @TableField("platform_risk_rate")
+    var platformRiskRate: BigDecimal? = null
+
+    /**
+     * 参考日收益率(非必填)
+     */
+    @TableField("daily_rate")
+    var dailyRate: BigDecimal? = null
+
+    /**
      * 创建时间
      */
-    @Schema(description = "创建时间")
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     var createTime: LocalDateTime? = null
 
     /**
-     * 创建者
+     * 更新时间
      */
-    @Schema(description = "创建者")
-    @TableField("create_by")
-    var createBy: String? = null
-
-    /**
-     * 修改时间
-     */
-    @Schema(description = "修改时间")
     @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
     var updateTime: LocalDateTime? = null
 
-    /**
-     * 修改者
-     */
-    @Schema(description = "修改者")
-    @TableField("update_by")
-    var updateBy: String? = null
-
-    /**
-     * 备注
-     */
-    @Schema(description = "备注")
-    @TableField("remark")
-    var remark: String? = null
-
     override fun toString(): String {
-        return "FinancialProduct(id=$id, productName=$productName, productCode=$productCode, productType=$productType, currentRate=$currentRate, termRate=$termRate, interestDay=$interestDay, minAmount=$minAmount, maxAmount=$maxAmount, productStatus=$productStatus, productTip=$productTip, sort=$sort, createTime=$createTime, createBy=$createBy, updateTime=$updateTime, updateBy=$updateBy, remark=$remark)"
+        return "FinancialProduct{" +
+        "id=" + id +
+        ", productCode=" + productCode +
+        ", title=" + title +
+        ", iconUrl=" + iconUrl +
+        ", status=" + status +
+        ", days=" + days +
+        ", rateType=" + rateType +
+        ", defaultRate=" + defaultRate +
+        ", minRate=" + minRate +
+        ", maxRate=" + maxRate +
+        ", timeLimit=" + timeLimit +
+        ", limitMinAmount=" + limitMinAmount +
+        ", limitMaxAmount=" + limitMaxAmount +
+        ", coin=" + coin +
+        ", classify=" + classify +
+        ", isHot=" + isHot +
+        ", sort=" + sort +
+        ", level=" + level +
+        ", basicInvestAmount=" + basicInvestAmount +
+        ", totalInvestAmount=" + totalInvestAmount +
+        ", purchasedAmount=" + purchasedAmount +
+        ", remainAmount=" + remainAmount +
+        ", avgRate=" + avgRate +
+        ", buyPurchase=" + buyPurchase +
+        ", remark=" + remark +
+        ", productIntro=" + productIntro +
+        ", faq=" + faq +
+        ", platformRiskRate=" + platformRiskRate +
+        ", dailyRate=" + dailyRate +
+        ", createTime=" + createTime +
+        ", updateTime=" + updateTime +
+        "}"
     }
-
 }

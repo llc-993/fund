@@ -6,27 +6,37 @@
     <resultMap id="BaseResultMap" type="com.fund.modules.financial.model.FinancialOrder">
         <id column="id" property="id" />
         <result column="user_id" property="userId" />
+        <result column="order_no" property="orderNo" />
+        <result column="product_id" property="productId" />
         <result column="product_code" property="productCode" />
         <result column="product_name" property="productName" />
-        <result column="order_no" property="orderNo" />
-        <result column="order_type" property="orderType" />
-        <result column="current_rate" property="currentRate" />
-        <result column="term_rate" property="termRate" />
-        <result column="apply_time" property="applyTime" />
-        <result column="interest_start_day" property="interestStartDay" />
-        <result column="interest_end_day" property="interestEndDay" />
-        <result column="last_interest_day" property="lastInterestDay" />
-        <result column="amount" property="amount" />
-        <result column="account_type" property="accountType" />
-        <result column="last_amount" property="lastAmount" />
-        <result column="profit_amount" property="profitAmount" />
+        <result column="invest_amount" property="investAmount" />
+        <result column="invest_period" property="investPeriod" />
+        <result column="coin" property="coin" />
+        <result column="rate_type" property="rateType" />
+        <result column="min_rate" property="minRate" />
+        <result column="max_rate" property="maxRate" />
+        <result column="default_rate" property="defaultRate" />
+        <result column="actual_rate" property="actualRate" />
         <result column="order_status" property="orderStatus" />
-        <result column="sell_time" property="sellTime" />
+        <result column="start_time" property="startTime" />
+        <result column="next_settle_time" property="nextSettleTime" />
+        <result column="expire_time" property="expireTime" />
+        <result column="close_time" property="closeTime" />
+        <result column="accumulated_profit" property="accumulatedProfit" />
+        <result column="last_profit" property="lastProfit" />
+        <result column="settled_count" property="settledCount" />
+        <result column="settle_cycle" property="settleCycle" />
+        <result column="wallet_type" property="walletType" />
+        <result column="remark" property="remark" />
+        <result column="apply_time" property="applyTime" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, user_id, product_code, product_name, order_no, order_type, current_rate, term_rate, apply_time, interest_start_day, interest_end_day, last_interest_day, amount, account_type, last_amount, profit_amount, order_status, sell_time
+        id, user_id, order_no, product_id, product_code, product_name, invest_amount, invest_period, coin, rate_type, min_rate, max_rate, default_rate, actual_rate, order_status, start_time, next_settle_time, expire_time, close_time, accumulated_profit, last_profit, settled_count, settle_cycle, wallet_type, remark, apply_time, create_time, update_time
     </sql>
 
 </mapper>

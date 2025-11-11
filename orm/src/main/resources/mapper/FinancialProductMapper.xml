@@ -5,27 +5,41 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.fund.modules.financial.model.FinancialProduct">
         <id column="id" property="id" />
-        <result column="product_name" property="productName" />
         <result column="product_code" property="productCode" />
-        <result column="product_type" property="productType" />
-        <result column="current_rate" property="currentRate" />
-        <result column="term_rate" property="termRate" />
-        <result column="interest_day" property="interestDay" />
-        <result column="min_amount" property="minAmount" />
-        <result column="max_amount" property="maxAmount" />
-        <result column="product_status" property="productStatus" />
-        <result column="product_tip" property="productTip" />
+        <result column="title" property="title" />
+        <result column="icon_url" property="iconUrl" />
+        <result column="status" property="status" />
+        <result column="days" property="days" />
+        <result column="rate_type" property="rateType" />
+        <result column="default_rate" property="defaultRate" />
+        <result column="min_rate" property="minRate" />
+        <result column="max_rate" property="maxRate" />
+        <result column="time_limit" property="timeLimit" />
+        <result column="limit_min_amount" property="limitMinAmount" />
+        <result column="limit_max_amount" property="limitMaxAmount" />
+        <result column="coin" property="coin" />
+        <result column="classify" property="classify" />
+        <result column="is_hot" property="isHot" />
         <result column="sort" property="sort" />
-        <result column="create_time" property="createTime" />
-        <result column="create_by" property="createBy" />
-        <result column="update_time" property="updateTime" />
-        <result column="update_by" property="updateBy" />
+        <result column="level" property="level" />
+        <result column="basic_invest_amount" property="basicInvestAmount" />
+        <result column="total_invest_amount" property="totalInvestAmount" />
+        <result column="purchased_amount" property="purchasedAmount" />
+        <result column="remain_amount" property="remainAmount" />
+        <result column="avg_rate" property="avgRate" />
+        <result column="buy_purchase" property="buyPurchase" />
         <result column="remark" property="remark" />
+        <result column="product_intro" property="productIntro" />
+        <result column="faq" property="faq" />
+        <result column="platform_risk_rate" property="platformRiskRate" />
+        <result column="daily_rate" property="dailyRate" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
     </resultMap>
 
     <!-- 通用查询结果列 -->
     <sql id="Base_Column_List">
-        id, product_name, product_code, product_type, current_rate, term_rate, interest_day, min_amount, max_amount, product_status, product_tip, sort, create_time, create_by, update_time, update_by, remark
+        id, product_code, title, icon_url, status, days, rate_type, default_rate, min_rate, max_rate, time_limit, limit_min_amount, limit_max_amount, coin, classify, is_hot, sort, level, basic_invest_amount, total_invest_amount, purchased_amount, remain_amount, avg_rate, buy_purchase, remark, product_intro, faq, platform_risk_rate, daily_rate, create_time, update_time
     </sql>
 
 </mapper>

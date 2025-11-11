@@ -10,7 +10,8 @@ import com.fund.modules.cash.CashInReq
 import com.fund.modules.wallet.model.AppUserCashInOrder
 import com.fund.modules.wallet.service.AppUserCashInOrderService
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.validation.annotation.Validated
@@ -43,7 +44,8 @@ class DepositController(
         summary = "充值历史记录",
         description = "查询用户的充值历史记录，支持分页，需要登录状态"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = AppUserCashInOrder::class))])
     @SaCheckLogin
     @GetMapping("/history")
     fun history(@ModelAttribute req: PageReq): R<Page<AppUserCashInOrder>> {

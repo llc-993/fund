@@ -8,6 +8,9 @@ import com.fund.modules.stock.QueryStockRequest
 import com.fund.modules.stock.StockBuyRequest
 import com.fund.modules.stock.StockAddOrderRequest
 import com.fund.modules.stock.UpdateProfitTargetRequest
+import com.fund.modules.stock.model.Stock
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import com.fund.modules.stock.service.StockService
 import com.fund.modules.stock.service.UserPendingOrderService
 import com.fund.modules.stock.service.UserPositionService
@@ -40,7 +43,8 @@ class StockController(
         summary = "股票列表",
         description = "查询股票列表，支持分页和筛选"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Stock::class))])
     @SaIgnore
     @GetMapping("list")
     fun list(@ModelAttribute req: QueryStockRequest): R<Any> {
@@ -51,7 +55,8 @@ class StockController(
         summary = "股票详情",
         description = "根据ID获取股票详细信息，包括实时行情数据"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Stock::class))])
     @SaIgnore
     @GetMapping("detail")
     fun detail(
@@ -81,7 +86,8 @@ class StockController(
         summary = "支持的国家列表",
         description = "获取系统支持的所有国家列表"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = String::class))])
     @GetMapping("country-list")
     fun countryList(): R<Any> {
         return stockService.countryList()

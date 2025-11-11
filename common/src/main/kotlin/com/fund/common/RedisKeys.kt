@@ -47,6 +47,9 @@ object RedisKeys {
 
     const val LOCK_CASH_OUT_REQUEST = "lock:cash_out:request:"
     const val LOCK_CASH_IN_REQUEST = "lock:cash_in:request:"
+    
+    // 理财产品申购锁
+    const val LOCK_FINANCIAL_PURCHASE = "lock:financial:purchase:"
 
     // 顶级代理与用户id映射
     const val TOP_AGENT_MAP_CACHE_KEY = "top_agent_maps"

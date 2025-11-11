@@ -7,9 +7,12 @@ import com.fund.common.entity.R
 import com.fund.modules.ipo.IpoApplyRequest
 import com.fund.modules.ipo.IpoUpdateRequest
 import com.fund.modules.ipo.model.Ipo
+import com.fund.modules.ipo.model.StockSubscription
 import com.fund.modules.ipo.service.IpoService
 import com.fund.modules.ipo.service.StockSubscriptionService
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.GetMapping
@@ -30,7 +33,8 @@ class IpoController(
         summary = "获取IPO列表",
         description = "获取所有可申购的IPO列表"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Ipo::class))])
     @GetMapping("list")
     fun list(): R<Any> {
         val ipos = ipoService.list(
@@ -55,7 +59,8 @@ class IpoController(
         summary = "获取申购历史",
         description = "获取当前用户的IPO申购历史记录，需要登录状态"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = StockSubscription::class))])
     @SaCheckLogin
     @GetMapping("history")
     fun history(): R<Any> {

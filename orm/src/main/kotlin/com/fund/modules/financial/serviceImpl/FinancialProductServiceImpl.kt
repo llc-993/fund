@@ -8,11 +8,11 @@ import org.springframework.stereotype.Service;
 
 /**
  * <p>
- * 理财产品 服务实现类
+ * 理财产品信息表 服务实现类
  * </p>
  *
  * @author 书记
- * @since 2025-10-27
+ * @since 2025-11-10
  */
 @Service
 open class FinancialProductServiceImpl : ServiceImpl<FinancialProductMapper, FinancialProduct>(), FinancialProductService {

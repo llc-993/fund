@@ -19,6 +19,8 @@ import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
@@ -45,7 +47,11 @@ class StockBlockTradeSubscriptionController(
         summary = "大宗交易申购列表",
         description = "分页查询大宗交易申购列表，支持按股票名称、用户ID、状态筛选"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(
+        responseCode = "200",
+        description = "查询成功",
+        content = [Content(schema = Schema(implementation = StockBlockTradeSubscription::class))]
+    )
     @GetMapping("list")
     fun list(@RequestBody req: AdminBlockTradeSubscriptionQueryRequest): R<Any> {
         val page: Page<StockBlockTradeSubscription> = Page(req.pageNum, req.pageSize)
@@ -64,7 +70,11 @@ class StockBlockTradeSubscriptionController(
         summary = "大宗交易申购转化",
         description = "将申购记录转化为用户持仓。业务逻辑：1.校验申购记录状态；2.计算需支付金额；3.检查钱包余额；4.创建持仓记录；5.更新申购状态。只有status=1(已申购)或status=3(已确认)的记录才能转化"
     )
-    @ApiResponse(responseCode = "200", description = "转化成功")
+    @ApiResponse(
+        responseCode = "200",
+        description = "转化成功",
+        content = [Content(schema = Schema(implementation = UserPosition::class))]
+    )
     @PostMapping("conversion")
     fun conversion(@RequestBody req: BlockTradeConversionRequest): R<Any> {
         try {

@@ -14,6 +14,8 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import jakarta.servlet.http.HttpServletRequest
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
@@ -33,11 +35,18 @@ class AuthController(
         summary = "用户注册",
         description = "新用户注册接口，返回用户信息和登录 Token"
     )
-    @ApiResponse(responseCode = "200", description = "注册成功")
+    @ApiResponse(responseCode = "200", description = "注册成功",
+        content = [Content(schema = Schema(implementation = AppLoginInfo::class))])
     @SaIgnore
     @PostMapping("register")
     fun register(
-        @SwaggerRequestBody(description = "用户注册信息", required = true) @RequestBody @Validated userRegisterRequest: UserRegisterRequest,
+        @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            description = "用户注册信息",
+            required = true,
+            content = [
+                Content(schema = Schema(implementation = UserRegisterRequest::class))
+            ]
+        ) @RequestBody @Validated userRegisterRequest: UserRegisterRequest,
         @Parameter(hidden = true) request: HttpServletRequest
     ): R<AppLoginInfo> {
         return userService.register(userRegisterRequest, request)
@@ -47,7 +56,8 @@ class AuthController(
         summary = "用户登录",
         description = "用户登录接口，返回用户信息和登录 Token"
     )
-    @ApiResponse(responseCode = "200", description = "登录成功")
+    @ApiResponse(responseCode = "200", description = "登录成功",
+        content = [Content(schema = Schema(implementation = AppLoginInfo::class))])
     @SaIgnore
     @PostMapping("login")
     fun login(

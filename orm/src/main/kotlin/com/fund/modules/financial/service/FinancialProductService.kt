@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
  * <p>
- * 理财产品 服务类
+ * 理财产品信息表 服务类
  * </p>
  *
  * @author 书记
- * @since 2025-10-27
+ * @since 2025-11-10
  */
 interface FinancialProductService : IService<FinancialProduct>

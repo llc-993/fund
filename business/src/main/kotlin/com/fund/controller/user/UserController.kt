@@ -4,6 +4,10 @@ import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.common.entity.R
+import com.fund.modules.user.model.AppUser
+
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import com.fund.modules.user.service.AppUserService
 import com.fund.modules.wallet.model.AppUserWalletV2
 import com.fund.modules.wallet.service.AppUserWalletV2Service
@@ -26,7 +30,8 @@ class UserController(
         summary = "获取用户信息",
         description = "获取当前登录用户的详细信息，包括钱包信息，需要登录状态"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = AppUser::class))])
     @SaCheckLogin
     @GetMapping("info")
     fun info(): R<Any> {

@@ -1,12 +1,16 @@
-package com.fund.controller.risingFalling
+package com.fund.controller.risingfalling
 
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.common.entity.R
+
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import com.fund.modules.risingFalling.RisingFallingSectorsApplyRequest
 import com.fund.modules.risingFalling.RisingFallingSectorsUpdateRequest
 import com.fund.modules.risingFalling.model.RisingFallingSectors
+import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription
 import com.fund.modules.risingFalling.service.RisingFallingSectorsService
 import com.fund.modules.risingFalling.service.RisingFallingSectorsSubscriptionService
 import io.swagger.v3.oas.annotations.Operation
@@ -33,7 +37,8 @@ class RisingFallingSectorsController(
         summary = "获取涨跌板块列表",
         description = "获取所有可申购的涨跌板块列表"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = RisingFallingSectors::class))])
     @GetMapping("list")
     fun list(): R<Any> {
         val risingFallingSectors = risingFallingSectorsService.list(
@@ -58,7 +63,8 @@ class RisingFallingSectorsController(
         summary = "获取申购历史",
         description = "获取当前用户的涨跌板块申购历史记录，需要登录状态"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = RisingFallingSectorsSubscription::class))])
     @SaCheckLogin
     @GetMapping("history")
     fun history(): R<Any> {
