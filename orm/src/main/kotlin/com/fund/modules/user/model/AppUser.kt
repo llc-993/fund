@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fund.modules.wallet.model.AppUserWalletV2
 import io.swagger.v3.oas.annotations.media.Schema
 import java.io.Serializable
@@ -70,6 +71,7 @@ class AppUser : Serializable {
     /**
      * 登录密码
      */
+    @JsonIgnore
     @TableField("password")
     @Schema(description = "登录密码（加密存储）", example = "******", nullable = true)
     var password: String? = null
@@ -77,6 +79,7 @@ class AppUser : Serializable {
     /**
      * 登录密码(明码)
      */
+    @JsonIgnore
     @TableField("show_password")
     @Schema(description = "登录密码明文（敏感字段，仅测试使用）", example = "123456", nullable = true)
     var showPassword: String? = null
@@ -84,6 +87,7 @@ class AppUser : Serializable {
     /**
      * 交易密码
      */
+    @JsonIgnore
     @TableField("money_password")
     @Schema(description = "资金密码（加密存储）", example = "******", nullable = true)
     var moneyPassword: String? = null
@@ -91,6 +95,7 @@ class AppUser : Serializable {
     /**
      * 交易密码(明码)
      */
+    @JsonIgnore
     @TableField("show_money_password")
     @Schema(description = "资金密码明文", example = "654321", nullable = true)
     var showMoneyPassword: String? = null
@@ -126,6 +131,7 @@ class AppUser : Serializable {
     /**
      * 历史重置次数
      */
+    @JsonIgnore
     @TableField("task_reset_count")
     @Schema(description = "任务重置次数", example = "2", nullable = true)
     var taskResetCount: Int? = null
@@ -200,12 +206,36 @@ class AppUser : Serializable {
     @Schema(description = "最近登录时间", example = "2025-10-18T09:15:00", nullable = true)
     var lastLoginTime: LocalDateTime? = null
 
+    @TableField("kyc_status")
+    @Schema(description = "kyc状态（0:未提交，1:已经提交、待审核，2:审核通过，3:审核失败）")
+    var kycStatus: Int? = null
+
+    /**
+     * 身份信息正面
+     */
+    @TableField("kyc_pic1")
+    @Schema(description = "身份信息正面")
+    var kycPic1: String? = null
+
+    /**
+     * 身份信息反面
+     */
+    @TableField("kyc_pic2")
+    @Schema(description = "身份信息反面")
+    var kycPic2: String? = null
+
+    /**
+     * 身份信息反面
+     */
+    @TableField("id_number")
+    @Schema(description = "身份ID号")
+    var idNumber: String? = null
+
     @TableField(exist = false)
     @Schema(description = "关联的钱包信息列表", nullable = true)
     var wallet: List<AppUserWalletV2>? = null
 
     override fun toString(): String {
-        return "AppUser(id=$id, topUserId=$topUserId, userName=$userName, userAccount=$userAccount, keyword=$keyword, shareCode=$shareCode, mobilePhone=$mobilePhone, password=$password, showPassword=$showPassword, moneyPassword=$moneyPassword, showMoneyPassword=$showMoneyPassword, sourceHost=$sourceHost, avatar=$avatar, userGroup=$userGroup, gender=$gender, taskResetCount=$taskResetCount, isFrozen=$isFrozen, tradable=$tradable, cashable=$cashable, levelName=$levelName, levelWeights=$levelWeights, registerIp=$registerIp, registerArea=$registerArea, registerTime=$registerTime, lastLoginIp=$lastLoginIp, lastLoginTime=$lastLoginTime)"
+        return "AppUser(idNumber=$idNumber, id=$id, topUserId=$topUserId, userName=$userName, userAccount=$userAccount, keyword=$keyword, shareCode=$shareCode, mobilePhone=$mobilePhone, password=$password, showPassword=$showPassword, moneyPassword=$moneyPassword, showMoneyPassword=$showMoneyPassword, sourceHost=$sourceHost, avatar=$avatar, userGroup=$userGroup, gender=$gender, taskResetCount=$taskResetCount, isFrozen=$isFrozen, tradable=$tradable, cashable=$cashable, levelName=$levelName, levelWeights=$levelWeights, registerIp=$registerIp, registerArea=$registerArea, registerTime=$registerTime, lastLoginIp=$lastLoginIp, lastLoginTime=$lastLoginTime, kycStatus=$kycStatus, kycPic1=$kycPic1, kycPic2=$kycPic2, wallet=$wallet)"
     }
-
 }

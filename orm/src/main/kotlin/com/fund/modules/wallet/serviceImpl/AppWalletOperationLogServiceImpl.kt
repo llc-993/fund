@@ -45,6 +45,7 @@ open class AppWalletOperationLogServiceImpl : ServiceImpl<AppWalletOperationLogM
             this.afterBalance = afterBalance
             this.relatedId = relatedId
             this.relatedType = relatedType
+            this.createTime = LocalDateTime.now()
             this.status = status
             this.remark = remark
         }

@@ -3,10 +3,13 @@ package com.fund.controller.auth
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.annotation.SaIgnore
 import cn.dev33.satoken.stp.StpUtil
+import cn.hutool.core.util.StrUtil
+import com.fund.common.Constants
 import com.fund.common.entity.R
 import com.fund.modules.user.UserChangePasswordRequest
 import com.fund.modules.user.UserLoginRequest
 import com.fund.modules.user.UserRegisterRequest
+import com.fund.modules.user.UserUpdateRequest
 import com.fund.modules.user.service.AppUserService
 import com.fund.modules.user.vo.AppLoginInfo
 import io.swagger.v3.oas.annotations.Operation
@@ -21,6 +24,7 @@ import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 
 
@@ -90,6 +94,49 @@ class AuthController(
         @SwaggerRequestBody(description = "修改密码信息", required = true) @RequestBody @Validated req: UserChangePasswordRequest
     ): R<Unit> {
         return userService.changePassword(req, StpUtil.getLoginIdAsLong())
+    }
+
+    @SaCheckLogin
+    @Operation(summary ="校验交易密码")
+    @PostMapping("/checkMoneyPassword")
+    fun checkMoneyPassword(@Parameter(name = "moneyPassword",description= "交易密码", required = true) @RequestParam("moneyPassword") moneyPassword: String): R<Any>{
+        val userId = StpUtil.getLoginIdAsLong()
+
+        val user = userService.getById(userId)
+
+        if (StrUtil.isBlank(user.showMoneyPassword)) {
+            return R.success("2", "SUCCESS",  200)
+        }
+
+        if (StrUtil.isBlank(moneyPassword)) {
+            return R.success(0)
+        }
+
+        return R.success(if (user.showMoneyPassword.equals(moneyPassword)) 1 else 0)
+    }
+
+    /**
+     * 修改交易密码
+     * @param req
+     * @return
+     */
+    @Operation(summary ="修改交易密码")
+    @PostMapping("/changeMoneyPassword")
+    @SaCheckLogin
+    fun changeMoneyPassword(@SwaggerRequestBody(description = "修改交易密码", required = true)  @RequestBody @Validated req: UserChangePasswordRequest): R<Unit> {
+        val userId = StpUtil.getLoginIdAsLong()
+        userService.changeMoneyPassword(req, userId)
+        return R.success()
+    }
+
+    /**
+     * 修改kyc信息
+     */
+    @Operation(summary = "修改kyc信息")
+    @PostMapping("updateKyc")
+    @SaCheckLogin
+    fun updateKyc(@SwaggerRequestBody(description = "kyc参数", required = true)  @RequestBody @Validated req: UserUpdateRequest): R<Unit> {
+        return userService.updateKyc(req, StpUtil.getLoginIdAsLong())
     }
 
 }

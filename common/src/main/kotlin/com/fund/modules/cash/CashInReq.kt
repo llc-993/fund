@@ -12,4 +12,6 @@ class CashInReq {
     @Min(value = 1, message = "recharge_min")
     @NotNull(message = "recharge_amount_not_null")
     var amount: BigDecimal? = null
+
+    var imgUrl: String? = null
 }

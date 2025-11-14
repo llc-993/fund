@@ -135,6 +135,9 @@ class StockBlockTradeSubscription : Serializable {
     @TableField("remarks")
     var remarks: String? = null
 
+    @TableField(exist = false)
+    var stockBlockTrade: StockBlockTrade? = null
+
     override fun toString(): String {
         return "StockBlockTradeSubscription{" +
         "id=" + id +

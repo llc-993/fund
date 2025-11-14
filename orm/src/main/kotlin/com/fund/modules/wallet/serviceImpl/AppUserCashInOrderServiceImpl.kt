@@ -49,6 +49,7 @@ open class AppUserCashInOrderServiceImpl(
             order.orderNo = "ci" + generateId()
             order.applyTime = LocalDateTime.now()
             order.applyAmount = req.amount
+            order.imgUrl = req.imgUrl
             // 订单类型   1待处理 2已锁定 3  已取消 4 已拒绝 5 已成功
             order.cashStatus = 1
             save(order)

@@ -6,6 +6,7 @@ import com.fund.common.entity.R
 import com.fund.modules.user.UserChangePasswordRequest
 import com.fund.modules.user.UserLoginRequest
 import com.fund.modules.user.UserRegisterRequest
+import com.fund.modules.user.UserUpdateRequest
 import com.fund.modules.user.vo.AppLoginInfo
 import jakarta.servlet.http.HttpServletRequest
 
@@ -30,4 +31,9 @@ interface AppUserService : IService<AppUser> {
     // 修改密码
     fun changePassword(req: UserChangePasswordRequest, userId: Long): R<Unit>
 
+    // 修改交易密码
+    fun changeMoneyPassword(req: UserChangePasswordRequest, userId: Long)
+
+    // 修改kyc
+    fun updateKyc(req: UserUpdateRequest, userId: Long): R<Unit>
 }

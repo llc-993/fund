@@ -1305,5 +1305,37 @@ open class UserPositionServiceImpl(
         // 尝试获取一个令牌
         return rateLimiter.tryAcquire(1)
     }
-
+    
+    /**
+     * 获取用户的盈亏总和
+     * @param userIds 用户ID列表
+     * @return 用户ID与对应盈亏总和的映射
+     */
+    override fun getProfitAndLoseByUser(userIds: List<Long>): Map<Long, BigDecimal> {
+        if (userIds.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 创建查询条件：用户ID在给定列表中
+        val queryWrapper = KtQueryWrapper(UserPosition())
+            .`in`(UserPosition::userId, userIds)
+        
+        // 查询符合条件的所有持仓记录
+        val positionList = this.list(queryWrapper)
+        if (positionList.isEmpty()) {
+            return emptyMap()
+        }
+        
+        // 按用户ID分组并计算每个用户的盈亏总和
+        return positionList
+            .groupBy { it.userId } // 按用户ID分组
+            .mapValues { (_, positions) ->
+                // 计算该用户所有持仓的盈亏总和
+                positions
+                    .mapNotNull { it.profitAndLose } // 提取每个持仓的盈亏值，过滤null值
+                    .fold(BigDecimal.ZERO) { acc, value -> acc.add(value) } // 求和
+            }
+            .filterKeys { it != null } // 过滤掉null的键
+            .mapKeys { it.key!!.toLong() } // 将非空断言应用于键
+    }
 }

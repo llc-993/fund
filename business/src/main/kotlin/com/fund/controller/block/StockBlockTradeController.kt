@@ -10,6 +10,7 @@ import com.fund.modules.block.model.StockBlockTrade
 import com.fund.modules.block.model.StockBlockTradeSubscription
 import com.fund.modules.block.service.StockBlockTradeService
 import com.fund.modules.block.service.StockBlockTradeSubscriptionService
+import com.fund.modules.stock.service.StockService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -29,7 +30,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/block")
 class StockBlockTradeController(
     private val stockBlockTradeService: StockBlockTradeService,
-    private val stockBlockTradeSubscriptionService: StockBlockTradeSubscriptionService
+    private val stockBlockTradeSubscriptionService: StockBlockTradeSubscriptionService,
+    private val stockService: StockService
 ) {
 
     @Operation(
@@ -44,6 +46,10 @@ class StockBlockTradeController(
             KtQueryWrapper(StockBlockTrade())
                 .eq(StockBlockTrade::status, 1)
         )
+
+        for (stockBlockTrade in blockTrades) {
+            stockBlockTrade.price = stockService.getStockById(stockBlockTrade.stockId!!).last
+        }
         return R.success(blockTrades)
     }
 

@@ -37,10 +37,7 @@ class IpoController(
         content = [Content(schema = Schema(implementation = Ipo::class))])
     @GetMapping("list")
     fun list(): R<Any> {
-        val ipos = ipoService.list(
-            KtQueryWrapper(Ipo())
-                .eq(Ipo::status, 1)
-        )
+        val ipos = ipoService.list()
         return R.success(ipos)
     }
 

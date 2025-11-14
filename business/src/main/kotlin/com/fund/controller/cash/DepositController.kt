@@ -48,7 +48,7 @@ class DepositController(
         content = [Content(schema = Schema(implementation = AppUserCashInOrder::class))])
     @SaCheckLogin
     @GetMapping("/history")
-    fun history(@ModelAttribute req: PageReq): R<Page<AppUserCashInOrder>> {
+    fun history(req: PageReq): R<Page<AppUserCashInOrder>> {
         val userId = StpUtil.getLoginIdAsLong()
         val p = Page<AppUserCashInOrder>(req.pageNum, req.pageSize)
         val page = cashInOrderService.page(

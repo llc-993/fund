@@ -187,6 +187,11 @@
              <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
              <version>3.5.12</version>
          </dependency>
+     <!--   <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-jsqlparser-4.9</artifactId>
+            <version>3.5.10</version>
+        </dependency>-->
         <dependency>
             <groupId>com.github.yulichang</groupId>
             <artifactId>mybatis-plus-join-boot-starter</artifactId>

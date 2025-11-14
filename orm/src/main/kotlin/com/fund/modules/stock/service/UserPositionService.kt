@@ -91,4 +91,11 @@ interface UserPositionService : IService<UserPosition> {
     fun isTradingTime(stockFlag: String): Boolean
 
     fun getLotUnit(marketFlag: String?): Int
+
+    /**
+     * 获取用户的盈亏总和
+     * @param userIds 用户ID列表
+     * @return 用户ID与对应盈亏总和的映射
+     */
+    fun getProfitAndLoseByUser(userIds: List<Long>): Map<Long, BigDecimal>
 }

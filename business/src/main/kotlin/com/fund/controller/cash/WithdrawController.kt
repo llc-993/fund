@@ -48,7 +48,7 @@ class WithdrawController(
         content = [Content(schema = Schema(implementation = AppUserCashOutOrder::class))])
     @SaCheckLogin
     @GetMapping("/history")
-    fun history(@ModelAttribute req: PageReq): R<Any> {
+    fun history(req: PageReq): R<Any> {
         val page1: Page<AppUserCashOutOrder> = Page(req.pageNum, req.pageSize)
 
         val page = appUserCashOutOrderService.page(

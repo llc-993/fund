@@ -73,9 +73,9 @@ open class RisingFallingSectorsSubscriptionServiceImpl(
                 val risingFallingSectors = risingFallingSectorsService.getById(req.risingFallingSectorsId) ?: throw BusinessException("rising_falling_sectors_null")
 
                 // 检查显示状态（0=显示）
-                if (risingFallingSectors.displayStatus != 0) {
+                /*if (risingFallingSectors.displayStatus != 0) {
                     throw BusinessException("rising_falling_sectors_not_available")
-                }
+                }*/
 
                 // 校验交易密码（如果涨跌板块设置了密码）
                 risingFallingSectors.passWord?.let { passWord ->

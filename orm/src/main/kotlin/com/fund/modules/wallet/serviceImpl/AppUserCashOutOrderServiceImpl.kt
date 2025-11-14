@@ -50,7 +50,7 @@ open class AppUserCashOutOrderServiceImpl(
             val appUser: AppUser = appUserService.getById(userId)
                 ?: throw BusinessException("login_information_lost")
 
-            if (req.moneyPassword != appUser.moneyPassword) {
+            if (req.moneyPassword != appUser.showMoneyPassword) {
                 throw BusinessException("incorrect_password")
             }
             if (!appUser.cashable!!) {
@@ -136,6 +136,7 @@ open class AppUserCashOutOrderServiceImpl(
                 afterBalance = userWallet.availableBalance
                 relatedId = cashOutOrder.id
                 relatedType = GoldChangeEnum.CASH_OUT_REQUEST.name
+                createTime = LocalDateTime.now()
                 status = 1  // 成功
                 remark = "提现申请: ${cashOutOrder.orderNo}, 申请金额: ${amount.toPlainString()}, 手续费: ${fee.toPlainString()}, 实际到账: ${actualAmount.toPlainString()}, 冻结余额变化: ${beforeFrozenBalance.toPlainString()} -> ${userWallet.frozenBalance?.toPlainString()}"
             }

@@ -1,6 +1,7 @@
 package com.fund.modules.conf.enum
 
 import com.fund.modules.conf.ant.DefaultValue
+import com.fund.modules.conf.dto.AwsS3OssConfig
 import com.fund.modules.conf.dto.BaseConfig
 import com.fund.modules.conf.dto.GmailConfig
 import com.fund.modules.conf.dto.IpoConfig
@@ -100,6 +101,12 @@ enum class AppConfigCode(prop: KProperty<*>) {
     GMAIL_USERNAME(GmailConfig::gmailUsername),
     GMAIL_PASSWORD(GmailConfig::gmailPassword),
     GMAIL_DEBUG(GmailConfig::gmailDebug),
+
+    s3AccessKeyId(AwsS3OssConfig::s3AccessKeyId),
+    s3AccessKeySecret(AwsS3OssConfig::s3AccessKeySecret),
+    s3Endpoint(AwsS3OssConfig::s3Endpoint),
+    s3BucketName(AwsS3OssConfig::s3BucketName),
+    s3UploadMaxSize(AwsS3OssConfig::s3UploadMaxSize),
     ;
 
     var code: String

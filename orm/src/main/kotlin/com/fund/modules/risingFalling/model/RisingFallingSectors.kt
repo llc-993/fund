@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.annotation.IdType
 import com.baomidou.mybatisplus.annotation.TableField
 import com.baomidou.mybatisplus.annotation.TableId
 import com.baomidou.mybatisplus.annotation.TableName
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 import java.io.Serializable
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 /**
@@ -91,9 +93,26 @@ class RisingFallingSectors : Serializable {
     @Schema(description = "记录创建时间", example = "2025-10-15T12:00:00", nullable = true)
     var createTime: LocalDateTime? = null
 
+    @JsonIgnore
     @TableField(value = "pass_word")
     @Schema(description = "板块访问密码（如需校验）", example = "abcd1234", nullable = true)
     var passWord: String? = null
+
+    @Schema(description = "股票名称")
+    @TableField(exist = false)
+    var name: String? = null
+
+    @Schema(description = "股票价格")
+    @TableField(exist = false)
+    var price: BigDecimal? = null
+
+    @Schema(description = "股票涨跌百分比")
+    @TableField(exist = false)
+    var chgPct: BigDecimal? = null
+
+    @Schema(description = "板块访问密码,true:需要输入密码， false:不需要密码", example = "true", nullable = true)
+    @TableField(exist = false)
+    var passWordStatus: Boolean? = null
 
     override fun toString(): String {
         return "RisingFallingSectors(id=$id, symbol=$symbol, stockId=$stockId, stockLockStatus=$stockLockStatus, displayStatus=$displayStatus, openTime=$openTime, endTime=$endTime, startSellTime=$startSellTime, endSellTime=$endSellTime, createTime=$createTime, passWord=$passWord)"

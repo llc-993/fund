@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil
 import cn.hutool.core.date.DateUtil
 import cn.hutool.core.util.StrUtil
 import cn.hutool.crypto.digest.MD5
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.kotlin.KtUpdateWrapper
 import com.fund.modules.user.model.AppUser;
@@ -21,6 +22,7 @@ import com.fund.modules.conf.service.AppConfigService
 import com.fund.modules.user.UserChangePasswordRequest
 import com.fund.modules.user.UserLoginRequest
 import com.fund.modules.user.UserRegisterRequest
+import com.fund.modules.user.UserUpdateRequest
 import com.fund.modules.user.vo.AppLoginInfo
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.IpService
@@ -115,6 +117,7 @@ open class AppUserServiceImpl(
             // 头像相对路径
             user.avatar = appConfigService.getValueOrDefault(AppConfigCode.DEFAULT_AVATAR)
             user.isFrozen = false
+            user.tradable = true
             user.registerIp = clientIP
             user.registerTime = LocalDateTime.now()
             user.lastLoginIp = clientIP
@@ -156,9 +159,7 @@ open class AppUserServiceImpl(
         val appUser = this.findUserByAccount(req.userAccount!!)
             ?: // 账号或密码不正确
             throw BusinessException("account_or_password_is_incorrect")
-        if (MD5.create().digestHex(req.password!!)
-                .lowercase(Locale.ROOT) != appUser.password!!.lowercase(Locale.ROOT)
-        ) {
+        if (!MD5.create().digestHex(req.password!!).lowercase(Locale.ROOT).equals(appUser.password!!.lowercase(Locale.ROOT))) {
             // 账号或密码不正确
             throw BusinessException("account_or_password_is_incorrect")
         }
@@ -216,6 +217,41 @@ open class AppUserServiceImpl(
         user.showPassword = req.newPassword
         updateById(user)
 
+        return R.success()
+    }
+
+    override fun changeMoneyPassword(req: UserChangePasswordRequest, userId: Long) {
+        if (req.newPassword != req.confirmPassword) {
+            throw BusinessException("the_confirmation_password_does_not_match")
+        }
+        val user = getById(userId)
+        val userAccount: String = user.userAccount!!
+
+        if (StrUtil.isNotBlank(user.moneyPassword)) {
+            if (!req.oldPassword.equals(user.showMoneyPassword) ) {
+                throw BusinessException("incorrect_password")
+            }
+        }
+
+        user.moneyPassword = MD5.create().digestHex(req.newPassword)
+        user.showMoneyPassword = req.newPassword
+        updateById(user)
+
+        val key = RedisKeys.CHANGE_PASSWORD_LIMIT + userAccount
+        val b = limitFunctionToday(key, 3)
+        if (b) {
+            throw BusinessException("can_only_try")
+        }
+    }
+
+    override fun updateKyc(req: UserUpdateRequest, userId: Long): R<Unit> {
+        val user = this.getById(userId)
+
+        user.kycStatus = 1
+        user.kycPic1 = req.kycPic1
+        user.kycPic2 = req.kycPic2
+        user.idNumber = req.idNumber
+        this.updateById(user)
         return R.success()
     }
 

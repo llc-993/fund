@@ -2,6 +2,7 @@ package com.fund.controller.risingfalling
 
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
+import cn.hutool.core.util.StrUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.common.entity.R
 
@@ -13,6 +14,7 @@ import com.fund.modules.risingFalling.model.RisingFallingSectors
 import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription
 import com.fund.modules.risingFalling.service.RisingFallingSectorsService
 import com.fund.modules.risingFalling.service.RisingFallingSectorsSubscriptionService
+import com.fund.modules.stock.service.StockService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -30,7 +32,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/risingFallingSectors")
 class RisingFallingSectorsController(
     private val risingFallingSectorsService: RisingFallingSectorsService,
-    private val risingFallingSectorsSubscriptionService: RisingFallingSectorsSubscriptionService
+    private val risingFallingSectorsSubscriptionService: RisingFallingSectorsSubscriptionService,
+    private val stockService: StockService
 ) {
 
     @Operation(
@@ -43,8 +46,16 @@ class RisingFallingSectorsController(
     fun list(): R<Any> {
         val risingFallingSectors = risingFallingSectorsService.list(
             KtQueryWrapper(RisingFallingSectors())
-                .eq(RisingFallingSectors::displayStatus, 0)  // 0=显示
+               // .eq(RisingFallingSectors::displayStatus, 0)  // 0=显示
+                .orderByDesc(RisingFallingSectors::id)
         )
+        for (sectors in risingFallingSectors) {
+            val stock = stockService.getStockById(sectors.stockId!!)
+            sectors.name = stock.name
+            sectors.price = stock.last
+            sectors.chgPct = stock.chgPct
+            sectors.passWordStatus = StrUtil.isNotBlank(sectors.passWord)
+        }
         return R.success(risingFallingSectors)
     }
 

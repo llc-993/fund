@@ -1,6 +1,7 @@
 package com.fund.modules.wallet.model
 
 import com.baomidou.mybatisplus.annotation.*
+import com.fasterxml.jackson.annotation.JsonIgnore
 import io.swagger.v3.oas.annotations.media.Schema
 import java.io.Serializable
 import java.math.BigDecimal
@@ -70,7 +71,7 @@ class AppUserWalletV2 : Serializable {
     /**
      * 总余额（计算字段）
      */
-    @TableField("total_balance")
+    @TableField(value = "total_balance", exist = false)
     @Schema(description = "总余额（可用 + 冻结）", example = "1500.50", nullable = true)
     var totalBalance: BigDecimal? = null
 
@@ -91,8 +92,8 @@ class AppUserWalletV2 : Serializable {
     /**
      * 版本号（乐观锁）
      */
-    @Version
-    @TableField("version")
+    @JsonIgnore
+    @TableField("version", update ="%s+1" )
     @Schema(description = "版本号（用于乐观锁）", example = "5", nullable = true)
     var version: Int? = null
 
