@@ -125,7 +125,7 @@ class StockSubscriptionController(
                 walletType = 0,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = GoldChangeEnum.IPO_CONVERSION.enumName,
+                operationType = GoldChangeEnum.IPO_CONVERSION,
                 remark = "IPO转持仓: ${subscription.name}(${subscription.symbol}), 数量: ${req.allotmentQuantity}"
             )
 

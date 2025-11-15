@@ -14,6 +14,7 @@ import com.fund.modules.financial.model.FinancialOrder
 import com.fund.modules.financial.model.FinancialProduct
 import com.fund.modules.financial.service.FinancialOrderService
 import com.fund.modules.financial.service.FinancialProductService
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
 import com.fund.utils.I18nUtil
@@ -50,11 +51,6 @@ open class FinancialOrderServiceImpl(
         private const val ORDER_STATUS_ACTIVE: Byte = 1
         private const val ORDER_STATUS_CLOSED: Byte = 2
         private const val ORDER_STATUS_EXPIRED: Byte = 3
-        private const val WALLET_OPERATION_TYPE = "FINANCIAL_PURCHASE"
-        private const val WALLET_INTEREST_TYPE = "FINANCIAL_INTEREST"
-        private const val WALLET_EXPIRE_TYPE = "FINANCIAL_EXPIRE"
-        private const val WALLET_REDEEM_TYPE = "FINANCIAL_REDEEM"
-        private const val WALLET_FORCE_REDEEM_TYPE = "FINANCIAL_FORCE_REDEEM"
         
         // 一年按365天计算
         private const val DAYS_PER_YEAR = 365
@@ -133,7 +129,7 @@ open class FinancialOrderServiceImpl(
                 walletType = walletType.toInt(),
                 currencyCode = coin,
                 amount = amount,
-                operationType = WALLET_OPERATION_TYPE,
+                operationType = GoldChangeEnum.FINANCIAL_PURCHASE,
                 remark = remark
             )
             
@@ -245,7 +241,7 @@ open class FinancialOrderServiceImpl(
                 walletType = walletType,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = WALLET_REDEEM_TYPE,
+                operationType = GoldChangeEnum.FINANCIAL_REDEEM,
                 remark = remark
             )
             
@@ -332,7 +328,7 @@ open class FinancialOrderServiceImpl(
                                         walletType = walletType,
                                         currencyCode = coin,
                                         amount = totalProfit,
-                                        operationType = WALLET_EXPIRE_TYPE,
+                                        operationType = GoldChangeEnum.FINANCIAL_EXPIRE,
                                         remark = remark
                                     )
                                     
@@ -367,7 +363,7 @@ open class FinancialOrderServiceImpl(
                                     walletType = walletType,
                                     currencyCode = coin,
                                     amount = dailyProfit,
-                                    operationType = WALLET_INTEREST_TYPE,
+                                    operationType = GoldChangeEnum.FINANCIAL_INTEREST,
                                     remark = remark
                                 )
                                 
@@ -446,7 +442,7 @@ open class FinancialOrderServiceImpl(
                 walletType = walletType,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = WALLET_FORCE_REDEEM_TYPE,
+                operationType = GoldChangeEnum.FINANCIAL_FORCE_REDEEM,
                 remark = remark
             )
             
@@ -517,7 +513,7 @@ open class FinancialOrderServiceImpl(
                                 walletType = walletType,
                                 currencyCode = coin,
                                 amount = totalAmount,
-                                operationType = WALLET_FORCE_REDEEM_TYPE,
+                                operationType = GoldChangeEnum.FINANCIAL_FORCE_REDEEM,
                                 remark = redeemRemark
                             )
                             

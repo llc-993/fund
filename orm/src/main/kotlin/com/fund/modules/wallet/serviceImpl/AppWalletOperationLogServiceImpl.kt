@@ -2,6 +2,7 @@ package com.fund.modules.wallet.serviceImpl
 
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.mapper.AppWalletOperationLogMapper
 import com.fund.modules.wallet.model.AppWalletOperationLog
 import com.fund.modules.wallet.service.AppWalletOperationLogService
@@ -24,7 +25,7 @@ open class AppWalletOperationLogServiceImpl : ServiceImpl<AppWalletOperationLogM
     override fun logOperation(
         userId: Long,
         walletType: Int,
-        operationType: String,
+        operationType: GoldChangeEnum,
         amount: BigDecimal,
         beforeBalance: BigDecimal,
         afterBalance: BigDecimal,
@@ -33,13 +34,13 @@ open class AppWalletOperationLogServiceImpl : ServiceImpl<AppWalletOperationLogM
         status: Int,
         remark: String?
     ): AppWalletOperationLog {
-        val serialNo = operationType + generateId()
+        val serialNo = operationType.prefix + generateId()
         
         val log = AppWalletOperationLog().apply {
             this.serialNo = serialNo
             this.userId = userId
             this.walletType = walletType
-            this.operationType = operationType
+            this.operationType = operationType.code
             this.amount = amount
             this.beforeBalance = beforeBalance
             this.afterBalance = afterBalance

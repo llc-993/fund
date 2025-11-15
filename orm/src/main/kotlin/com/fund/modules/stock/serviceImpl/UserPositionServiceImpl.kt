@@ -202,7 +202,7 @@ open class UserPositionServiceImpl(
                 walletType = 0,
                 currencyCode = currencyCode,
                 amount = totalCost,
-                operationType = GoldChangeEnum.TASK.enumName,
+                operationType = GoldChangeEnum.BUY,
                 remark = "股票买入: ${stock.name}(${stock.symbol}), 数量: ${req.buyNum}, 价格: $nowPrice"
             )
 
@@ -364,7 +364,7 @@ open class UserPositionServiceImpl(
                 walletType = 0,
                 currencyCode = currencyCode,
                 amount = totalCost,
-                operationType = GoldChangeEnum.TASK.enumName,
+                operationType = GoldChangeEnum.BUY,
                 remark = "挂单买入: ${stock.name}(${stock.symbol}), 挂单ID: $pendingOrderId, 数量: ${pendingOrder.buyNum}, 价格: $nowPrice"
             )
 
@@ -1248,7 +1248,7 @@ open class UserPositionServiceImpl(
                 0,
                 currencyCode,
                 amount,
-                "close_position",
+                GoldChangeEnum.SELL,
                 remark
             )
 

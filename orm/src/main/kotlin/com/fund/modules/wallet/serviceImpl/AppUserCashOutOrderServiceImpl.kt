@@ -130,7 +130,7 @@ open class AppUserCashOutOrderServiceImpl(
                 serialNo = GeneratorIdUtil.generateId()
                 this.userId = userId
                 walletType = 0
-                operationType = GoldChangeEnum.CASH_OUT_REQUEST.enumName
+                operationType = GoldChangeEnum.CASH_OUT_REQUEST.code
                 this.amount = amount.negate()  // 负数表示扣减
                 beforeBalance = beforeAvailableBalance
                 afterBalance = userWallet.availableBalance

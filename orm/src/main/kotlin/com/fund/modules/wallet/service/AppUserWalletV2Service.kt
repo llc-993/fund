@@ -1,6 +1,7 @@
 package com.fund.modules.wallet.service
 
 import com.baomidou.mybatisplus.extension.service.IService
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.model.AppUserWalletV2
 import java.math.BigDecimal
 
@@ -43,7 +44,7 @@ interface AppUserWalletV2Service : IService<AppUserWalletV2> {
      * @param remark 备注
      * @return 是否成功
      */
-    fun addAvailableBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun addAvailableBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: GoldChangeEnum, remark: String? = null): Boolean
 
     /**
      * 减少可用余额
@@ -55,7 +56,7 @@ interface AppUserWalletV2Service : IService<AppUserWalletV2> {
      * @param remark 备注
      * @return 是否成功
      */
-    fun subtractAvailableBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun subtractAvailableBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: GoldChangeEnum, remark: String? = null): Boolean
 
     /**
      * 冻结余额
@@ -67,7 +68,7 @@ interface AppUserWalletV2Service : IService<AppUserWalletV2> {
      * @param remark 备注
      * @return 是否成功
      */
-    fun freezeBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun freezeBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: GoldChangeEnum, remark: String? = null): Boolean
 
     /**
      * 解冻余额
@@ -79,7 +80,7 @@ interface AppUserWalletV2Service : IService<AppUserWalletV2> {
      * @param remark 备注
      * @return 是否成功
      */
-    fun unfreezeBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: String, remark: String? = null): Boolean
+    fun unfreezeBalance(userId: Long, walletType: Int = 0, currencyCode: String = "CNY", amount: BigDecimal, operationType: GoldChangeEnum, remark: String? = null): Boolean
 
     /**
      * 检查余额是否足够

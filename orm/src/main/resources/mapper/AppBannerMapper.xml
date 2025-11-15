@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.banner.mapper.AppBannerMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.banner.model.AppBanner">
+        <id column="id" property="id" />
+        <result column="skip_type" property="skipType" />
+        <result column="i18n_code" property="i18nCode" />
+        <result column="img_url" property="imgUrl" />
+        <result column="skip_url" property="skipUrl" />
+        <result column="content" property="content" />
+        <result column="banner_status" property="bannerStatus" />
+        <result column="sort_by" property="sortBy" />
+        <result column="create_by" property="createBy" />
+        <result column="update_by" property="updateBy" />
+        <result column="create_time" property="createTime" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, skip_type, i18n_code, img_url, skip_url, content, banner_status, sort_by, create_by, update_by, create_time, update_time
+    </sql>
+
+</mapper>

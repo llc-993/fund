@@ -38,7 +38,7 @@ class KlineFillJob(
      * 每分钟执行一次K线填充
      * cron: 秒 分 时 日 月 周
      */
-    @Scheduled(cron = "0 */1 * * * ?")
+   // @Scheduled(cron = "0 */1 * * * ?")
     fun fillKlineData() {
         if (!fillEnabled) {
             return

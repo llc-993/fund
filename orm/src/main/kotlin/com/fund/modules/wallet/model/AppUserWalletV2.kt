@@ -69,9 +69,9 @@ class AppUserWalletV2 : Serializable {
     var frozenBalance: BigDecimal? = null
 
     /**
-     * 总余额（计算字段）
+     * 总余额（数据库计算字段，不参与插入和更新）
      */
-    @TableField(value = "total_balance", exist = false)
+    @TableField(value = "total_balance", insertStrategy = FieldStrategy.NEVER, updateStrategy = FieldStrategy.NEVER)
     @Schema(description = "总余额（可用 + 冻结）", example = "1500.50", nullable = true)
     var totalBalance: BigDecimal? = null
 

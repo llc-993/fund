@@ -51,7 +51,7 @@ class AppWalletOperationLog : Serializable {
      */
     @TableField("operation_type")
     @Schema(description = "操作类型（如充值、提现、交易等）", example = "DEPOSIT", nullable = true)
-    var operationType: String? = null
+    var operationType: Int? = null
 
     /**
      * 操作金额

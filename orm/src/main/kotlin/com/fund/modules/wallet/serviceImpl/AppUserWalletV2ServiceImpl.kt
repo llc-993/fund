@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl
 import com.fund.common.Constants.MARKET_COIN_MAP
 import com.fund.exception.BusinessException
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.mapper.AppUserWalletV2Mapper
 import com.fund.modules.wallet.model.AppUserWalletV2
 import com.fund.modules.wallet.service.AppUserWalletV2Service
@@ -62,7 +63,7 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun addAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+    override fun addAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
         val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         
@@ -93,7 +94,7 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun subtractAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+    override fun subtractAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
         val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         
@@ -128,7 +129,7 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun freezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+    override fun freezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
         val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         
@@ -167,7 +168,7 @@ open class AppUserWalletV2ServiceImpl(
     }
 
     @Transactional(rollbackFor = [Exception::class])
-    override fun unfreezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: String, remark: String?): Boolean {
+    override fun unfreezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
         val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
             ?: throw BusinessException("钱包不存在")
         

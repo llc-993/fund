@@ -25,7 +25,7 @@ class DisruptorConfig(
 
     private val logger = KotlinLogging.logger {}
 
-    private val bufferSize: Int = 2 shl 13
+    private val bufferSize: Int = 2 shl 14
 
     private lateinit var disruptor: Disruptor<KlineEvent>
 

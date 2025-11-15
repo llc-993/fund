@@ -1,13 +1,21 @@
 package com.fund.controller
 
+import cn.hutool.core.util.StrUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.HeaderConstants
 import com.fund.common.entity.R
 import com.fund.exception.BusinessException
+import com.fund.modules.banner.model.AppBanner
+import com.fund.modules.banner.service.AppBannerService
 import com.fund.modules.conf.dto.BaseConfig
 import com.fund.modules.conf.dto.IpoConfig
 import com.fund.modules.conf.dto.RisingFallingConfig
 import com.fund.modules.conf.dto.StockMarketConfig
 import com.fund.modules.conf.service.AppConfigService
+import com.fund.modules.doc.model.AppDoc
+import com.fund.modules.doc.service.AppDocService
+import com.fund.modules.notice.model.AppNotice
+import com.fund.modules.notice.service.AppNoticeService
 import com.fund.modules.sys.model.SysCsLink
 import com.fund.modules.sys.service.SysCsLinkService
 import com.fund.modules.sys.service.UploadService
@@ -19,6 +27,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
@@ -30,11 +39,14 @@ import org.springframework.web.multipart.MultipartFile
 class CommonController(
     private val uploadService: UploadService,
     private val appConfigService: AppConfigService,
-    private val csLinkService: SysCsLinkService
+    private val csLinkService: SysCsLinkService,
+    private val bannerService: AppBannerService,
+    private val docService: AppDocService,
+    private val appNoticeService: AppNoticeService,
 ) {
 
     @Operation(
-        summary = "上传图片", 
+        summary = "上传图片",
         description = "上传图片文件并返回访问URL"
     )
     @ApiResponse(responseCode = "200", description = "上传成功")
@@ -110,6 +122,58 @@ class CommonController(
                 .last(" limit 1")
         )
         return R.success(csLink)
+    }
+
+    @Operation(summary = "轮播图列表")
+    @GetMapping("/banner")
+    fun banner(
+        @Parameter(description = "国际化标识编码（可选）", required = false, example = "banner_home_top")
+        @RequestParam(required = false) i18nCode: String?
+    ): R<List<AppBanner>> {
+        val list = bannerService.list(
+            KtQueryWrapper(AppBanner::class.java)
+                .eq(!i18nCode.isNullOrBlank(), AppBanner::i18nCode, i18nCode)
+                .eq(AppBanner::bannerStatus, true)
+                .orderByDesc(AppBanner::sortBy)
+        )
+        return R.success(list)
+    }
+
+
+    @GetMapping("/getDoc")
+    @Operation(summary = "获取文案")
+    fun getDoc(
+        @RequestHeader(value = HeaderConstants.Lang, required = false, defaultValue = "en_US")
+        lang: String,
+        @RequestParam(value = "usedFor", required = true)
+        @Parameter(name = "用途 参考用途列表")
+        usedFor: String
+    ): R<AppDoc?> {
+        // en-US -> en_US
+        val i18nCode = lang.replace("-", "_")
+        val doc = docService.getOne(
+            KtQueryWrapper(AppDoc())
+                .eq(AppDoc::usedFor, usedFor)
+                .eq(AppDoc::i18nCode, i18nCode)
+                .orderByAsc(AppDoc::sortBy, AppDoc::createTime)
+                .last("limit 1")
+        )
+        return R.success(doc)
+    }
+
+    @GetMapping("/getNotice")
+    @Operation(summary = "获取信息公告栏")
+    fun getNotice(
+        @RequestHeader(value = HeaderConstants.Lang, required = false, defaultValue = "en_US")
+        lang: String
+    ): R<List<AppNotice>> {
+        val i18nCode = lang.replace("-", "_")
+        val appNotices = appNoticeService.list(
+            KtQueryWrapper(AppNotice::class.java)
+                .eq(AppNotice::language, i18nCode)
+                .orderByDesc(AppNotice::id)
+        )
+        return R.success(appNotices)
     }
 
 }

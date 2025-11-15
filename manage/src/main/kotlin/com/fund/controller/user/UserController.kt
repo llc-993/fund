@@ -1,6 +1,7 @@
 package com.fund.controller.user
 
 import cn.dev33.satoken.annotation.SaCheckLogin
+import cn.hutool.core.bean.BeanUtil
 import cn.hutool.core.util.StrUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
@@ -10,17 +11,22 @@ import com.fund.modules.stock.service.UserPositionService
 import com.fund.modules.user.AdminUserQueryReq
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
+import com.fund.modules.user.vo.AdminUserVo
+import com.fund.modules.wallet.model.AppUserWalletV2
+import com.fund.modules.wallet.service.AppUserWalletV2Service
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.math.BigDecimal
 import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
 
 @RestController
 @RequestMapping("/user")
 class UserController(
     private val userService: AppUserService,
-    private val userPositionService: UserPositionService
+    private val userPositionService: UserPositionService,
+    private val walletV2Service: AppUserWalletV2Service
 ) {
 
     @SaCheckLogin
@@ -45,29 +51,28 @@ class UserController(
         val userIds = page1.records.mapNotNull { it.id }
         
         // 如果有用户记录，则获取每个用户的盈亏总和
+        val voList: MutableList<AdminUserVo> = mutableListOf()
         if (userIds.isNotEmpty()) {
             val userProfitMap = userPositionService.getProfitAndLoseByUser(userIds)
-            
-            // 在返回结果中添加用户盈亏信息
-            val userList = page1.records.map { user ->
-                val userId = user.id
-                val profit = if (userId != null) userProfitMap[userId] ?: java.math.BigDecimal.ZERO else java.math.BigDecimal.ZERO
-                
-                // 创建包含用户信息和盈亏数据的Map
-                mapOf(
-                    "user" to user,
-                    "profitAndLose" to profit
-                )
-            }
-            
-            // 更新分页对象中的记录
-            val result = Page<Map<String, Any>>(page1.current, page1.size, page1.total)
-            result.records = userList
-            
-            return R.success(result)
-        }
 
-        return R.success(page1)
+            for (user in page1.records) {
+                val userVo = AdminUserVo()
+                BeanUtil.copyProperties(user, userVo)
+
+                userVo.profitAndLose= userProfitMap[user.id] ?: BigDecimal.ZERO
+
+                user.wallet = walletV2Service.list(KtQueryWrapper(AppUserWalletV2())
+                    .eq(AppUserWalletV2::userId, user.id)
+                )
+
+                voList.add(userVo)
+            }
+        }
+        val page2 = Page<AdminUserVo> (page1.current, page1.size, page1.total)
+        page2.records = voList
+        return R.success(page2)
     }
+
+
 
 }

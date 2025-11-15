@@ -1,6 +1,7 @@
 package com.fund.modules.wallet.service
 
 import com.baomidou.mybatisplus.extension.service.IService
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.model.AppWalletOperationLog
 import java.math.BigDecimal
 
@@ -31,7 +32,7 @@ interface AppWalletOperationLogService : IService<AppWalletOperationLog> {
     fun logOperation(
         userId: Long,
         walletType: Int,
-        operationType: String,
+        operationType: GoldChangeEnum,
         amount: BigDecimal,
         beforeBalance: BigDecimal,
         afterBalance: BigDecimal,

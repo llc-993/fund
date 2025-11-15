@@ -15,10 +15,9 @@ enum class GoldChangeEnum(var code: Int, var `enumName`: String, var prefix: Str
     REG_REWARD(2, "注册奖励", "rr"), // 注册奖励
     PROXY_REBATE(3, "代理佣金", "px"), // 代理佣金
     ADMIN_GIVE_BALANCE(141, "赠送", "gb"), // 赠送
-    TASK(666, "交易下单", "tk"),  // 任务扣除
-    TASK_CANCEL(777, "交易取消", "tc"), // 交易取消
-    TASK_RETURN(699, "交易本金返还", "tn"), // 接单返还
-    TASK_INCOME(688, "交易返佣", "te"), // 任务返佣
+
+    BUY(666, "交易下单", "buy"),  // 交易下单
+    SELL(667, "平仓","sell"),
 
     // IPO相关
     IPO_CONVERSION(667, "IPO转持仓", "ic"), // IPO转持仓
@@ -28,6 +27,13 @@ enum class GoldChangeEnum(var code: Int, var `enumName`: String, var prefix: Str
 
     // 涨跌板块相关
     RISING_FALLING_SECTORS_CONVERSION(669, "涨跌板块转持仓", "rfsc"), // 伦敦板块转持仓
+
+    // 理财相关
+    FINANCIAL_PURCHASE(670, "理财申购", "fp"), // 理财申购
+    FINANCIAL_INTEREST(671, "理财收益", "fi"), // 理财收益
+    FINANCIAL_EXPIRE(672, "理财到期", "fe"), // 理财到期
+    FINANCIAL_REDEEM(673, "理财赎回", "fr"), // 理财赎回
+    FINANCIAL_FORCE_REDEEM(674, "理财强制赎回", "ffr"), // 理财强制赎回
     ;
 
     companion object {

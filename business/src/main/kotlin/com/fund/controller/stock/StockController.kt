@@ -3,12 +3,15 @@ package com.fund.controller.stock
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.annotation.SaIgnore
 import cn.dev33.satoken.stp.StpUtil
+import cn.hutool.core.util.StrUtil
+import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.common.entity.R
 import com.fund.modules.stock.QueryStockRequest
 import com.fund.modules.stock.StockBuyRequest
 import com.fund.modules.stock.StockAddOrderRequest
 import com.fund.modules.stock.UpdateProfitTargetRequest
 import com.fund.modules.stock.model.Stock
+import com.fund.modules.stock.model.UserPosition
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import com.fund.modules.stock.service.StockService
@@ -43,8 +46,10 @@ class StockController(
         summary = "股票列表",
         description = "查询股票列表，支持分页和筛选"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功",
-        content = [Content(schema = Schema(implementation = Stock::class))])
+    @ApiResponse(
+        responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Stock::class))]
+    )
     @SaIgnore
     @GetMapping("list")
     fun list(@ModelAttribute req: QueryStockRequest): R<Any> {
@@ -55,8 +60,10 @@ class StockController(
         summary = "股票详情",
         description = "根据ID获取股票详细信息，包括实时行情数据"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功",
-        content = [Content(schema = Schema(implementation = Stock::class))])
+    @ApiResponse(
+        responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Stock::class))]
+    )
     @SaIgnore
     @GetMapping("detail")
     fun detail(
@@ -86,8 +93,10 @@ class StockController(
         summary = "支持的国家列表",
         description = "获取系统支持的所有国家列表"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功",
-        content = [Content(schema = Schema(implementation = String::class))])
+    @ApiResponse(
+        responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = String::class))]
+    )
     @GetMapping("country-list")
     fun countryList(): R<Any> {
         return stockService.countryList()
@@ -158,6 +167,28 @@ class StockController(
     ): R<Any> {
         val userId = StpUtil.getLoginIdAsLong()
         return userPendingOrderService.delOrder(id, userId)
+    }
+
+    @Operation(
+        summary = "用户持仓信息"
+    )
+    @ApiResponse(responseCode = "200",
+        content = [Content(schema = Schema(implementation = UserPosition::class))])
+    @SaCheckLogin
+    @GetMapping("userPosition")
+    fun userPosition(
+        @Parameter(description = "交易对", required = false)
+        @RequestParam(value = "symbol", required = false) symbol: String
+    ): R<Any> {
+        val userId = StpUtil.getLoginIdAsLong()
+
+        val list = userPositionService.list(
+            KtQueryWrapper(UserPosition())
+                .eq(UserPosition::userId, userId)
+                .eq(StrUtil.isNotBlank(symbol), UserPosition::stockCode, symbol)
+                .orderByDesc(UserPosition::id)
+        )
+        return R.success(list)
     }
 
 }

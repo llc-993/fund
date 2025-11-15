@@ -1,4 +1,4 @@
-package com.fund.controller.risingFalling
+package com.fund.controller.risingfalling
 
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
@@ -147,7 +147,7 @@ class RisingFallingSectorsSubscriptionController(
                 walletType = 0,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = GoldChangeEnum.RISING_FALLING_SECTORS_CONVERSION.enumName,
+                operationType = GoldChangeEnum.RISING_FALLING_SECTORS_CONVERSION,
                 remark = "涨跌板块转持仓: ${subscription.name}, 数量: ${req.confirmQuantity}"
             )
 

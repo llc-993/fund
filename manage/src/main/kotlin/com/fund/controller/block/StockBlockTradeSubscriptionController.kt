@@ -136,7 +136,7 @@ class StockBlockTradeSubscriptionController(
                 walletType = 0,
                 currencyCode = coin,
                 amount = totalAmount,
-                operationType = GoldChangeEnum.BLOCK_TRADE_CONVERSION.enumName,
+                operationType = GoldChangeEnum.BLOCK_TRADE_CONVERSION,
                 remark = "大宗交易转持仓: ${subscription.name}, 数量: ${req.confirmQuantity}"
             )
 
