@@ -11,6 +11,7 @@ import com.fund.modules.block.model.StockBlockTrade
 import com.fund.modules.block.model.StockBlockTradeSubscription
 import com.fund.modules.block.service.StockBlockTradeService
 import com.fund.modules.block.service.StockBlockTradeSubscriptionService
+import com.fund.modules.stock.service.StockService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/block")
 class StockBlockTradeController(
+    private val stockService: StockService,
     private val stockBlockTradeService: StockBlockTradeService,
     private val stockBlockTradeSubscriptionService: StockBlockTradeSubscriptionService
 ) {
@@ -67,6 +69,9 @@ class StockBlockTradeController(
                 return R.error("折扣不能为空")
             }
 
+            stockService.getById(req.stockId!!) ?: return R.error("数据库没有该数据")
+
+
             // 创建大宗交易对象
             val blockTrade = StockBlockTrade()
             BeanUtils.copyProperties(req, blockTrade)
@@ -97,6 +102,8 @@ class StockBlockTradeController(
             if (req.id == null) {
                 return R.error("大宗交易ID不能为空")
             }
+
+            stockService.getById(req.stockId!!) ?: return R.error("数据库没有该数据")
 
             // 检查大宗交易是否存在
             val existingBlockTrade = stockBlockTradeService.getById(req.id)

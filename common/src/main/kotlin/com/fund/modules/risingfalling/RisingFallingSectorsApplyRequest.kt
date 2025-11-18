@@ -1,4 +1,4 @@
-package com.fund.modules.risingFalling
+package com.fund.modules.risingfalling
 
 import io.swagger.v3.oas.annotations.media.Schema
 import java.io.Serializable

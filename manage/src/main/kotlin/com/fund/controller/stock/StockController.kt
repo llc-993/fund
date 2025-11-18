@@ -11,6 +11,9 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 
 @RestController
 @RequestMapping("/stock")
@@ -23,6 +26,8 @@ class StockController (
         summary = "股票列表",
         description = "分页查询股票列表"
     )
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Stock::class))])
     @GetMapping("/page")
     fun list(req: PageReq) :R<Any> {
         val page = Page<Stock>(req.pageNum, req.pageSize)

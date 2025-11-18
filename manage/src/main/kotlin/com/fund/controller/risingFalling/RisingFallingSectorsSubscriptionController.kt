@@ -5,8 +5,8 @@ import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.R
-import com.fund.modules.risingFalling.AdminRisingFallingSectorsSubscriptionQueryRequest
-import com.fund.modules.risingFalling.RisingFallingSectorsConversionRequest
+import com.fund.modules.risingfalling.AdminRisingFallingSectorsSubscriptionQueryRequest
+import com.fund.modules.risingfalling.RisingFallingSectorsConversionRequest
 import com.fund.modules.risingFalling.model.RisingFallingSectors
 import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription
 import com.fund.modules.risingFalling.service.RisingFallingSectorsService

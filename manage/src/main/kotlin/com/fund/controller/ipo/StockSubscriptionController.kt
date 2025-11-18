@@ -22,7 +22,8 @@ import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
 import io.swagger.v3.oas.annotations.Operation
-import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import mu.KotlinLogging
@@ -50,7 +51,8 @@ class StockSubscriptionController(
         summary = "新股申购列表",
         description = "分页查询新股申购列表，支持按股票代码和名称筛选"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = StockSubscription::class))])
     @GetMapping("list")
     fun list( req: AdminSubscriptionQueryRequest): R<Any> {
         val page:Page<StockSubscription> = Page(req.pageNum, req.pageSize)

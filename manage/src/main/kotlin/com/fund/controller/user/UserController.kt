@@ -7,7 +7,9 @@ import cn.hutool.core.date.DateUtil
 import cn.hutool.core.util.StrUtil
 import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.baomidou.mybatisplus.extension.kotlin.KtUpdateWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
+import com.fund.common.Constants
 import com.fund.common.dto.Label
 import com.fund.common.entity.PageReq
 import com.fund.common.entity.R
@@ -16,6 +18,8 @@ import com.fund.modules.cash.GoldChangePageReq
 import com.fund.modules.cash.WalletAdminChangeReq
 import com.fund.modules.stock.service.UserPositionService
 import com.fund.modules.sys.service.SysOptLogService
+import com.fund.modules.user.AddAppUserReq
+import com.fund.modules.user.AdminEditAppUserReq
 import com.fund.modules.user.AdminUserQueryReq
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
@@ -194,5 +198,35 @@ class UserController(
         return R.success(page)
     }
 
+    @PostMapping("/edit")
+    @Operation(summary = "编辑会员信息", description = "修改用户的手机号、登录密码、交易密码、会员等级、是否假人 正常 0 假人 1、是否冻结、是否允许交易、是否允许提现")
+    fun edit(@RequestBody @Validated req: AdminEditAppUserReq): R<Unit> {
+        val adminId = StpUtil.getLoginIdAsLong()
+        userService.adminEditAppUser(req) {
+            if (it.isFrozen == true) {
+                StpUtil.logout(req.userId)
+            }
+            if (it.levelWeights != null) {
+               // todo 暂时没有这个需求逻辑。
+            }
+        }
+        optLogService.addLog(adminId, "编辑会员信息", JSON.toJSONString(req))
+        return R.success()
+    }
+
+    @PostMapping("/add")
+    @Operation(summary = "添加会员")
+    fun add(@RequestBody @Validated req: AddAppUserReq): R<Unit> {
+        val adminId = StpUtil.getLoginIdAsLong()
+        userService.adminAddAppUser(req, {
+           // todo 会员等级
+        }) {
+            for (s in Constants.MARKET_COIN_MAP.values) {
+                walletV2Service.createWallet(it.id!!, it.topUserId, 0, s)
+            }
+        }
+        optLogService.addLog(adminId, "添加会员", JSON.toJSONString(req))
+        return R.success()
+    }
 
 }

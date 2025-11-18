@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
+import java.math.BigDecimal
 
 /**
  * 大宗交易
@@ -48,7 +49,8 @@ class StockBlockTradeController(
         )
 
         for (stockBlockTrade in blockTrades) {
-            stockBlockTrade.price = stockService.getStockById(stockBlockTrade.stockId!!).last
+            if (stockBlockTrade.stockId == null) continue
+            stockBlockTrade.price = stockService.getStockById(stockBlockTrade.stockId!!).last ?: BigDecimal.ZERO
         }
         return R.success(blockTrades)
     }

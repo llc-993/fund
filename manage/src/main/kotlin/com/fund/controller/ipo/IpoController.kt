@@ -18,6 +18,8 @@ import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Tag(name = "IPO管理", description = "IPO列表查询、新增、修改、删除等接口")
 @RestController
@@ -33,7 +35,8 @@ class IpoController(
         summary = "分页查询IPO列表",
         description = "分页查询IPO列表，支持按股票代码和名称筛选"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Ipo::class))])
     @GetMapping("list")
     fun list( req: AdminIpoQueryRequest): R<Any> {
         val page: Page<Ipo> = Page(req.pageNum, req.pageSize)
@@ -87,7 +90,7 @@ class IpoController(
             }
 
             logger.info("新增IPO成功: symbol=${req.symbol}, name=${req.name}")
-            return R.success(ipo)
+            return R.success()
         } catch (e: Exception) {
             logger.error(e) { "新增IPO异常" }
             return R.error("新增IPO失败")
@@ -133,7 +136,7 @@ class IpoController(
             }
 
             logger.info("修改IPO成功: id=${req.id}, symbol=${req.symbol}")
-            return R.success(existingIpo)
+            return R.success()
 
         } catch (e: Exception) {
             logger.error(e) { "修改IPO异常" }

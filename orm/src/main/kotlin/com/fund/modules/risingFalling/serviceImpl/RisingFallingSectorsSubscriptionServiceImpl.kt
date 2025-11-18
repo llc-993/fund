@@ -10,8 +10,8 @@ import com.fund.common.entity.R
 import com.fund.exception.BusinessException
 import com.fund.modules.conf.enum.AppConfigCode
 import com.fund.modules.conf.service.AppConfigService
-import com.fund.modules.risingFalling.RisingFallingSectorsApplyRequest
-import com.fund.modules.risingFalling.RisingFallingSectorsUpdateRequest
+import com.fund.modules.risingfalling.RisingFallingSectorsApplyRequest
+import com.fund.modules.risingfalling.RisingFallingSectorsUpdateRequest
 import com.fund.modules.risingFalling.service.RisingFallingSectorsService
 import com.fund.modules.stock.service.StockService
 import com.fund.modules.user.service.AppUserService

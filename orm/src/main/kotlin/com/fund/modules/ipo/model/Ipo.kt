@@ -1,6 +1,7 @@
 package com.fund.modules.ipo.model;
 
 import com.baomidou.mybatisplus.annotation.*
+import io.swagger.v3.oas.annotations.media.Schema
 import org.springframework.format.annotation.DateTimeFormat
 import java.io.Serializable
 import java.math.BigDecimal
@@ -14,98 +15,83 @@ import java.time.LocalDateTime
  * @author 书记
  * @since 2025-10-07
  */
+@Schema(description = "IPO新股申购信息")
 @TableName("ipo")
 class Ipo : Serializable {
 
-    /**
-     * 主键
-     */
+    @Schema(description = "IPO主键ID", example = "1", nullable = true)
     @TableId(value = "id", type = IdType.AUTO)
     var id: Long? = null
 
-    /**
-     * 名字
-     */
+    @Schema(description = "股票名称", example = "苹果公司", nullable = true)
     @TableField("name")
     var name: String? = null
 
-    /**
-     * 国家
-     */
+    @Schema(description = "国家/地区", example = "US", nullable = true)
     @TableField("country")
     var country: String? = null
 
-    /**
-     * 产品代码
-     */
+    @Schema(description = "股票代码/交易对符号", example = "AAPL", nullable = true)
     @TableField("symbol")
     var symbol: String? = null
 
-    /**
-     * 开始时间
-     */
+    @Schema(description = "申购开始时间", example = "2025-01-01T00:00:00", nullable = true)
     @TableField("open_date")
     var openDate: LocalDateTime? = null
 
-    /**
-     * 结束时间
-     */
+    @Schema(description = "申购结束时间", example = "2025-01-10T23:59:59", nullable = true)
     @TableField("close_date")
     var closeDate: LocalDateTime? = null
 
-    /**
-     * 上市时间
-     */
+    @Schema(description = "上市时间", example = "2025-01-15T09:30:00", nullable = true)
     @TableField("listing_date")
     var listingDate: LocalDateTime? = null
 
-    /**
-     * 价格
-     */
+    @Schema(description = "发行价格", example = "150.00", nullable = true)
     @TableField("price")
     var price: BigDecimal? = null
 
-    /**
-     * 认购数量
-     */
+    @Schema(description = "认购数量", example = "1000000", nullable = true)
     @TableField("count")
     var count: Long? = null
 
-    /**
-     * 交易所名称
-     */
+    @Schema(description = "交易所名称", example = "NASDAQ", nullable = true)
     @TableField("exchange")
     var exchange: String? = null
 
-    /**
-     * 状态，1:认购中，2:结束
-     */
+    @Schema(
+        description = "IPO状态：1=认购中，2=已结束",
+        example = "1",
+        allowableValues = ["1", "2"],
+        nullable = true
+    )
     @TableField("status")
     var status: Int? = null
 
-    /**
-     * 1: 新股， 2:线下配售、3:定额配售、4:IPO多配
-     */
+    @Schema(
+        description = "IPO类型：1=新股，2=线下配售，3=定额配售，4=IPO多配",
+        example = "1",
+        allowableValues = ["1", "2", "3", "4"],
+        defaultValue = "1"
+    )
     @TableField("type")
-    var type: Int? = 1
+    var type: Int? = null
 
-    /**
-     * 创建时间
-     */
+    @Schema(description = "创建时间", example = "2025-01-01T10:00:00", nullable = true)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(value = "create_time", fill = FieldFill.INSERT)
     var createTime: LocalDateTime? = null
 
-    /**
-     * 新股申购，已认缴后，转持仓是否锁仓
-     * 是否锁仓（0: 未锁仓, 1: 锁仓）
-     */
+    @Schema(
+        description = "转持仓是否锁仓：0=未锁仓，1=锁仓",
+        example = "0",
+        allowableValues = ["0", "1"],
+        defaultValue = "0"
+    )
     @TableField(value = "is_lock")
     var isLock: Int = 0
 
-    /**
-     * 认缴时间
-     */
+    @Schema(description = "认缴时间", example = "2025-01-05T14:30:00", nullable = true)
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @TableField(value = "subscription_time")
     var subscriptionTime: LocalDateTime? = null

@@ -1,10 +1,10 @@
-package com.fund.modules.risingFalling.service;
+package com.fund.modules.risingFalling.service
 
-import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.baomidou.mybatisplus.extension.service.IService
 import com.fund.common.entity.R
-import com.fund.modules.risingFalling.RisingFallingSectorsApplyRequest
-import com.fund.modules.risingFalling.RisingFallingSectorsUpdateRequest
+import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription
+import com.fund.modules.risingfalling.RisingFallingSectorsApplyRequest
+import com.fund.modules.risingfalling.RisingFallingSectorsUpdateRequest
 
 /**
  * <p>

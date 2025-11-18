@@ -19,6 +19,8 @@ import com.fund.modules.agent.model.AppAgentRelation
 import com.fund.modules.agent.service.AppAgentRelationService
 import com.fund.modules.conf.enum.AppConfigCode
 import com.fund.modules.conf.service.AppConfigService
+import com.fund.modules.user.AddAppUserReq
+import com.fund.modules.user.AdminEditAppUserReq
 import com.fund.modules.user.UserChangePasswordRequest
 import com.fund.modules.user.UserLoginRequest
 import com.fund.modules.user.UserRegisterRequest
@@ -159,7 +161,9 @@ open class AppUserServiceImpl(
         val appUser = this.findUserByAccount(req.userAccount!!)
             ?: // 账号或密码不正确
             throw BusinessException("account_or_password_is_incorrect")
-        if (!MD5.create().digestHex(req.password!!).lowercase(Locale.ROOT).equals(appUser.password!!.lowercase(Locale.ROOT))) {
+        if (!MD5.create().digestHex(req.password!!).lowercase(Locale.ROOT)
+                .equals(appUser.password!!.lowercase(Locale.ROOT))
+        ) {
             // 账号或密码不正确
             throw BusinessException("account_or_password_is_incorrect")
         }
@@ -228,7 +232,7 @@ open class AppUserServiceImpl(
         val userAccount: String = user.userAccount!!
 
         if (StrUtil.isNotBlank(user.moneyPassword)) {
-            if (!req.oldPassword.equals(user.showMoneyPassword) ) {
+            if (!req.oldPassword.equals(user.showMoneyPassword)) {
                 throw BusinessException("incorrect_password")
             }
         }
@@ -253,6 +257,128 @@ open class AppUserServiceImpl(
         user.idNumber = req.idNumber
         this.updateById(user)
         return R.success()
+    }
+
+    override fun adminEditAppUser(req: AdminEditAppUserReq, levelFn: (AdminEditAppUserReq) -> Unit) {
+        RedisLockService.transaction {
+            val old = getById(req.userId)
+
+            var password: String? = null
+            var showPassword: String? = null
+            var moneyPassword: String? = null
+            var showMoneyPassword: String? = null
+            if (StrUtil.isNotBlank(req.password)) {
+                showPassword = req.password
+                password = MD5.create().digestHex(req.password)
+            }
+            if (StrUtil.isNotBlank(req.moneyPassword)) {
+                showMoneyPassword = req.moneyPassword
+                moneyPassword = MD5.create().digestHex(req.moneyPassword)
+            }
+            levelFn(req)
+
+            if (StrUtil.isNotBlank(req.mobilePhone) && req.mobilePhone != old.mobilePhone) {
+                val has = count(
+                    KtQueryWrapper(AppUser())
+                        .eq(AppUser::mobilePhone, req.mobilePhone)
+                ) > 0
+                if (has) {
+                    throw BusinessException("手机号已被注册")
+                }
+            }
+            val keyword = "${old.userAccount};${req.mobilePhone ?: old.mobilePhone};${old.shareCode}"
+            update(
+                KtUpdateWrapper(AppUser())
+                    .eq(AppUser::id, req.userId)
+                    .set(StrUtil.isNotBlank(req.mobilePhone), AppUser::mobilePhone, req.mobilePhone)
+                    .set(AppUser::keyword, keyword)
+                    .set(password != null, AppUser::password, password)
+                    .set(showPassword != null, AppUser::showPassword, showPassword)
+                    .set(moneyPassword != null, AppUser::moneyPassword, moneyPassword)
+                    .set(showMoneyPassword != null, AppUser::showMoneyPassword, showMoneyPassword)
+                    .set(req.userGroup != null, AppUser::userGroup, req.userGroup)
+                    .set(req.isFrozen != null, AppUser::isFrozen, req.isFrozen)
+                    .set(req.tradable != null, AppUser::tradable, req.tradable)
+                    .set(req.cashable != null, AppUser::cashable, req.cashable)
+            )
+        }
+    }
+
+    override fun adminAddAppUser(req: AddAppUserReq, beforeCrate: (AppUser) -> Unit, created: (AppUser) -> Unit) {
+        val clientIP = IpUtils.getIpAddr()
+        RedisLockService.lockTransaction(RedisKeys.LOCK_REG + req.userAccount) {
+
+            // 查询是否存在当前用户
+            val existsAccount = count(
+                KtQueryWrapper(AppUser())
+                    .select(AppUser::id)
+                    .eq(AppUser::userAccount, req.userAccount)
+            ) > 0
+            if (existsAccount) {
+                // 账号已存在
+                throw BusinessException("账号已存在")
+            }
+            // 查询手机号是否被注册过
+            if (StrUtil.isNotBlank(req.mobilePhone)) {
+                val existsMobile = count(
+                    KtQueryWrapper(AppUser())
+                        .select(AppUser::id)
+                        .eq(AppUser::mobilePhone, req.mobilePhone)
+                ) > 0
+                if (existsMobile) {
+                    // 手机号已存在
+                    throw BusinessException("手机号已存在")
+                }
+            }
+
+            // 查询代理关系是否存在
+            val ar = appAgentRelationService.findAgentByCode(req.shareCode!!) ?: throw BusinessException("无效的邀请码")
+
+            // 生成用户
+            val user = AppUser()
+            user.topUserId = ar.topUserId
+            user.userName = req.userAccount
+            user.userAccount = req.userAccount
+            user.mobilePhone = req.mobilePhone
+            user.keyword = "${user.userAccount};${user.mobilePhone}"
+            user.userGroup = req.userGroup
+            user.password = MD5.create().digestHex(req.password)
+            user.showPassword = req.password
+            user.gender = -1
+
+            beforeCrate(user)
+
+            if (StrUtil.isNotBlank(req.moneyPassword)) {
+                user.moneyPassword = MD5.create().digestHex(req.moneyPassword)
+                user.showMoneyPassword = req.moneyPassword
+            }
+            // 头像相对路径
+            user.avatar = appConfigService.getValueOrDefault(AppConfigCode.DEFAULT_AVATAR)
+            user.isFrozen = req.isFrozen
+            user.cashable = req.cashable
+            user.tradable = req.tradable
+            user.registerIp = clientIP
+            user.registerTime = LocalDateTime.now()
+            user.lastLoginIp = clientIP
+            user.lastLoginTime = LocalDateTime.now()
+            save(user)
+
+            // 生成代理关系
+            val myAr: AppAgentRelation = appAgentRelationService.createMemAgentRelation(user, ar)
+            appAgentRelationService.save(myAr)
+
+            // 更新ip区域
+            val area: String? = clientIP?.let { ipService.getRealAddressByIP(it) }
+
+            // 更新邀请码
+            user.shareCode = myAr.oriShareCode
+            user.keyword = "${user.userAccount};${user.mobilePhone};${user.shareCode}"
+            user.registerArea = area
+            updateById(user)
+
+
+            created(user)
+        }
     }
 
 

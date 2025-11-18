@@ -17,7 +17,7 @@ class AdminBlockTradeAddRequest : Serializable {
     /**
      * 股票id
      */
-    var stockId: Int? = null
+    var stockId: Long? = null
 
     /**
      * 最大买入数量

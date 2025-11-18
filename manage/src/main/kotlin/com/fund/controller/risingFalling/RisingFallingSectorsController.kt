@@ -4,9 +4,10 @@ import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.IdReq
 import com.fund.common.entity.R
-import com.fund.modules.risingFalling.AdminRisingFallingSectorsAddRequest
-import com.fund.modules.risingFalling.AdminRisingFallingSectorsQueryRequest
-import com.fund.modules.risingFalling.AdminRisingFallingSectorsUpdateRequest
+import com.fund.modules.ipo.model.Ipo
+import com.fund.modules.risingfalling.AdminRisingFallingSectorsAddRequest
+import com.fund.modules.risingfalling.AdminRisingFallingSectorsQueryRequest
+import com.fund.modules.risingfalling.AdminRisingFallingSectorsUpdateRequest
 import com.fund.modules.risingFalling.model.RisingFallingSectors
 import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription
 import com.fund.modules.risingFalling.service.RisingFallingSectorsService
@@ -18,6 +19,8 @@ import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
 
 @Tag(name = "涨跌板块管理", description = "涨跌板块列表查询、新增、修改、删除等接口")
 @RestController
@@ -33,7 +36,8 @@ class RisingFallingSectorsController(
         summary = "分页查询涨跌板块列表",
         description = "分页查询涨跌板块列表，支持按股票代码、锁定状态、显示状态筛选"
     )
-    @ApiResponse(responseCode = "200", description = "查询成功")
+    @ApiResponse(description = "查询成功",
+        content = [Content(schema = Schema(implementation = RisingFallingSectors::class))])
     @GetMapping("list")
     fun list( req: AdminRisingFallingSectorsQueryRequest): R<Any> {
         val page: Page<RisingFallingSectors> = Page(req.pageNum, req.pageSize)

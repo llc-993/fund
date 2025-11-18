@@ -67,6 +67,22 @@ class StockBlockTradeSubscriptionController(
                 .eq(req.status != null, StockBlockTradeSubscription::status, req.status)
                 .orderByDesc(StockBlockTradeSubscription::id)
         )
+
+        if (!page1.records.isNotEmpty()) {
+            val userIds = page1.records.mapNotNull { it.userId }.distinct()
+            if (userIds.isNotEmpty()) {
+                val userMap = appUserService.list(
+                    KtQueryWrapper(AppUser())
+                        .select(AppUser::userName)
+                        .`in`(AppUser::id, userIds)
+                ).associateBy { it.id }.mapValues { it.value.userName }
+                
+                page1.records.forEach { subscription ->
+                    subscription.userName = subscription.userId?.let { userMap[it] }
+                }
+            }
+        }
+
         return R.success(page1)
     }
 
@@ -167,6 +183,8 @@ class StockBlockTradeSubscriptionController(
             // 更新申购记录状态：转化成功后标记为已转持仓
             subscription.status = 4  // 4 = 已转持仓
             subscription.confirmTime = LocalDateTime.now()  // 记录转化时间
+            subscription.actualAmount = totalAmount
+            subscription.applyNums = req.confirmQuantity
             stockBlockTradeSubscriptionService.updateById(subscription)
 
             logger.info("大宗交易转化成功: subscriptionId=${subscription.id}, positionId=${userPosition.id}, userId=$userId, stockId=${subscription.stockId}, quantity=${req.confirmQuantity}")

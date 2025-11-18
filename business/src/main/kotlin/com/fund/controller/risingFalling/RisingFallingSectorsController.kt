@@ -8,8 +8,8 @@ import com.fund.common.entity.R
 
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
-import com.fund.modules.risingFalling.RisingFallingSectorsApplyRequest
-import com.fund.modules.risingFalling.RisingFallingSectorsUpdateRequest
+import com.fund.modules.risingfalling.RisingFallingSectorsApplyRequest
+import com.fund.modules.risingfalling.RisingFallingSectorsUpdateRequest
 import com.fund.modules.risingFalling.model.RisingFallingSectors
 import com.fund.modules.risingFalling.model.RisingFallingSectorsSubscription
 import com.fund.modules.risingFalling.service.RisingFallingSectorsService

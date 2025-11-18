@@ -3,6 +3,8 @@ package com.fund.modules.user.service;
 import com.fund.modules.user.model.AppUser;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fund.common.entity.R
+import com.fund.modules.user.AddAppUserReq
+import com.fund.modules.user.AdminEditAppUserReq
 import com.fund.modules.user.UserChangePasswordRequest
 import com.fund.modules.user.UserLoginRequest
 import com.fund.modules.user.UserRegisterRequest
@@ -36,4 +38,10 @@ interface AppUserService : IService<AppUser> {
 
     // 修改kyc
     fun updateKyc(req: UserUpdateRequest, userId: Long): R<Unit>
+
+    //编辑会员信息
+    fun adminEditAppUser(req: AdminEditAppUserReq, levelFn: (req: AdminEditAppUserReq) -> Unit)
+
+    // 新增会员
+    fun adminAddAppUser(req: AddAppUserReq, beforeCrate: (appUser:AppUser) -> Unit, created: (appUser: AppUser) -> Unit)
 }
