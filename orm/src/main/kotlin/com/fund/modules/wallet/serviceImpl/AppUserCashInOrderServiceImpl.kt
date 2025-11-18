@@ -1,16 +1,21 @@
 package com.fund.modules.wallet.serviceImpl;
 
 import cn.hutool.core.date.DateUtil
+import cn.hutool.core.util.StrUtil
+import com.baomidou.mybatisplus.extension.kotlin.KtUpdateWrapper
 import com.fund.modules.wallet.model.AppUserCashInOrder;
 import com.fund.modules.wallet.mapper.AppUserCashInOrderMapper;
 import com.fund.modules.wallet.service.AppUserCashInOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fund.common.RedisKeys
 import com.fund.common.entity.R
+import com.fund.exception.BusinessException
 import com.fund.modules.agent.service.AppAgentRelationService
 import com.fund.modules.cash.CashInReq
+import com.fund.modules.cash.CashInReviewReq
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
+import com.fund.modules.wallet.enum.GoldChangeEnum
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil.generateId
 import com.fund.utils.IpUtils
@@ -52,8 +57,58 @@ open class AppUserCashInOrderServiceImpl(
             order.imgUrl = req.imgUrl
             // 订单类型   1待处理 2已锁定 3  已取消 4 已拒绝 5 已成功
             order.cashStatus = 1
+            order.depositCode = req.depositCode
             save(order)
             R.success()
+        }
+    }
+
+    override fun review(req: CashInReviewReq) {
+        RedisLockService.transaction block@{
+            val order = this.getById(req.id) ?: throw BusinessException("订单不存在")
+            if (order.cashStatus != 1) {
+                throw BusinessException("订单状态已变更")
+            }
+            if (!req.pass!!) {
+                // 拒绝
+                update(
+                    KtUpdateWrapper(AppUserCashInOrder())
+                        .eq(AppUserCashInOrder::id, req.id) // 订单类型   1待处理 2已锁定 3  已取消 4 已拒绝 5 已成功
+                        .set(AppUserCashInOrder::cashStatus, 4)
+                        .set(StrUtil.isNotBlank(req.reason), AppUserCashInOrder::reason, req.reason)
+                        .set(AppUserCashInOrder::remitTime, DateUtil.date())
+                )
+                return@block
+            }
+
+            val userId = order.userId ?: throw BusinessException("用户ID不存在")
+            val amount = order.applyAmount ?: throw BusinessException("充值金额不存在")
+            val currencyCode = req.depositCode?.takeIf { it.isNotBlank() } 
+                ?: order.depositCode?.takeIf { it.isNotBlank() } 
+                ?: "CNY"
+            
+            val success = appUserWalletV2Service.addAvailableBalance(
+                userId = userId,
+                walletType = 0,
+                currencyCode = currencyCode,
+                amount = amount,
+                operationType = GoldChangeEnum.CASH_IN,
+                remark = """
+                    用户id:${userId},
+                    操作：后台审核,
+                    金额:${amount}
+                """.trimIndent()
+            )
+            
+            if (!success) {
+                throw BusinessException("充值到账失败")
+            }
+            update(
+                KtUpdateWrapper(AppUserCashInOrder())
+                    .eq(AppUserCashInOrder::id, req.id) // 订单类型   1待处理 2已锁定 3  已取消 4 已拒绝 5 已成功
+                    .set(AppUserCashInOrder::cashStatus, 5)
+                    .set(AppUserCashInOrder::remitTime, DateUtil.date())
+            )
         }
     }
 

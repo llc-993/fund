@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*
 
 @Tag(name = "菜单管理", description = "菜单权限管理相关接口")
 @RestController
-@RequestMapping("/manage/sys/menu")
+@RequestMapping("/sys/menu")
 class SysMenuController(
     private val sysMenuService: SysMenuService,
     private val optLogService: SysOptLogService

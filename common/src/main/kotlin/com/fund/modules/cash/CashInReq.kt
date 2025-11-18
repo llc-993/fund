@@ -13,5 +13,9 @@ class CashInReq {
     @NotNull(message = "recharge_amount_not_null")
     var amount: BigDecimal? = null
 
+    @Schema(description = "图片链接")
     var imgUrl: String? = null
+
+    @Schema(description = "充值币种", required = true, example="USD、INR、CNY")
+    var depositCode: String? = null
 }

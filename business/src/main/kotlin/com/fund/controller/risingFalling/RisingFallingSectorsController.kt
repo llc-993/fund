@@ -1,4 +1,4 @@
-package com.fund.controller.risingfalling
+package com.fund.controller.risingFalling
 
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil

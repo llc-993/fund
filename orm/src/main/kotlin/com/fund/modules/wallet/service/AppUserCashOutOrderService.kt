@@ -4,6 +4,7 @@ import com.fund.modules.wallet.model.AppUserCashOutOrder;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fund.common.entity.R
 import com.fund.modules.cash.CashOutReq
+import com.fund.modules.cash.CashOutReviewReq
 
 /**
  * <p>
@@ -16,4 +17,6 @@ import com.fund.modules.cash.CashOutReq
 interface AppUserCashOutOrderService : IService<AppUserCashOutOrder> {
 
     fun request(userId: Long, req: CashOutReq): R<Any>
+
+    fun review(adminId: Long, req: CashOutReviewReq, successCallback: (order: AppUserCashOutOrder) -> Unit)
 }

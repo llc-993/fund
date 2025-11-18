@@ -1,5 +1,8 @@
 package com.fund.controller.user
 
+import cn.dev33.satoken.stp.StpUtil
+import cn.hutool.core.util.ObjectUtil
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.common.entity.R
 import com.fund.exception.BusinessException
@@ -8,6 +11,7 @@ import com.fund.modules.ForceClosePositionRequest
 import com.fund.modules.UpdateLockStatusRequest
 import com.fund.modules.stock.model.UserPosition
 import com.fund.modules.stock.service.UserPositionService
+import com.fund.modules.sys.service.SysOptLogService
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
 import io.swagger.v3.oas.annotations.Operation
@@ -25,7 +29,8 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/position")
 class UserPositionController(
     private val userPositionService: UserPositionService,
-    private val appUserService: AppUserService
+    private val appUserService: AppUserService,
+    private val optLogService: SysOptLogService,
 ) {
 
     @Operation(summary = "持仓列表", description = "支持按账号、昵称、状态及买入时间区间查询，按状态+ID倒序")
@@ -35,11 +40,10 @@ class UserPositionController(
 
         // 根据账号、昵称筛选用户ID
         if (!req.account.isNullOrBlank() || !req.username.isNullOrBlank()) {
-            val userWrapper = KtQueryWrapper(AppUser())
-                .eq(!req.account.isNullOrBlank(), AppUser::userAccount, req.account)
-                .like(!req.username.isNullOrBlank(), AppUser::userName, req.username)
 
-            val users = appUserService.list(userWrapper)
+            val users = appUserService.list(KtQueryWrapper(AppUser())
+                .eq(!req.account.isNullOrBlank(), AppUser::userAccount, req.account)
+                .like(!req.username.isNullOrBlank(), AppUser::userName, req.username))
             if (users.isEmpty()) {
                 return R.success(emptyList())
             }
@@ -49,6 +53,7 @@ class UserPositionController(
         wrapper.eq(!req.status.isNullOrBlank(), UserPosition::status, req.status)
             .ge(req.startTime != null, UserPosition::buyOrderTime, req.startTime)
             .le(req.endTime != null, UserPosition::buyOrderTime, req.endTime)
+            .eq(ObjectUtil.isNotEmpty(req.userId), UserPosition::userId, req.userId)
             .orderByDesc(UserPosition::status)
             .orderByDesc(UserPosition::id)
 
@@ -75,7 +80,8 @@ class UserPositionController(
         if (!userPositionService.updateById(position)) {
             throw BusinessException("更新锁仓状态失败")
         }
-
+        val adminId = StpUtil.getLoginIdAsLong()
+        optLogService.addLog(adminId, "更新持仓锁仓状态", JSON.toJSONString(req))
         return R.success()
     }
 
@@ -90,6 +96,9 @@ class UserPositionController(
         // 根据持仓编号查找持仓
         val position = userPositionService.getById(req.id!!)
             ?: throw BusinessException("持仓不存在")
+
+        val adminId = StpUtil.getLoginIdAsLong()
+        optLogService.addLog(adminId, "更新持仓锁仓状态", JSON.toJSONString(req))
 
         // 调用 sell 方法执行平仓逻辑
         return userPositionService.sell(

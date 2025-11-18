@@ -139,24 +139,13 @@ class AppUserCashInOrder : Serializable {
     @Schema(description = "充值凭证图片URL", example = "https://cdn.example.com/images/receipt.jpg", nullable = true)
     var imgUrl: String? = null
 
+
+    @TableField("deposit_code")
+    @Schema(description = "充值币种", example = "USD、CNY、INR", nullable = true)
+    var depositCode: String? = null
+
     override fun toString(): String {
-        return "AppUserCashInOrder{" +
-        "id=" + id +
-        ", userId=" + userId +
-        ", userGroup=" + userGroup +
-        ", userAccount=" + userAccount +
-        ", mobilePhone=" + mobilePhone +
-        ", topUserId=" + topUserId +
-        ", ip=" + ip +
-        ", orderNo=" + orderNo +
-        ", applyTime=" + applyTime +
-        ", applyAmount=" + applyAmount +
-        ", remark=" + remark +
-        ", remitTime=" + remitTime +
-        ", cashStatus=" + cashStatus +
-        ", reason=" + reason +
-        ", operatorUser=" + operatorUser +
-        ", updateTime=" + updateTime +
-        "}"
+        return "AppUserCashInOrder(id=$id, userId=$userId, userGroup=$userGroup, userAccount=$userAccount, mobilePhone=$mobilePhone, topUserId=$topUserId, ip=$ip, orderNo=$orderNo, applyTime=$applyTime, applyAmount=$applyAmount, remark=$remark, remitTime=$remitTime, cashStatus=$cashStatus, reason=$reason, operatorUser=$operatorUser, updateTime=$updateTime, imgUrl=$imgUrl, depositCode=$depositCode)"
     }
+
 }

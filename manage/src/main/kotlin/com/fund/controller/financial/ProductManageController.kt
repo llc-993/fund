@@ -1,5 +1,7 @@
 package com.fund.controller.financial
 
+import cn.dev33.satoken.stp.StpUtil
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.R
 import com.fund.modules.financial.FinancialProductCreateRequest
@@ -7,6 +9,7 @@ import com.fund.modules.financial.FinancialProductOfflineRequest
 import com.fund.modules.financial.FinancialProductUpdateRequest
 import com.fund.modules.financial.model.FinancialProduct
 import com.fund.modules.financial.service.FinancialProductService
+import com.fund.modules.sys.service.SysOptLogService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.media.Content
@@ -19,7 +22,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/financial/product/manage")
 class ProductManageController(
-    private val financialProductService: FinancialProductService
+    private val financialProductService: FinancialProductService,
+    private val optLogService: SysOptLogService,
 ) {
 
     @Operation(
@@ -86,6 +90,8 @@ class ProductManageController(
         @Parameter(description = "上架备注") @RequestParam(required = false) remark: String?
     ): R<FinancialProduct> {
         val product = financialProductService.onlineProduct(id, remark)
+        val adminId = StpUtil.getLoginIdAsLong()
+        optLogService.addLog(adminId, "上架理财产品", JSON.toJSONString(mapOf("id" to id, "remark" to remark)))
         return R.success(product)
     }
     
@@ -101,6 +107,8 @@ class ProductManageController(
     @PostMapping("/offline")
     fun offline(@RequestBody request: FinancialProductOfflineRequest): R<FinancialProduct> {
         val product = financialProductService.offlineProduct(request)
+        val adminId = StpUtil.getLoginIdAsLong()
+        optLogService.addLog(adminId, "下架理财产品", JSON.toJSONString(request))
         return R.success(product)
     }
     

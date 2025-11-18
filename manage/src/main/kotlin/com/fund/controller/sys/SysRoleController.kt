@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*
 
 @Tag(name = "角色管理", description = "系统角色管理相关接口，包括角色列表查询、新增、更新、删除以及角色菜单权限配置")
 @RestController
-@RequestMapping("/manage/sys/menu")
+@RequestMapping("/sys/menu")
 class SysRoleController(
     private val sysRoleService: SysRoleService
     ){

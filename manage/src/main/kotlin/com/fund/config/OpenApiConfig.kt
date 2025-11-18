@@ -42,9 +42,9 @@ class OpenApiConfig {
             )
             .servers(
                 listOf(
-                    Server().url("http://localhost:$serverPort").description("本地开发环境"),
-                    Server().url("http://dev.manage.example.com").description("开发环境"),
-                    Server().url("http://prod.manage.example.com").description("生产环境")
+                    Server().url("http://localhost:$serverPort/manage").description("本地开发环境"),
+                    Server().url("https://test-h5.xmjy001.qpon/manage").description("开发环境"),
+                    Server().url("https://test-h5.xmjy001.qpon/manage").description("生产环境")
                 )
             )
             .components(

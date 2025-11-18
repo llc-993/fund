@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "系统操作日志", description = "系统操作日志查询接口，用于查看和管理系统的操作记录")
 @RestController
-@RequestMapping(value = ["/manage/optlog"])
+@RequestMapping(value = ["/optlog"])
 class SysOptLogController(
     private val optLogService: SysOptLogService
 ) {

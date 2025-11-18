@@ -1,5 +1,7 @@
 package com.fund.controller.block
 
+import cn.dev33.satoken.stp.StpUtil
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.R
@@ -13,6 +15,7 @@ import com.fund.modules.stock.model.Stock
 import com.fund.modules.stock.model.UserPosition
 import com.fund.modules.stock.service.StockService
 import com.fund.modules.stock.service.UserPositionService
+import com.fund.modules.sys.service.SysOptLogService
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
 import com.fund.modules.wallet.enum.GoldChangeEnum
@@ -38,7 +41,8 @@ class StockBlockTradeSubscriptionController(
     private val appUserWalletV2Service: AppUserWalletV2Service,
     private val userPositionService: UserPositionService,
     private val stockService: StockService,
-    private val appUserService: AppUserService
+    private val appUserService: AppUserService,
+    private val optLogService: SysOptLogService,
 ) {
 
     private val logger = KotlinLogging.logger {}
@@ -53,7 +57,7 @@ class StockBlockTradeSubscriptionController(
         content = [Content(schema = Schema(implementation = StockBlockTradeSubscription::class))]
     )
     @GetMapping("list")
-    fun list(@RequestBody req: AdminBlockTradeSubscriptionQueryRequest): R<Any> {
+    fun list( req: AdminBlockTradeSubscriptionQueryRequest): R<Any> {
         val page: Page<StockBlockTradeSubscription> = Page(req.pageNum, req.pageSize)
 
         val page1 = stockBlockTradeSubscriptionService.page(
@@ -78,6 +82,7 @@ class StockBlockTradeSubscriptionController(
     @PostMapping("conversion")
     fun conversion(@RequestBody req: BlockTradeConversionRequest): R<Any> {
         try {
+            val adminId = StpUtil.getLoginIdAsLong()
             // 参数校验
             if (req.id == null) {
                 return R.error("申购记录ID不能为空")
@@ -165,6 +170,9 @@ class StockBlockTradeSubscriptionController(
             stockBlockTradeSubscriptionService.updateById(subscription)
 
             logger.info("大宗交易转化成功: subscriptionId=${subscription.id}, positionId=${userPosition.id}, userId=$userId, stockId=${subscription.stockId}, quantity=${req.confirmQuantity}")
+
+            optLogService.addLog(adminId, "大宗交易转化", JSON.toJSONString(req))
+
             return R.success(userPosition)
 
         } catch (e: Exception) {

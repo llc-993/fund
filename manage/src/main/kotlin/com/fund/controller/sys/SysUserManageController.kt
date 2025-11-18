@@ -32,7 +32,7 @@ import kotlin.streams.toList
 
 @Tag(name = "系统用户管理", description = "系统用户管理相关接口，包括用户分页查询、新增、编辑、启用/禁用、删除以及代理列表等功能")
 @RestController
-@RequestMapping("/manage/sys/user")
+@RequestMapping("/sys/user")
 class SysUserManageController(
     private val sysUserService: SysUserService,
     private val agentRelationService: AppAgentRelationService,

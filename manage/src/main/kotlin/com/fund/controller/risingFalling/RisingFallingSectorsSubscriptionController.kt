@@ -1,5 +1,7 @@
-package com.fund.controller.risingfalling
+package com.fund.controller.risingFalling
 
+import cn.dev33.satoken.stp.StpUtil
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.R
@@ -13,6 +15,7 @@ import com.fund.modules.stock.model.Stock
 import com.fund.modules.stock.model.UserPosition
 import com.fund.modules.stock.service.StockService
 import com.fund.modules.stock.service.UserPositionService
+import com.fund.modules.sys.service.SysOptLogService
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
 import com.fund.modules.wallet.enum.GoldChangeEnum
@@ -20,6 +23,13 @@ import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.utils.GeneratorIdUtil
 import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.Parameter
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
+import io.swagger.v3.oas.annotations.parameters.RequestBody as SwaggerRequestBody
 import org.springframework.web.bind.annotation.*
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -37,12 +47,14 @@ import java.time.LocalDateTime
  * - status=3: 已确认
  * - status=4: 已转持仓
  */
+@Tag(name = "涨跌板块申购", description = "涨跌板块申购查询与转持仓相关接口")
 @RestController
-@RequestMapping("/risingFallingSectors/subscription")
+@RequestMapping("/risingFalling/subscription")
 class RisingFallingSectorsSubscriptionController(
     private val risingFallingSectorsSubscriptionService: RisingFallingSectorsSubscriptionService,
     private val risingFallingSectorsService: RisingFallingSectorsService,
     private val appUserWalletV2Service: AppUserWalletV2Service,
+    private val optLogService: SysOptLogService,
     private val userPositionService: UserPositionService,
     private val stockService: StockService,
     private val appUserService: AppUserService
@@ -50,11 +62,23 @@ class RisingFallingSectorsSubscriptionController(
 
     private val logger = KotlinLogging.logger {}
 
-    /**
-     * 涨跌板块申购列表
-     */
+    @Operation(
+        summary = "申购列表查询",
+        description = "分页查询涨跌板块申购列表，支持按名称、标的、用户ID与状态过滤，按ID倒序",
+    )
+    @ApiResponse(
+        responseCode = "200",
+        description = "查询成功",
+        content = [Content(schema = Schema(implementation = RisingFallingSectorsSubscription::class))]
+    )
     @GetMapping("list")
-    fun list(@RequestBody req: AdminRisingFallingSectorsSubscriptionQueryRequest): R<Any> {
+    fun list(
+        @SwaggerRequestBody(
+            description = "查询条件，包含分页与过滤参数（名称、标的、用户、状态）",
+            required = true
+        )
+         req: AdminRisingFallingSectorsSubscriptionQueryRequest
+    ): R<Any> {
         val page: Page<RisingFallingSectorsSubscription> = Page(req.pageNum, req.pageSize)
 
         val page1 = risingFallingSectorsSubscriptionService.page(
@@ -68,27 +92,27 @@ class RisingFallingSectorsSubscriptionController(
         return R.success(page1)
     }
 
-    /**
-     * 涨跌板块申购转化
-     *
-     * 将申购记录转化为用户持仓
-     *
-     * 业务逻辑：
-     * 1. 校验申购记录ID和确认数量
-     * 2. 检查申购记录状态（只有status=1已申购或status=3已确认的才能转化）
-     * 3. 计算需支付金额 = 确认数量 * buyPrice
-     * 4. 检查用户钱包余额是否足够
-     *    - 余额不足：将申购记录状态改为2(已取消)，返回错误
-     *    - 余额充足：扣除钱包availableBalance，继续执行
-     * 5. 创建UserPosition持仓记录
-     * 6. 更新申购记录状态为4(已转持仓)，更新确认时间
-     *
-     * @param req 转化请求，包含申购记录ID和确认数量
-     * @return 成功返回创建的UserPosition对象，失败返回错误信息
-     */
+    @Operation(
+        summary = "申购转持仓",
+        description = "将指定的涨跌板块申购记录转化为用户持仓。仅当状态为 1(已申购) 或 3(已确认) 时允许转化",
+    )
+    @ApiResponse(
+        responseCode = "200",
+        description = "转化成功，返回创建的持仓对象",
+        content = [Content(schema = Schema(implementation = R::class))]
+    )
+    @ApiResponse(responseCode = "400", description = "参数或业务校验失败")
     @PostMapping("conversion")
-    fun conversion(@RequestBody req: RisingFallingSectorsConversionRequest): R<Any> {
+    fun conversion(
+        @SwaggerRequestBody(
+            description = "转化请求参数，包含申购ID与确认数量",
+            required = true
+        )
+        @RequestBody req: RisingFallingSectorsConversionRequest
+    ): R<Any> {
         try {
+            val adminId = StpUtil.getLoginIdAsLong()
+
             // 参数校验
             if (req.id == null) {
                 return R.error("申购记录ID不能为空")
@@ -176,6 +200,9 @@ class RisingFallingSectorsSubscriptionController(
             risingFallingSectorsSubscriptionService.updateById(subscription)
 
             logger.info("涨跌板块转化成功: subscriptionId=${subscription.id}, positionId=${userPosition.id}, userId=$userId, stockId=${subscription.stockId}, quantity=${req.confirmQuantity}")
+
+            optLogService.addLog(adminId, "涨跌板块转化", JSON.toJSONString(req))
+
             return R.success(userPosition)
 
         } catch (e: Exception) {

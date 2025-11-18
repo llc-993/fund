@@ -1,11 +1,14 @@
 package com.fund.controller.financial
 
+import cn.dev33.satoken.stp.StpUtil
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.R
 import com.fund.modules.financial.FinancialOrderForceRedeemRequest
 import com.fund.modules.financial.FinancialOrderQueryRequest
 import com.fund.modules.financial.model.FinancialOrder
 import com.fund.modules.financial.service.FinancialOrderService
+import com.fund.modules.sys.service.SysOptLogService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -17,7 +20,8 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @RequestMapping("/financial/order/manage")
 class OrderManageController(
-    private val financialOrderService: FinancialOrderService
+    private val financialOrderService: FinancialOrderService,
+    private val optLogService: SysOptLogService,
 ) {
 
     @Operation(
@@ -30,7 +34,7 @@ class OrderManageController(
         content = [Content(schema = Schema(implementation = FinancialOrder::class))]
     )
     @PostMapping("/list")
-    fun list(@RequestBody request: FinancialOrderQueryRequest): R<Page<FinancialOrder>> {
+    fun list( request: FinancialOrderQueryRequest): R<Page<FinancialOrder>> {
         val page = financialOrderService.pageQuery(request)
         return R.success(page)
     }
@@ -47,6 +51,8 @@ class OrderManageController(
     @PostMapping("/force-redeem")
     fun forceRedeem(@RequestBody request: FinancialOrderForceRedeemRequest): R<FinancialOrder> {
         val order = financialOrderService.forceRedeem(request)
+        val adminId = StpUtil.getLoginIdAsLong()
+        optLogService.addLog(adminId, "强制赎回订单", JSON.toJSONString(request))
         return R.success(order)
     }
     

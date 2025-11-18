@@ -1,5 +1,7 @@
 package com.fund.controller.ipo
 
+import cn.dev33.satoken.stp.StpUtil
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.R
@@ -13,6 +15,7 @@ import com.fund.modules.stock.model.Stock
 import com.fund.modules.stock.model.UserPosition
 import com.fund.modules.stock.service.StockService
 import com.fund.modules.stock.service.UserPositionService
+import com.fund.modules.sys.service.SysOptLogService
 import com.fund.modules.user.model.AppUser
 import com.fund.modules.user.service.AppUserService
 import com.fund.modules.wallet.enum.GoldChangeEnum
@@ -37,7 +40,8 @@ class StockSubscriptionController(
     private val userPositionService: UserPositionService,
     private val ipoService: IpoService,
     private val stockService: StockService,
-    private val appUserService: AppUserService
+    private val appUserService: AppUserService,
+    private val optLogService: SysOptLogService,
 ) {
 
     private val logger = KotlinLogging.logger {}
@@ -48,7 +52,7 @@ class StockSubscriptionController(
     )
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
-    fun list(@RequestBody req: AdminSubscriptionQueryRequest): R<Any> {
+    fun list( req: AdminSubscriptionQueryRequest): R<Any> {
         val page:Page<StockSubscription> = Page(req.pageNum, req.pageSize)
 
         val page1 = this.stockSubscriptionService.page(
@@ -68,6 +72,7 @@ class StockSubscriptionController(
     @PostMapping("conversion")
     fun conversion(@RequestBody req: SubscriptionConversionRequest): R<Any> {
         try {
+            val adminId = StpUtil.getLoginIdAsLong()
             // 参数校验
             if (req.id == null) {
                 return R.error("申购记录ID不能为空")
@@ -151,8 +156,8 @@ class StockSubscriptionController(
             stockSubscriptionService.updateById(subscription)
 
             logger.info("IPO转化成功: subscriptionId=${subscription.id}, positionId=${userPosition.id}, userId=$userId, symbol=${subscription.symbol}, quantity=${req.allotmentQuantity}")
+            optLogService.addLog(adminId, "IPO转化", JSON.toJSONString(req))
             return R.success(userPosition)
-
         } catch (e: Exception) {
             logger.error(e) { "IPO转化异常" }
             return R.error("IPO转化失败")

@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*
 
 @Tag(name = "系统配置", description = "系统配置相关接口，包括Gmail配置、邮件模板配置等")
 @RestController
-@RequestMapping(value = ["/manage/config"])
+@RequestMapping(value = ["/config"])
 class AppConfigController(
     private val configService: AppConfigService,
     private val optLogService: SysOptLogService,

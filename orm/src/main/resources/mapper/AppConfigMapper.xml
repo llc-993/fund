@@ -19,4 +19,21 @@
         id, code, value, remark, create_by, create_time, update_by, update_time
     </sql>
 
+    <select id="selectHomeData" resultType="com.fund.modules.sys.vo.HomeData">
+        SELECT
+        (SELECT COUNT(1) FROM app_user <where><if test="topId != null"> and top_user_id = #{topId} </if></where> ) as total_user,
+        (SELECT COUNT(1) FROM app_user u where u.register_time  &gt; #{startTime} and u.register_time  &lt;= #{endTime} and u.user_group = 0 <if test="topId != null"> and u.top_user_id = #{topId} </if>) as today_total_user,
+        (SELECT IFNULL(SUM(r.apply_amount), 0) FROM app_user_cash_in_order r where r.cash_status = 5 and r.user_group = 0 <if test="topId != null"> and r.top_user_id = #{topId} </if>) as total_cash_in,
+        (SELECT IFNULL(SUM(r.apply_amount), 0) FROM app_user_cash_in_order r where r.cash_status = 5 and r.remit_time &gt; #{startTime} and r.remit_time &lt;= #{endTime} and r.user_group = 0 <if test="topId != null"> and r.top_user_id = #{topId} </if>) as today_cash_in,
+        (SELECT IFNULL(SUM(r.actual_amount), 0) FROM app_user_cash_out_order r where r.cash_status = 5 and r.user_group = 0 <if test="topId != null"> and r.top_user_id = #{topId} </if>) as total_cash_out,
+        (SELECT IFNULL(SUM(r.actual_amount), 0) FROM app_user_cash_out_order r where r.cash_status = 5 and r.remit_time &gt; #{startTime} and r.remit_time &lt;= #{endTime} and r.user_group = 0 <if test="topId != null"> and r.top_user_id = #{topId} </if>) as today_cash_out,
+        (SELECT COUNT(1) FROM user_position r where r.buy_order_time &gt; #{startTime} and r.buy_order_time &lt;= #{endTime} <if test="topId != null"> and r.agentId = #{topId} </if>) as today_orders
+    </select>
+    <select id="selectUndoData" resultType="com.fund.modules.sys.vo.UndoData">
+        select
+        (SELECT COUNT(1) FROM user_position r where r.`status` = 1 <if test="topId != null"> and r.agentId = #{topId} </if>) as order_count,
+        (SELECT COUNT(1) FROM app_user_cash_in_order r where r.cash_status = 1 <if test="topId != null"> and r.top_user_id = #{topId} </if>) as cash_in_count,
+        (SELECT COUNT(1) FROM app_user_cash_out_order r where r.cash_status = 1 <if test="topId != null"> and r.top_user_id = #{topId} </if>) as cash_out_count
+    </select>
+
 </mapper>

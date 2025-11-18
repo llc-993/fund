@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @Tag(name = "客服链接管理", description = "客服链接配置相关接口")
 @RestController
-@RequestMapping(value = ["/manage/csLink"])
+@RequestMapping(value = ["/csLink"])
 class SysCsLinkController(
     private val sysCsLinkService: SysCsLinkService,
     private val optLogService: SysOptLogService,

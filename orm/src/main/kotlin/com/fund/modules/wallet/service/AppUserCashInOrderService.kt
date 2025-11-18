@@ -4,6 +4,7 @@ import com.fund.modules.wallet.model.AppUserCashInOrder;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fund.common.entity.R
 import com.fund.modules.cash.CashInReq
+import com.fund.modules.cash.CashInReviewReq
 
 /**
  * <p>
@@ -20,4 +21,5 @@ interface AppUserCashInOrderService : IService<AppUserCashInOrder> {
      */
     fun request(userId: Long, req: CashInReq): R<Any>
 
+    fun review(req: CashInReviewReq)
 }

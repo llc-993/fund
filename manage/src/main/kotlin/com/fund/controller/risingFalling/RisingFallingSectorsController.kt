@@ -35,7 +35,7 @@ class RisingFallingSectorsController(
     )
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
-    fun list(@RequestBody req: AdminRisingFallingSectorsQueryRequest): R<Any> {
+    fun list( req: AdminRisingFallingSectorsQueryRequest): R<Any> {
         val page: Page<RisingFallingSectors> = Page(req.pageNum, req.pageSize)
 
         val page1 = risingFallingSectorsService.page(

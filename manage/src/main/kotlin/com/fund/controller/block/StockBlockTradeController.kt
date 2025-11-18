@@ -35,7 +35,7 @@ class StockBlockTradeController(
     )
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
-    fun list(@RequestBody req: AdminBlockTradeQueryRequest): R<Any> {
+    fun list( req: AdminBlockTradeQueryRequest): R<Any> {
         val page: Page<StockBlockTrade> = Page(req.pageNum, req.pageSize)
 
         val page1 = stockBlockTradeService.page(

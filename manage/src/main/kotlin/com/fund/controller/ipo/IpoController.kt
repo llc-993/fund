@@ -35,7 +35,7 @@ class IpoController(
     )
     @ApiResponse(responseCode = "200", description = "查询成功")
     @GetMapping("list")
-    fun list(@RequestBody req: AdminIpoQueryRequest): R<Any> {
+    fun list( req: AdminIpoQueryRequest): R<Any> {
         val page: Page<Ipo> = Page(req.pageNum, req.pageSize)
 
         val page1 = ipoService.page(

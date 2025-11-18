@@ -21,7 +21,7 @@ import kotlin.streams.toList
 
 @Tag(name = "用户角色管理", description = "用户角色关联管理相关接口，包括用户列表查询、角色用户查询、用户角色配置等")
 @RestController
-@RequestMapping("/manage/sys/menu")
+@RequestMapping("/sys/menu")
 class SysUserController(
     private val sysUserService: SysUserService
     ){
