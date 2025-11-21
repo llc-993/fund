@@ -2,11 +2,14 @@ package com.fund.modules.stock.consumer
 
 import com.alibaba.fastjson2.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.Constants
 import com.fund.common.RedisKeys
 import com.fund.common.RedisKeys.STOCK_MESSAGE_QUEUE
 import com.fund.common.RedisKeys.CHECK_ORDER_KEY
 import com.fund.common.RedisKeys.CHECK_USER_POSITION_KEY
 import com.fund.common.RedisKeys.USER_POSITION_CACHE_KEY
+import com.fund.modules.emqt.co.MqttMsg
+import com.fund.modules.emqt.service.EmqXService
 import com.fund.modules.kline.event.KlineEvent
 import com.fund.modules.stock.model.Stock
 import com.fund.modules.stock.model.UserPosition
@@ -42,7 +45,8 @@ class PositionUserUpdListener(
     private val stockService: StockService,
     private val appUserWalletV2Service: AppUserWalletV2Service,
     private val klineRingBuffer: RingBuffer<KlineEvent>,
-    private val i18nUtil: I18nUtil
+    private val i18nUtil: I18nUtil,
+    private val emqXService: EmqXService,
 ) : InitializingBean {
 
     private val logger = KotlinLogging.logger {}
@@ -113,6 +117,8 @@ class PositionUserUpdListener(
                 logger.warn("无效的股票数据: $message")
                 return
             }
+            //
+            emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
 
             // 发布 Stock 数据到 Disruptor 进行 K线处理
             publishToDisruptor(stock)
@@ -419,7 +425,8 @@ class PositionUserUpdListener(
             val freezAmt = allBuyAmt.divide(BigDecimal(position.orderLever ?: 1), 2, RoundingMode.HALF_UP)
 
             // 7. 钱包结算（调用公共方法）
-            val remark = "自动平仓($reason), id: ${position.id}(${position.stockCode}), 数量: $buyNum, 价格: $closePrice"
+            val remark =
+                "自动平仓($reason), id: ${position.id}(${position.stockCode}), 数量: $buyNum, 价格: $closePrice"
             userPositionService.settleCloseWallet(position, stock, position.allProfitAndLose!!, freezAmt, remark)
 
             // 8. 清理缓存（调用公共方法）
@@ -456,7 +463,7 @@ class PositionUserUpdListener(
                     }
 
                     val userOrderVo = JSON.parseObject(orderJson, UserOrderVo::class.java) ?: continue
-                    
+
                     // 确认是挂单类型
                     if (userOrderVo.dataType != "1") {
                         continue
@@ -474,7 +481,7 @@ class PositionUserUpdListener(
 
                     if (shouldExecute) {
                         logger.info("挂单触发: 股票=${stock.symbol}, 用户=${userOrderVo.userId}, 目标价=$targetPrice, 当前价=$currentPrice, 类型=$buyType")
-                        
+
                         // 执行挂单买入
                         val lockKey = RedisKeys.PROCESS_USER_POSITION_LOCK_KEY + "pending_" + userOrderVo.id
                         RedisLockService.lockTransaction(lockKey) {
@@ -508,7 +515,7 @@ class PositionUserUpdListener(
             if (result.code == 0) {
                 // 买入成功，更新挂单状态和清理Redis缓存
                 userPendingOrderService.updatePendingOrderStatus(pendingOrderId, 1, null)
-                
+
                 // 从Redis中删除挂单信息
                 val key = String.format(CHECK_ORDER_KEY, stock.flag + stock.symbol)
                 val hKey = "${pendingOrderId}1"
@@ -519,7 +526,7 @@ class PositionUserUpdListener(
             } else {
                 // 买入失败，更新挂单状态为失败
                 userPendingOrderService.updatePendingOrderStatus(pendingOrderId, 2, result.msg)
-                
+
                 // 从Redis中删除挂单信息
                 val key = String.format(CHECK_ORDER_KEY, stock.flag + stock.symbol)
                 val hKey = "${pendingOrderId}1"

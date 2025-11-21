@@ -25,7 +25,7 @@ interface FinancialProductService : IService<FinancialProduct> {
      * @param status 状态：1-上架 0-下架，null表示查询所有
      * @return 分页数据
      */
-    fun pageQuery(pageNum: Int, pageSize: Int, status: Byte?): Page<FinancialProduct>
+    fun pageQuery(pageNum: Int, pageSize: Int, status: Byte?, title: String?, productCode: String?): Page<FinancialProduct>
     
     /**
      * 创建理财产品（默认下架状态）

@@ -402,6 +402,7 @@ open class FinancialOrderServiceImpl(
                 .eq(request.productId != null, FinancialOrder::productId, request.productId)
                 .eq(request.orderStatus != null, FinancialOrder::orderStatus, request.orderStatus)
                 .eq(StringUtils.isNotBlank(request.productCode), FinancialOrder::productCode, request.productCode)
+                .eq(StringUtils.isNotBlank(request.productName), FinancialOrder::productName, request.productName)
                 .orderByDesc(FinancialOrder::id)
         )
     }

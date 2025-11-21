@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.kotlin.KtUpdateWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.Constants
+import com.fund.common.Constants.MARKET_COIN_MAP
 import com.fund.common.dto.Label
 import com.fund.common.entity.PageReq
 import com.fund.common.entity.R
@@ -35,6 +36,7 @@ import com.fund.utils.GeneratorIdUtil.generateId
 import com.fund.utils.RedisLockService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
+import mu.KotlinLogging
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -55,28 +57,31 @@ class UserController(
     private val cashInOrderService: AppUserCashInOrderService,
     private val optLogService: SysOptLogService,
     private val appWalletOperationLogService: AppWalletOperationLogService
-    ) {
+) {
+
+    private val log = KotlinLogging.logger {}
 
     @SaCheckLogin
-    @GetMapping("/list")
+    @GetMapping("/page")
     fun userPage(
         @SwaggerRequestBody(
             description = "查询用户信息",
             required = true
-        ) @RequestBody req: AdminUserQueryReq
+        ) req: AdminUserQueryReq
     ): R<Any> {
-
+        log.info("参数：${JSON.toJSONString(req)}")
         val page = Page<AppUser>(req.pageNum, req.pageSize)
 
         val page1 = userService.page(
-            page, KtQueryWrapper(AppUser::class.java)
-                .eq(StrUtil.isNotBlank(req.username), AppUser::userName, req.username)
+            page, KtQueryWrapper(AppUser())
+                .eq(StrUtil.isNotBlank(req.userName), AppUser::userName, req.userName)
                 .eq(StrUtil.isNotBlank(req.userAccount), AppUser::userAccount, req.userAccount)
                 .eq(StrUtil.isNotBlank(req.mobilePhone), AppUser::mobilePhone, req.mobilePhone)
+                .orderByDesc(AppUser::id)
         )
 
         // 获取所有用户ID列表
-        val userIds = page1.records.mapNotNull { it.id }
+        val userIds = page1.records.mapNotNull { it.id }.distinct()
 
         // 如果有用户记录，则获取每个用户的盈亏总和
         val voList: MutableList<AdminUserVo> = mutableListOf()
@@ -89,7 +94,7 @@ class UserController(
 
                 userVo.profitAndLose = userProfitMap[user.id] ?: BigDecimal.ZERO
 
-                user.wallet = walletV2Service.list(
+                userVo.wallet = walletV2Service.list(
                     KtQueryWrapper(AppUserWalletV2())
                         .eq(AppUserWalletV2::userId, user.id)
                 )
@@ -125,6 +130,7 @@ class UserController(
                     order.applyAmount = req.amount
                     // 订单类型   1待处理 2已锁定 3  已取消 4 已拒绝 5 已成功
                     order.cashStatus = 5
+                    order.depositCode = req.currencyCode
                     order.remitTime = LocalDateTime.now()
                     cashInOrderService.save(order)
                     // 加款
@@ -190,7 +196,7 @@ class UserController(
             p,
             KtQueryWrapper(AppWalletOperationLog())
                 .eq(req.userId != null, AppWalletOperationLog::userId, req.userId)
-                .eq(req.changeType != null, AppWalletOperationLog::operationType, req.changeType)
+                .eq(req.operationType != null, AppWalletOperationLog::operationType, req.operationType)
                 .gt(req.startTime != null, AppWalletOperationLog::createTime, req.startTime)
                 .le(req.endTime != null, AppWalletOperationLog::createTime, req.endTime)
                 .orderByDesc(AppWalletOperationLog::id, AppWalletOperationLog::createTime)
@@ -199,7 +205,10 @@ class UserController(
     }
 
     @PostMapping("/edit")
-    @Operation(summary = "编辑会员信息", description = "修改用户的手机号、登录密码、交易密码、会员等级、是否假人 正常 0 假人 1、是否冻结、是否允许交易、是否允许提现")
+    @Operation(
+        summary = "编辑会员信息",
+        description = "修改用户的手机号、登录密码、交易密码、会员等级、是否假人 正常 0 假人 1、是否冻结、是否允许交易、是否允许提现"
+    )
     fun edit(@RequestBody @Validated req: AdminEditAppUserReq): R<Unit> {
         val adminId = StpUtil.getLoginIdAsLong()
         userService.adminEditAppUser(req) {
@@ -207,7 +216,7 @@ class UserController(
                 StpUtil.logout(req.userId)
             }
             if (it.levelWeights != null) {
-               // todo 暂时没有这个需求逻辑。
+                // todo 暂时没有这个需求逻辑。
             }
         }
         optLogService.addLog(adminId, "编辑会员信息", JSON.toJSONString(req))
@@ -219,7 +228,7 @@ class UserController(
     fun add(@RequestBody @Validated req: AddAppUserReq): R<Unit> {
         val adminId = StpUtil.getLoginIdAsLong()
         userService.adminAddAppUser(req, {
-           // todo 会员等级
+            // todo 会员等级
         }) {
             for (s in Constants.MARKET_COIN_MAP.values) {
                 walletV2Service.createWallet(it.id!!, it.topUserId, 0, s)
@@ -229,4 +238,8 @@ class UserController(
         return R.success()
     }
 
+    @GetMapping("supportCoin")
+    fun supportCoin(): R<Collection<String>> {
+        return R.success(MARKET_COIN_MAP.values)
+    }
 }

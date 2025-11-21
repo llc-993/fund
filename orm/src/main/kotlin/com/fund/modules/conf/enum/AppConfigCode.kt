@@ -3,6 +3,7 @@ package com.fund.modules.conf.enum
 import com.fund.modules.conf.ant.DefaultValue
 import com.fund.modules.conf.dto.AwsS3OssConfig
 import com.fund.modules.conf.dto.BaseConfig
+import com.fund.modules.conf.dto.EmqxConfig
 import com.fund.modules.conf.dto.GmailConfig
 import com.fund.modules.conf.dto.IpoConfig
 import com.fund.modules.conf.dto.RisingFallingConfig
@@ -107,6 +108,13 @@ enum class AppConfigCode(prop: KProperty<*>) {
     s3Endpoint(AwsS3OssConfig::s3Endpoint),
     s3BucketName(AwsS3OssConfig::s3BucketName),
     s3UploadMaxSize(AwsS3OssConfig::s3UploadMaxSize),
+
+    // emqx
+    EMQX_ENABLE(EmqxConfig::emqxEnable),
+    emqxApiHost(EmqxConfig::emqxApiHost),
+    emqxApiPort(EmqxConfig::emqxApiPort),
+    emqxApiKey(EmqxConfig::emqxApiKey),
+    emqxApiSecret(EmqxConfig::emqxApiSecret),
     ;
 
     var code: String

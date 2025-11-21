@@ -18,6 +18,9 @@ object Constants {
         "DE" to "EUR",
     )
 
+    const val MARKET_THUMB = "/topic/market/thumb"
+    const val MARKET_KLINE = "/topic/market/kline/"
+
     private const val FIELDS =
         "id,name,symbol,isCFD,high,low,last,lastPairDecimal,change,changePercent,volume,time,isOpen,url,flag,countryNameTranslated,exchangeId,performanceDay,performanceWeek,performanceMonth,performanceYtd,performanceYear,performance3Year,technicalHour,technicalDay,technicalWeek,technicalMonth,avgVolume,fundamentalMarketCap,fundamentalRevenue,fundamentalRatio,fundamentalBeta,pairType"
 

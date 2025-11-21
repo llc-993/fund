@@ -3,6 +3,10 @@ package com.fund.modules.agent.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.modules.agent.model.AppAgentRelation;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.fund.modules.agent.model.dto.AgentLineQuery
+import com.fund.modules.agent.model.dto.AgentMoveCo
+import com.fund.modules.agent.model.dto.AgentTreePageQuery
+import com.fund.modules.agent.model.dto.AgentUserBase
 import com.fund.modules.sys.model.SysUser
 import com.fund.modules.user.model.AppUser
 
@@ -33,4 +37,12 @@ interface AppAgentRelationService : IService<AppAgentRelation> {
     fun getShareCodeByOriUserId(userId: Long): String?
 
     fun createTopAgentRelation(adminId:Long ,sysUser: SysUser): AppAgentRelation
+
+    fun queryAgentPage(topId: Long?, query: AgentTreePageQuery): Page<AgentUserBase>
+
+    fun queryAgentLinePage(topId: Long?, query: AgentLineQuery): Page<AgentUserBase>
+
+    fun agentMove(userId: Long, co: AgentMoveCo): Boolean
+
+    fun topAgentMove(userId: Long, co: AgentMoveCo): Boolean
 }

@@ -16,7 +16,7 @@ class GoldChangePageReq : PageReq() {
     /**
      * 变动类型
      */
-    var changeType: Int? = null
+    var operationType: Int? = null
 
     /**
      * 开始时间

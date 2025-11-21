@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpUtil
 import cn.hutool.core.util.StrUtil
 import com.alibaba.fastjson.JSON
 import com.fund.common.entity.R
+import com.fund.modules.conf.dto.BaseConfig
 import com.fund.modules.conf.dto.EmailTemplateConfig
 import com.fund.modules.conf.dto.GmailConfig
 import com.fund.modules.conf.service.AppConfigService
@@ -74,6 +75,24 @@ class AppConfigController(
         val adminId = StpUtil.getLoginIdAsLong()
         largeTextConfigService.setEmailTemplateConfig(dto)
         optLogService.addLog(adminId, "设置邮件模板配置", JSON.toJSONString(dto))
+        return R.success()
+    }
+
+    @PostMapping("/getBaseConfig")
+    @Operation(summary = "获取基础配置")
+    fun selectBaseConfig(): R<BaseConfig> {
+        return R.success(configService.getConfig(BaseConfig::class.java))
+    }
+
+    @PostMapping("/setBaseConfig")
+    @Operation(summary = "设置基础配置")
+    @SaCheckOr(
+        role = [SaCheckRole("root"), SaCheckRole("admin")]
+    )
+    fun changeBaseConfig(@RequestBody @Validated dto: BaseConfig): R<Unit> {
+        configService.setConfig(dto)
+        val adminId = StpUtil.getLoginIdAsLong()
+        optLogService.addLog(adminId, "设置基础配置", JSON.toJSONString(dto))
         return R.success()
     }
 

@@ -12,10 +12,6 @@ enum class GoldChangeEnum(var code: Int, var `enumName`: String, var prefix: Str
     ADMIN_CHANGE_ADD(1, "后台上分", "add"), // 后台上下分
     ADMIN_CHANGE_SUB(-1, "后台下分", "sub"),
 
-    REG_REWARD(2, "注册奖励", "rr"), // 注册奖励
-    PROXY_REBATE(3, "代理佣金", "px"), // 代理佣金
-    ADMIN_GIVE_BALANCE(141, "赠送", "gb"), // 赠送
-
     BUY(666, "交易下单", "buy"),  // 交易下单
     SELL(667, "平仓","sell"),
 

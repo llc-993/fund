@@ -13,6 +13,7 @@ class WalletAdminChangeReq {
     @Schema(description = "操作类型 1:加款 -1:减款", required = true)
     var type: @NotNull Int? = null
 
+
     @Schema(description = "币种代码, USD,CNY,INR", required = true)
     var currencyCode: @NotNull String? = null
 

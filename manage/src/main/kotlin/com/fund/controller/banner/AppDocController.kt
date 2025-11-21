@@ -3,8 +3,10 @@ package com.fund.controller.banner
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.dto.Label
 import com.fund.common.entity.R
 import com.fund.exception.BusinessException
+import com.fund.modules.doc.enums.UsedForEnum
 import com.fund.modules.doc.model.AppDoc
 import com.fund.modules.doc.service.AppDocService
 import io.swagger.v3.oas.annotations.Operation
@@ -12,7 +14,13 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 
 @Tag(name = "App 文案管理", description = "后台 App 文案（AppDoc）配置的查询、新增、编辑、删除接口")
@@ -21,6 +29,12 @@ import java.time.LocalDateTime
 class AppDocController(
     private val appDocService: AppDocService
 ) {
+
+    @GetMapping("/usedForList")
+    @Operation(summary = "用途列表")
+    fun usedForList(): R<List<Label<String, String>>> {
+        return R.success(UsedForEnum.toLabel())
+    }
 
     @Operation(
         summary = "查询文案列表",
@@ -58,7 +72,7 @@ class AppDocController(
     @Operation(summary = "新增文案", description = "创建 App 文案，支持配置标题、内容、国际化标识等信息")
     @ApiResponse(responseCode = "200", description = "创建成功")
     @SaCheckLogin
-    @PostMapping
+    @PostMapping("/save")
     fun create(@RequestBody @Validated doc: AppDoc): R<AppDoc> {
         val operator = currentOperator()
         doc.id = null
@@ -76,7 +90,7 @@ class AppDocController(
     @Operation(summary = "更新文案", description = "根据 ID 更新 App 文案信息")
     @ApiResponse(responseCode = "200", description = "更新成功")
     @SaCheckLogin
-    @PutMapping("/{id}")
+    @PostMapping("/update")
     fun update(
         @Parameter(description = "文案ID", required = true, example = "1")
         @PathVariable id: Long,
@@ -100,7 +114,7 @@ class AppDocController(
     @Operation(summary = "删除文案", description = "根据 ID 删除 App 文案")
     @ApiResponse(responseCode = "200", description = "删除成功")
     @SaCheckLogin
-    @DeleteMapping("/{id}")
+    @PostMapping("/del")
     fun delete(
         @Parameter(description = "文案ID", required = true, example = "1")
         @PathVariable id: Long

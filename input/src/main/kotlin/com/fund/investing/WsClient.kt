@@ -234,7 +234,7 @@ class WsClient(
             // 将消息发送到 Redis 队列
             val rTopic = redissonClient.getTopic(STOCK_MESSAGE_QUEUE)
             rTopic.publishAsync(JSON.toJSONString(stock))
-
+            log.info { "接收到的数据是：${JSON.toJSONString(stock)}" }
             log.debug { "Stock update message sent for ${stock.symbol} (ID: ${stock.pId})" }
         } catch (e: Exception) {
             log.error(e) { "Failed to send stock update message for ${stock.symbol}" }

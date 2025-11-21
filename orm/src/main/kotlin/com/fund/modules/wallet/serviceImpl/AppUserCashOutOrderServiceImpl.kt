@@ -152,7 +152,7 @@ open class AppUserCashOutOrderServiceImpl(
                 createTime = LocalDateTime.now()
                 status = 1  // 成功
                 remark =
-                    "提现申请: ${cashOutOrder.orderNo}, 申请金额: ${amount.toPlainString()}, 手续费: ${fee.toPlainString()}, 实际到账: ${actualAmount.toPlainString()}, 冻结余额变化: ${beforeFrozenBalance.toPlainString()} -> ${userWallet.frozenBalance?.toPlainString()}"
+                    "币种:${req.coinType},提现申请: ${cashOutOrder.orderNo}, 申请金额: ${amount.toPlainString()}, 手续费: ${fee.toPlainString()}, 实际到账: ${actualAmount.toPlainString()}, 冻结余额变化: ${beforeFrozenBalance.toPlainString()} -> ${userWallet.frozenBalance?.toPlainString()}"
             }
             appWalletOperationLogService.save(operationLog)
 
@@ -245,6 +245,7 @@ open class AppUserCashOutOrderServiceImpl(
                 createTime = LocalDateTime.now()
                 status = 1  // 成功
                 remark = """
+                    币种:${currencyCode}
                     提现成功: ${order.orderNo},
                     用户ID: ${userId},
                     提现金额: ${amount.toPlainString()},

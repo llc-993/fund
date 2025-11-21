@@ -9,12 +9,16 @@ import com.fund.modules.stock.model.Stock;
 import com.fund.modules.stock.mapper.StockMapper;
 import com.fund.modules.stock.service.StockService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fund.common.Constants
 import com.fund.common.RedisKeys
 import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.common.entity.R
+import com.fund.modules.emqt.co.MqttMsg
+import com.fund.modules.emqt.service.EmqXService
 import com.fund.modules.stock.QueryStockRequest
 import com.fund.modules.stock.service.StockDataRedisService
 import com.fund.modules.stock.util.StockDataUtil
+import io.swagger.v3.core.util.Json
 import mu.KotlinLogging
 import org.apache.commons.lang3.StringUtils
 import org.redisson.api.RedissonClient
@@ -33,7 +37,8 @@ import java.util.Date
  */
 @Service
 open class StockServiceImpl(
-    private val redissonClient: RedissonClient
+    private val redissonClient: RedissonClient,
+    private val emqXService: EmqXService
 ) : ServiceImpl<StockMapper, Stock>(), StockService {
 
     private val logger = KotlinLogging.logger {}
@@ -67,6 +72,7 @@ open class StockServiceImpl(
                 this.save(stock)
             }*/
             bucket.set(JSON.toJSONString(stock))
+            emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
             true
         } catch (e: Exception) {
             logger.error(e) { "Error upserting stock: symbol=${stock.symbol}" }

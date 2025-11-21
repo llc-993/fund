@@ -1,11 +1,12 @@
 package com.fund.modules.user
 
 import com.fund.common.entity.PageReq
+import java.io.Serializable
 
 
-class AdminUserQueryReq: PageReq() {
+class AdminUserQueryReq: PageReq(), Serializable {
 
-    var username: String? = null
+    var userName: String? = null
 
     var userAccount : String? = null
 

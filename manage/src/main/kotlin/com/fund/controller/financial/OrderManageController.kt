@@ -33,7 +33,7 @@ class OrderManageController(
         description = "查询成功", 
         content = [Content(schema = Schema(implementation = FinancialOrder::class))]
     )
-    @PostMapping("/list")
+    @GetMapping("/list")
     fun list( request: FinancialOrderQueryRequest): R<Page<FinancialOrder>> {
         val page = financialOrderService.pageQuery(request)
         return R.success(page)

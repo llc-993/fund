@@ -12,7 +12,13 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 
 @Tag(name = "Banner管理", description = "后台 Banner 轮播图的查询、新增、编辑、删除接口")
@@ -58,7 +64,7 @@ class BannerController(
     @Operation(summary = "新增 Banner", description = "创建新的 Banner 轮播图配置")
     @ApiResponse(responseCode = "200", description = "创建成功")
     @SaCheckLogin
-    @PostMapping
+    @PostMapping("/save")
     fun create(@RequestBody @Validated banner: AppBanner): R<AppBanner> {
         val operator = currentOperator()
         banner.id = null
@@ -76,7 +82,7 @@ class BannerController(
     @Operation(summary = "更新 Banner", description = "根据 ID 更新 Banner 信息")
     @ApiResponse(responseCode = "200", description = "更新成功")
     @SaCheckLogin
-    @PutMapping("/{id}")
+    @PostMapping("/update")
     fun update(
         @Parameter(description = "Banner 主键ID", required = true, example = "1")
         @PathVariable id: Long,
@@ -100,7 +106,7 @@ class BannerController(
     @Operation(summary = "删除 Banner", description = "根据 ID 删除 Banner")
     @ApiResponse(responseCode = "200", description = "删除成功")
     @SaCheckLogin
-    @DeleteMapping("/{id}")
+    @PostMapping("/del")
     fun delete(
         @Parameter(description = "Banner 主键ID", required = true, example = "1")
         @PathVariable id: Long

@@ -11,7 +11,13 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.validation.annotation.Validated
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.RestController
 import java.time.LocalDateTime
 
 @Tag(name = "App 公告管理", description = "后台 App 公告（AppNotice）配置的查询、新增、编辑、删除接口")
@@ -57,7 +63,7 @@ class AppNoticeController(
     @Operation(summary = "新增公告", description = "创建新的 App 公告")
     @ApiResponse(responseCode = "200", description = "创建成功")
     @SaCheckLogin
-    @PostMapping
+    @PostMapping("save")
     fun create(@RequestBody @Validated notice: AppNotice): R<AppNotice> {
         notice.id = null
         notice.createTime = LocalDateTime.now()
@@ -71,7 +77,7 @@ class AppNoticeController(
     @Operation(summary = "更新公告", description = "根据 ID 更新 App 公告内容")
     @ApiResponse(responseCode = "200", description = "更新成功")
     @SaCheckLogin
-    @PutMapping("/{id}")
+    @PostMapping("/update")
     fun update(
         @Parameter(description = "公告ID", required = true, example = "8")
         @PathVariable id: Long,
@@ -90,7 +96,7 @@ class AppNoticeController(
     @Operation(summary = "删除公告", description = "根据 ID 删除 App 公告")
     @ApiResponse(responseCode = "200", description = "删除成功")
     @SaCheckLogin
-    @DeleteMapping("/{id}")
+    @PostMapping("/del")
     fun delete(
         @Parameter(description = "公告ID", required = true, example = "8")
         @PathVariable id: Long

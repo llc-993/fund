@@ -21,6 +21,7 @@ import org.springframework.beans.BeanUtils
 import org.springframework.web.bind.annotation.*
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
+import java.time.LocalDateTime
 
 @Tag(name = "涨跌板块管理", description = "涨跌板块列表查询、新增、修改、删除等接口")
 @RestController
@@ -72,6 +73,7 @@ class RisingFallingSectorsController(
             // 创建涨跌板块对象
             val risingFallingSectors = RisingFallingSectors()
             BeanUtils.copyProperties(req, risingFallingSectors)
+            risingFallingSectors.createTime = LocalDateTime.now()
 
             // 保存到数据库
             val success = risingFallingSectorsService.save(risingFallingSectors)

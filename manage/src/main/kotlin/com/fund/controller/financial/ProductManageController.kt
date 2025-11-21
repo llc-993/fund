@@ -39,9 +39,11 @@ class ProductManageController(
     fun list(
         @Parameter(description = "页码", example = "1") @RequestParam(defaultValue = "1") pageNum: Int,
         @Parameter(description = "每页数量", example = "10") @RequestParam(defaultValue = "10") pageSize: Int,
-        @Parameter(description = "状态：1-上架 0-下架") @RequestParam(required = false) status: Byte?
+        @Parameter(description = "状态：1-上架 0-下架") @RequestParam(required = false) status: Byte?,
+        @Parameter(description = "标题、名称") @RequestParam(required = false) title: String?,
+        @Parameter(description = "产品唯一编码") @RequestParam(required = false) productCode: String?,
     ): R<Page<FinancialProduct>> {
-        val page = financialProductService.pageQuery(pageNum, pageSize, status)
+        val page = financialProductService.pageQuery(pageNum, pageSize, status, title, productCode)
         return R.success(page)
     }
     

@@ -40,6 +40,8 @@ open class AppUserWalletV2ServiceImpl(
             this.availableBalance = BigDecimal.ZERO
             this.frozenBalance = BigDecimal.ZERO
             this.totalBalance = BigDecimal.ZERO
+            this.createTime = LocalDateTime.now()
+            this.updateTime = LocalDateTime.now()
             this.creditScore = 100
             this.status = 1
             this.version = 0
@@ -87,7 +89,9 @@ open class AppUserWalletV2ServiceImpl(
             beforeBalance = beforeBalance,
             afterBalance = afterBalance,
             status = 1,
-            remark = remark
+            remark = remark + """
+                ,币种:$currencyCode
+            """.trimIndent()
         )
         
         return true
@@ -122,7 +126,9 @@ open class AppUserWalletV2ServiceImpl(
             beforeBalance = beforeBalance,
             afterBalance = afterBalance,
             status = 1,
-            remark = remark
+            remark = remark + """
+                ,币种:$currencyCode
+            """.trimIndent()
         )
         
         return true
@@ -161,7 +167,9 @@ open class AppUserWalletV2ServiceImpl(
             beforeBalance = availableBalance,
             afterBalance = newAvailableBalance,
             status = 1,
-            remark = remark
+            remark = remark + """
+                ,币种:$currencyCode
+            """.trimIndent()
         )
         
         return true
@@ -200,7 +208,9 @@ open class AppUserWalletV2ServiceImpl(
             beforeBalance = availableBalance,
             afterBalance = newAvailableBalance,
             status = 1,
-            remark = remark
+            remark = remark + """
+                ,币种:$currencyCode
+            """.trimIndent()
         )
         
         return true
