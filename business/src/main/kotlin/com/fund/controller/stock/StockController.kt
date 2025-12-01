@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
+import java.math.BigDecimal
 
 
 @Tag(name = "股票交易", description = "股票查询、买入、卖出、挂单等相关接口")
@@ -172,13 +173,15 @@ class StockController(
     @Operation(
         summary = "用户持仓信息"
     )
-    @ApiResponse(responseCode = "200",
-        content = [Content(schema = Schema(implementation = UserPosition::class))])
+    @ApiResponse(
+        responseCode = "200",
+        content = [Content(schema = Schema(implementation = UserPosition::class))]
+    )
     @SaCheckLogin
     @GetMapping("userPosition")
     fun userPosition(
         @Parameter(description = "交易对", required = false)
-        @RequestParam(value = "symbol", required = false) symbol: String
+        @RequestParam(value = "symbol", required = false) symbol: String?
     ): R<Any> {
         val userId = StpUtil.getLoginIdAsLong()
 
@@ -188,6 +191,27 @@ class StockController(
                 .eq(StrUtil.isNotBlank(symbol), UserPosition::stockCode, symbol)
                 .orderByDesc(UserPosition::id)
         )
+        for (position in list) {
+            position.price = when {
+                // 优先使用 stockGid 查询
+                StrUtil.isNotBlank(position.stockGid) && position.stockGid != "null" -> {
+                    val stock = stockService.getStockById(position.stockGid!!.toLong())
+                    stock?.last ?: BigDecimal.ZERO
+                }
+                // 否则使用股票代码、类型、名称组合查询
+                else -> {
+                    val stock = stockService.getOne(
+                        KtQueryWrapper(Stock())
+                            .eq(Stock::symbol, position.stockCode)
+                            .eq(Stock::flag, position.stockType)
+                            .eq(Stock::name, position.stockName)
+                            .orderByDesc(Stock::id)
+                            .last("limit 1")
+                    )
+                    stock?.last ?: BigDecimal.ZERO
+                }
+            }
+        }
         return R.success(list)
     }
 

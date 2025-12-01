@@ -60,9 +60,10 @@ class KlineController(
         for (index in 0 until length) {
             val kline = Kline().apply {
                 this.symbol = symbol
-                this.period = resolution
+                //this.period = resolution
                 this.dataSource = DATA_SOURCE
                 this.source = 1
+                this.id = timeArray.getLongValue(index)
                 this.dateTimeStr = formatEpoch(timeArray.getLongValue(index))
                 this.open = openArray.getBigDecimal(index)
                 this.close = closeArray.getBigDecimal(index)

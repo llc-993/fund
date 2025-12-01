@@ -118,6 +118,9 @@ class AppUserWalletV2 : Serializable {
     @Schema(description = "备注信息", example = "系统自动创建", nullable = true)
     var remark: String? = null
 
+    @TableField(exist = false)
+    var flag: String? = null
+
     override fun toString(): String {
         return "AppUserWalletV2{" +
                 "id=" + id +

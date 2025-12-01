@@ -287,6 +287,9 @@ class UserPosition : Serializable {
     @Schema(description = "挂单编号", example = "PEND20251115001", nullable = true)
     var pendingorderNo: String? = null
 
+    @TableField(exist = false)
+    var price: BigDecimal? = null
+
     override fun toString(): String {
         return "UserPosition{" +
         "id=" + id +

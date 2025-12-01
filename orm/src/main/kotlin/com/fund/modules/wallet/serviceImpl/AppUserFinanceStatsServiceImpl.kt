@@ -31,6 +31,8 @@ open class AppUserFinanceStatsServiceImpl : ServiceImpl<AppUserFinanceStatsMappe
             this.totalIncome = BigDecimal.ZERO
             this.totalCommission = BigDecimal.ZERO
             this.totalTradingVolume = BigDecimal.ZERO
+            this.createTime = LocalDateTime.now()
+            this.updateTime = LocalDateTime.now()
         }
         
         if (!this.save(stats)) {

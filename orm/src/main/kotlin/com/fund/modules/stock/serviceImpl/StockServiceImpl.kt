@@ -82,7 +82,7 @@ open class StockServiceImpl(
 
 
     override fun list(req: QueryStockRequest): R<Any> {
-        val page: Page<Stock> = Page(req.pageSize, req.pageNum)
+        val page: Page<Stock> = Page(req.pageNum, req.pageSize)
 
         val page1 = this.page(
             page, KtQueryWrapper(Stock())
@@ -138,5 +138,9 @@ open class StockServiceImpl(
             return stock1
         }
         return stock
+    }
+
+    override fun loadStockPid2Redis() {
+        TODO("Not yet implemented")
     }
 }

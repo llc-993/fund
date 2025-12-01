@@ -75,10 +75,10 @@ open class UserPositionServiceImpl(
         // val ipAddr = IpUtils.getIpAddr()
         val key = RedisKeys.BUY_KEY + userId
 
-        if (debounce(key, 2, 1)) {
+       /* if (debounce(key, 2, 1)) {
             logger.info("购买参数: ${JSON.toJSONString(req)} , userId: $userId")
             throw BusinessException("can_only_try")
-        }
+        }*/
         val appUser = appUserService.getById(userId)
         if (appUser == null) {
             throw BusinessException("user_not_found")
@@ -409,6 +409,7 @@ open class UserPositionServiceImpl(
             stockCode = stock.symbol
             stockType = stock.flag
             stockName = stock.name
+            stockGid = stock.id.toString()
 
             // 订单信息
             buyOrderId = GeneratorIdUtil.generateId()
@@ -503,7 +504,7 @@ open class UserPositionServiceImpl(
     private fun handleProfitStopTarget(
         userPosition: UserPosition,
         req: StockBuyRequest,
-        stock: com.fund.modules.stock.model.Stock
+        stock: Stock
     ) {
         val user = appUserService.getById(userPosition.userId?.toLong() ?: 0L) ?: return
 
@@ -598,10 +599,10 @@ open class UserPositionServiceImpl(
     override fun sell(positionSn: String, userId: Long, doType: Int, actionType: String): R<Any> {
         val key = RedisKeys.SELL_KEY + userId
 
-        if (debounce(key, 2, 1)) {
+        /*if (debounce(key, 2, 1)) {
             logger.info("卖出参数: positionSn , userId: $userId")
             throw BusinessException("can_only_try")
-        }
+        }*/
 
         val position = this.findPositionBySn(positionSn)
         if (position == null) {
@@ -770,6 +771,7 @@ open class UserPositionServiceImpl(
             stockCode = stock.symbol
             stockType = stock.flag
             stockName = stock.name
+            stockGid = stock.id.toString()
 
             // 订单信息
             buyOrderId = GeneratorIdUtil.generateId()

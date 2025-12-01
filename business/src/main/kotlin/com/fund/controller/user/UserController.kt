@@ -3,6 +3,7 @@ package com.fund.controller.user
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.Constants
 import com.fund.common.entity.R
 import com.fund.modules.user.model.AppUser
 
@@ -44,6 +45,12 @@ class UserController(
                 .eq(AppUserWalletV2::userId, userId)
                 .eq(AppUserWalletV2::walletType, 0)
         )
+        // 使用 find 方法优化查找，避免嵌套循环，同时处理一个 value 对应多个 key 的情况
+        list.forEach { wallet ->
+            wallet.flag = Constants.MARKET_COIN_MAP.entries
+                .find { it.value == wallet.currencyCode }
+                ?.key
+        }
         appUser.wallet = list
 
         return R.success(appUser)

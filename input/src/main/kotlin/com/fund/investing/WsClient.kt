@@ -10,11 +10,13 @@ import com.fund.modules.stock.model.Stock
 import com.alibaba.fastjson2.JSON
 import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.common.RedisKeys.STOCK_MESSAGE_QUEUE
+import com.fund.modules.stock.service.StockService
 import org.redisson.api.RedissonClient
 
 @Component
 class WsClient(
-    private val redissonClient: RedissonClient
+    private val redissonClient: RedissonClient,
+    private val stockService: StockService
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -116,6 +118,7 @@ class WsClient(
         // 构建 pid- 格式的字符串，用 %% 连接
         val msgBuild = StringBuilder()
         for (stock in subscribedStocks) {
+            if (stock.pId == null) continue
             stock.pId?.let { id ->
                 msgBuild.append("pid-").append(id).append(":%%")
             }
@@ -174,24 +177,12 @@ class WsClient(
             val stockData = JSON.parseObject(dataPart)
 
             // 查找对应的Stock对象并更新
-            val bucket = redissonClient.getBucket<String>(STOCK_KEY + stockId)
+           // val bucket = redissonClient.getBucket<String>(STOCK_KEY + stockId)
+            val stock1 = stockService.getStockById(stockId)
+            updateStockFromData(stock, stockData)
+            // 发送股票数据更新消息到 Redis 队列
+            sendStockUpdateMessage(stock)
 
-            if (bucket.isExists) {
-                val stock = JSON.parseObject(bucket.get(), Stock::class.java)
-                updateStockFromData(stock, stockData)
-                bucket.set(JSON.toJSONString(stock))
-
-                // 发送股票数据更新消息到 Redis 队列
-                sendStockUpdateMessage(stock)
-            } else {
-                log.warn { "Stock with ID $stockId not found in subscribed list" }
-                val stock = Stock()
-                updateStockFromData(stock, stockData)
-                bucket.set(JSON.toJSONString(stock))
-
-                // 发送股票数据更新消息到 Redis 队列
-                sendStockUpdateMessage(stock)
-            }
 
         } catch (e: Exception) {
             log.error(e) { "Error parsing stock data: $message" }

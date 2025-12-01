@@ -1,6 +1,7 @@
 package com.fund.job
 
 
+import cn.hutool.core.io.FileUtil
 import com.fund.investing.WsStarter
 import com.fund.modules.stock.adapter.StockDataProcessor
 import com.fund.modules.stock.model.Stock
@@ -8,8 +9,14 @@ import com.fund.modules.stock.service.StockService
 import com.fund.common.Constants
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
+import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.investing.InvestingClient
+import com.fund.modules.news.model.StockNews
+import com.fund.modules.news.service.StockNewsService
 import mu.KotlinLogging
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.redisson.api.RedissonClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -17,11 +24,14 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
+import java.nio.charset.Charset
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 
 @Component
 class StockJob(
-    private var investingClient: InvestingClient
+    private var investingClient: InvestingClient,
+    private var stockNewsService: StockNewsService
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -45,7 +55,7 @@ class StockJob(
     private lateinit var stockDataProcessor: StockDataProcessor
 
 
-    @Scheduled(cron = "1 * * * * ?")
+     @Scheduled(cron = "1 * * * * ?")
     fun loadStocks() {
         logger.info("Loading stocks...")
         val countryMarketStatus = mutableMapOf<String, String>()
@@ -76,11 +86,12 @@ class StockJob(
                                 val jsonObject = item as JSONObject
                                 val pId = jsonObject.getLong("Id")
                                 val symbol = jsonObject.getString("Symbol")
-                                
+
                                 // 使用适配器处理数据
                                 val stock = stockDataProcessor.processInputStockData(jsonObject, symbol, pId)
-                                
+
                                 if (stock != null) {
+                                    stock.sourceType = "investing"
                                     stockService.upsertById(stock)
                                     stock.isOpen == "1"
                                 } else {
@@ -182,4 +193,8 @@ class StockJob(
             logger.error(e) { "Error checking market status changes" }
         }
     }
+
+
+
+
 }

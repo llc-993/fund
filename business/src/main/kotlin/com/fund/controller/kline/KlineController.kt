@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
+import mu.KotlinLogging
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -22,11 +23,11 @@ import org.springframework.web.bind.annotation.RestController
 class KlineController(
     private val stockService: StockService
 ) {
-
+    private val log = KotlinLogging.logger {}
     companion object {
         const val  DEFAULT_SOURCE_TYPE: String = "investing"
 
-        var URI: String = "http://localhost:9092/kline?symbol=%s&resolution=%s&from=%s&to=%s"
+        var URI: String = "http://localhost:9093/kline?symbol=%s&resolution=%s&from=%s&to=%s"
     }
 
 
@@ -52,7 +53,7 @@ class KlineController(
     ): R<Any> {
 
         val stock = stockService.getStockById(stockId) ?: throw BusinessException("stock_not_found")
-
+        log.info("股票: {}", stock.toString())
         if (stock.sourceType.equals(DEFAULT_SOURCE_TYPE)) {
             val investingInterval = KlineEnum.fromInterval(interval)?.investingInterval
 
@@ -66,7 +67,8 @@ class KlineController(
             val body = HttpUtil.createGet(
                 String.format(URI, stock.pId, investingInterval, normalizedFrom, normalizedTo)
             ).execute().body()
-            return R.success(body)
+           // log.info("返回的数据是: {}",body.toString())
+            return R.success(body, "success")
         }
         return R.success()
     }

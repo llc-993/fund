@@ -239,7 +239,7 @@ class StockBlockTradeSubscriptionController(
             stockCode = stock.symbol
             stockType = stock.flag
             stockName = stock.name
-
+            stockGid = stock.id.toString()
             // 订单信息
             buyOrderId = subscription.orderNo
             buyOrderTime = LocalDateTime.now()

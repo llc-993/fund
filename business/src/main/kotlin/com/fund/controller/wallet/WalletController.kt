@@ -4,6 +4,7 @@ import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
+import com.fund.common.Constants
 import com.fund.common.entity.PageReq
 import com.fund.common.entity.R
 import com.fund.modules.wallet.model.AppUserWalletV2
@@ -43,6 +44,13 @@ class WalletController(
             KtQueryWrapper(AppUserWalletV2())
                 .eq(AppUserWalletV2::userId, userId)
         )
+        // 使用 find 方法优化查找，避免嵌套循环，同时处理一个 value 对应多个 key 的情况
+        list.forEach { wallet ->
+            wallet.flag = Constants.MARKET_COIN_MAP.entries
+                .find { it.value == wallet.currencyCode }
+                ?.key
+        }
+
         return R.success(list)
     }
 
