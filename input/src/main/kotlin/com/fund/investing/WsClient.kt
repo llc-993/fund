@@ -8,6 +8,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import com.fund.modules.stock.model.Stock
 import com.alibaba.fastjson2.JSON
+import com.fund.common.RedisKeys
 import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.common.RedisKeys.STOCK_MESSAGE_QUEUE
 import com.fund.modules.stock.service.StockService
@@ -170,20 +171,25 @@ class WsClient(
             val dataPart = parts[1] // {"pid":"1137571","last":"12.625",...}
 
             // 提取股票ID
-            val stockId = pidPart.removePrefix("pid-").toLongOrNull()
-            if (stockId == null) return
+            val pid = pidPart.removePrefix("pid-").toLongOrNull()
+            if (pid == null) return
             // TODO 需要根据pid查找对应的 stock.id
             // 解析股票数据
             val stockData = JSON.parseObject(dataPart)
 
             // 查找对应的Stock对象并更新
-           // val bucket = redissonClient.getBucket<String>(STOCK_KEY + stockId)
-            val stock1 = stockService.getStockById(stockId)
-            updateStockFromData(stock, stockData)
-            // 发送股票数据更新消息到 Redis 队列
-            sendStockUpdateMessage(stock)
+            // val bucket = redissonClient.getBucket<String>(STOCK_KEY + stockId)
+            val map = redissonClient.getMap<Long, Long>(RedisKeys.STOCK_PID_KEY)
+            if (map.containsKey(pid)) {
+                val id = map.get(pid)
+                val stock1 = stockService.getStockById(id!!)
+                updateStockFromData(stock1, stockData)
+                stockService.upsertById(stock1)
+                // 发送股票数据更新消息到 Redis 队列
+                sendStockUpdateMessage(stock1)
+            } else {
 
-
+            }
         } catch (e: Exception) {
             log.error(e) { "Error parsing stock data: $message" }
         }
@@ -212,7 +218,7 @@ class WsClient(
             // 更新其他字段
             stockData.getString("last_close")?.let { stock.last = it.toBigDecimalOrNull() }
             stockData.getString("time")?.let { /* 可以添加到Stock类中 */ }
-
+            stock.id = stock.id!!
             log.debug { "Stock ${stock.symbol} updated successfully" }
 
         } catch (e: Exception) {
@@ -224,8 +230,10 @@ class WsClient(
         try {
             // 将消息发送到 Redis 队列
             val rTopic = redissonClient.getTopic(STOCK_MESSAGE_QUEUE)
-            rTopic.publishAsync(JSON.toJSONString(stock))
-            log.info { "接收到的数据是：${JSON.toJSONString(stock)}" }
+            // 使用 WriteNulls 特性序列化所有字段（包括 null 值），确保推送完整的 Stock 对象
+            val jsonString = JSON.toJSONString(stock, com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls)
+            rTopic.publishAsync(jsonString)
+            log.info { "接收到的数据是：$jsonString" }
             log.debug { "Stock update message sent for ${stock.symbol} (ID: ${stock.pId})" }
         } catch (e: Exception) {
             log.error(e) { "Failed to send stock update message for ${stock.symbol}" }

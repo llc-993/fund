@@ -113,11 +113,11 @@ class PositionUserUpdListener(
         try {
             // 解析股票数据
             val stock = JSON.parseObject(message, Stock::class.java)
-            if (stock?.pId == null || stock.symbol.isNullOrEmpty()) {
+            if (stock?.id == null || stock.symbol.isNullOrEmpty()) {
                 logger.warn("无效的股票数据: $message")
                 return
             }
-            //
+
             emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
 
             // 发布 Stock 数据到 Disruptor 进行 K线处理

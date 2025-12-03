@@ -135,12 +135,24 @@ open class StockServiceImpl(
         if (bucket.isExists) {
             val s = bucket.get()
             val stock1 = JSON.parseObject(s, Stock::class.java)
+            stock1.id = stock.id
             return stock1
         }
         return stock
     }
 
     override fun loadStockPid2Redis() {
-        TODO("Not yet implemented")
+        val list = this.list(
+            KtQueryWrapper(Stock())
+                .isNotNull(Stock::pId)
+        )
+        val map = redissonClient.getMap<Long, Long>(RedisKeys.STOCK_PID_KEY)
+        for (stock in list) {
+            map.put(stock.pId, stock.id)
+
+            val stock1 = this.getStockById(stock.id!!)
+            stock1.id = stock.id
+            this.upsertById(stock1)
+        }
     }
 }

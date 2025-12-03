@@ -93,7 +93,7 @@ class NewsJob (
             newsWithContent.take(5).forEach { news ->
                 logger.info { "News: ${news.title} | Provider: ${news.provider} | Link: ${news.link}" }
                 if (news.content != null) {
-                    logger.info { "Content preview: ${news.content.take(100)}..." }
+
                 } else {
                     logger.warn { "Content is null for news: ${news.title}" }
                 }
@@ -115,7 +115,7 @@ class NewsJob (
                     stockNews.updateTime = LocalDateTime.now()
 
                     stockNewsService.save(stockNews)
-                    logger.info { "Saved news: ${newsItem.title}, content length: ${newsItem.content?.length ?: 0}" }
+                   // logger.info { "Saved news: ${newsItem.title}, content length: ${newsItem.content?.length ?: 0}" }
                 } else {
                     logger.debug { "News already exists: ${newsItem.link}" }
                 }

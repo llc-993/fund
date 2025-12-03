@@ -22,4 +22,7 @@ interface StockService : IService<Stock> {
     fun countryList(): R<Any>
 
     fun getStockById(stockId: Long): Stock
+
+    fun loadStockPid2Redis()
+
 }

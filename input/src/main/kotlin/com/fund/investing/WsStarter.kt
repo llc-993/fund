@@ -26,6 +26,7 @@ class WsStarter(
     @EventListener(ApplicationReadyEvent::class)
     fun onApplicationReady() {
         start()
+        stockService.loadStockPid2Redis()
     }
 
     fun start() {

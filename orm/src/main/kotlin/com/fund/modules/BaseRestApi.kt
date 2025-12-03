@@ -45,7 +45,7 @@ class BaseRestApi(private val restTemplate: RestTemplate) {
 
     fun post(url: String, data: Any? = null, headers: HttpHeaders? = null, vararg ignoreStatus: HttpStatus): String? {
         val httpEntity = HttpEntity(data, headers)
-        log.info("post params: {}", JSON.toJSONString(data))
+
         val entity: ResponseEntity<String> = restTemplate.postForEntity(url, httpEntity, String::class.java)
         var ignore = false
         for (ig in ignoreStatus) {

@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -238,8 +239,34 @@ class UserController(
         return R.success()
     }
 
+    @Operation(summary = "支持的币种")
     @GetMapping("supportCoin")
     fun supportCoin(): R<Collection<String>> {
         return R.success(MARKET_COIN_MAP.values)
     }
+
+    @Operation(summary = "kyc列表", description = "需要审核的kyc信息列表")
+    @GetMapping("kycList")
+    fun kycList(): R<Any> {
+        val appUsers = userService.list(
+            KtQueryWrapper(AppUser())
+                .eq(AppUser::kycStatus, 1)
+                .orderByAsc(AppUser::id)
+        )
+        return R.success(appUsers)
+    }
+
+    @Operation(summary = "kyc审核", description = "kyc状态,kycStatus（0:未提交，1:已经提交、待审核，2:审核通过，3:审核失败）")
+    @PostMapping("reviewKyc")
+    fun reviewKyc( @RequestParam(required = true, name = "id" )id: Long, @RequestParam(required = true, name = "kycStatus" ) kycStatus: Int): R<Any> {
+        val user = userService.getById(id) ?: return R.error("找不到该用户")
+        if (user.kycStatus != 1) {
+            return R.error("该用户的kyc 未提交、审核失败、审核通过")
+        }
+        user.kycStatus = kycStatus
+        userService.updateById(user)
+
+        return R.success()
+    }
+
 }
