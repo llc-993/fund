@@ -80,7 +80,7 @@ class NewsJob (
             // 遍历每个新闻，获取详情内容
             val newsWithContent = newsItems.mapIndexed { index, news ->
                 try {
-                    logger.info { "Loading detail for news ${index + 1}/${newsItems.size}: ${news.title}" }
+                   // logger.info { "Loading detail for news ${index + 1}/${newsItems.size}: ${news.title}" }
                     val content = loadNewsDetail(news.link)
                     news.copy(content = content)
                 } catch (e: Exception) {
@@ -91,7 +91,7 @@ class NewsJob (
 
             // 打印前几条新闻用于验证
             newsWithContent.take(5).forEach { news ->
-                logger.info { "News: ${news.title} | Provider: ${news.provider} | Link: ${news.link}" }
+              //  logger.info { "News: ${news.title} | Provider: ${news.provider} | Link: ${news.link}" }
                 if (news.content != null) {
 
                 } else {

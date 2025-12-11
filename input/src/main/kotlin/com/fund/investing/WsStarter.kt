@@ -34,7 +34,9 @@ class WsStarter(
         try {
             val ktQueryWrapper = KtQueryWrapper(Stock())
                 .select(Stock::pId)
-                .eq(Stock::isOpen, 1)
+               // .eq(Stock::isOpen, 1)
+                .eq(Stock::flag, "IN")
+                .isNotNull(Stock::pId)
 
             val count = stockService.count(ktQueryWrapper)
 

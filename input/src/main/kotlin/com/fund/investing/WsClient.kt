@@ -8,16 +8,19 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import com.fund.modules.stock.model.Stock
 import com.alibaba.fastjson2.JSON
+import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.common.RedisKeys
 import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.common.RedisKeys.STOCK_MESSAGE_QUEUE
+import com.fund.modules.stock.consumer.PositionUserUpdListener
 import com.fund.modules.stock.service.StockService
 import org.redisson.api.RedissonClient
 
 @Component
 class WsClient(
     private val redissonClient: RedissonClient,
-    private val stockService: StockService
+    private val stockService: StockService,
+    private val positionUserUpdListener: PositionUserUpdListener
 ) {
     private val log = KotlinLogging.logger {}
 
@@ -56,7 +59,7 @@ class WsClient(
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                //  log.info { "返回的数据是: $text" }
+                 // log.info { "返回的数据是: $text" }
 
                 // 解析返回的数据并更新Stock
                 try {
@@ -104,7 +107,7 @@ class WsClient(
 
         try {
             val subscriptionMessage = buildSubscriptionMessage()
-            // log.info { "Sending subscription message: $subscriptionMessage" }
+           //  log.info { "Sending subscription message: $subscriptionMessage" }
             webSocket.send(subscriptionMessage)
         } catch (e: Exception) {
             log.error(e) { "Failed to send subscription message" }
@@ -188,7 +191,15 @@ class WsClient(
                 // 发送股票数据更新消息到 Redis 队列
                 sendStockUpdateMessage(stock1)
             } else {
-
+                val stock = stockService.getOne(
+                    KtQueryWrapper(Stock())
+                        .eq(Stock::pId, pid)
+                        .last(" limit 1 ")
+                )
+                updateStockFromData(stock, stockData)
+                stockService.upsertById(stock)
+                // 发送股票数据更新消息到 Redis 队列
+                sendStockUpdateMessage(stock)
             }
         } catch (e: Exception) {
             log.error(e) { "Error parsing stock data: $message" }
@@ -233,7 +244,8 @@ class WsClient(
             // 使用 WriteNulls 特性序列化所有字段（包括 null 值），确保推送完整的 Stock 对象
             val jsonString = JSON.toJSONString(stock, com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls)
             rTopic.publishAsync(jsonString)
-            log.info { "接收到的数据是：$jsonString" }
+          //  log.info { "接收到的数据是：$jsonString" }
+          //  positionUserUpdListener.processStockUpdateMessage("", jsonString)
             log.debug { "Stock update message sent for ${stock.symbol} (ID: ${stock.pId})" }
         } catch (e: Exception) {
             log.error(e) { "Failed to send stock update message for ${stock.symbol}" }

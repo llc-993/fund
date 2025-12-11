@@ -72,7 +72,7 @@ open class StockServiceImpl(
                 this.save(stock)
             }*/
             bucket.set(JSON.toJSONString(stock))
-            emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
+          //  emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
             true
         } catch (e: Exception) {
             logger.error(e) { "Error upserting stock: symbol=${stock.symbol}" }
@@ -136,7 +136,8 @@ open class StockServiceImpl(
             val s = bucket.get()
             val stock1 = JSON.parseObject(s, Stock::class.java)
             stock1.id = stock.id
-            return stock1
+            BeanUtil.copyProperties(stock1, stock)
+            return stock
         }
         return stock
     }

@@ -8,7 +8,7 @@ object Constants {
     const val ADMIN_INFO = "adminInfo"
 
     // 市场的英为的国家id
-    val MARKET_LIST = listOf<Int>(5, 37, 17, 14)
+    val MARKET_LIST = listOf<Int>(14)
 
     // 国家货币符号
     val MARKET_COIN_MAP = mapOf<String, String>(

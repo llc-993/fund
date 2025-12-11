@@ -19,4 +19,7 @@ class EmqxConfig {
 
     @Schema(description = "emqx 密钥")
     var emqxApiSecret: String? = null
+
+    @Schema(description = "emqx MQTT broker端口，默认1883")
+    var emqxMqttPort: Int? = 1883
 }

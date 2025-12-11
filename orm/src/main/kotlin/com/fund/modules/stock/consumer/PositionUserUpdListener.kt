@@ -61,6 +61,7 @@ class PositionUserUpdListener(
     private val errorCount = AtomicLong(0)
 
     override fun afterPropertiesSet() {
+        logger.info("PositionUserUpdListener.afterPropertiesSet() start running")
         if (!listenerEnabled) {
             logger.info("股票持仓监听器已禁用")
             return
@@ -105,7 +106,7 @@ class PositionUserUpdListener(
     /**
      * 处理股票更新消息
      */
-    private fun processStockUpdateMessage(channel: CharSequence, message: String) {
+    fun processStockUpdateMessage(channel: CharSequence, message: String) {
         if (!listenerEnabled) {
             return
         }
@@ -121,8 +122,10 @@ class PositionUserUpdListener(
             emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
 
             // 发布 Stock 数据到 Disruptor 进行 K线处理
-            publishToDisruptor(stock)
-
+            // publishToDisruptor(stock)
+            if (stock.symbol.equals("ZYDU")) {
+                logger.info { "接收到的数据是：${message}" }
+            }
             // 检查是否有用户持仓该股票
             val cacheKey = String.format(CHECK_USER_POSITION_KEY, stock.flag + stock.symbol)
             val userSet = redissonClient.getSet<String>(cacheKey)
@@ -149,6 +152,7 @@ class PositionUserUpdListener(
      */
     @Transactional(rollbackFor = [Exception::class])
     private fun processUserPositions(stock: Stock, userSet: Set<String>) {
+        logger.info("接收到的数据是: ${JSON.toJSONString(stock)}, userSet size: ${userSet.size}")
         // 处理所有用户持仓，不限制数量
         for (userIdStr in userSet) {
             try {
