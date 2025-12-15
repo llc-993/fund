@@ -196,7 +196,7 @@ class StockSubscriptionController(
             marginAdd = BigDecimal.ZERO
             positionType = 0 // 默认持仓类型
             positionSn = GeneratorIdUtil.generateId()
-            userId = user.id?.toInt()
+            userId = user.id
             nickName = user.userName
             agentId = user.topUserId?.toInt()
 

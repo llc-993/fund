@@ -2,6 +2,7 @@ package com.fund.modules.stock.serviceImpl;
 
 
 import cn.hutool.core.bean.BeanUtil
+import cn.hutool.core.util.StrUtil
 import com.alibaba.fastjson2.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
@@ -53,26 +54,30 @@ open class StockServiceImpl(
     override fun upsertById(stock: Stock): Boolean {
         return try {
             val bucket = redissonClient.getBucket<String>(STOCK_KEY + stock.flag + stock.symbol)
-            if (bucket == null) {
-                this.save(stock)
-            }
-            /*// 查找现有记录
-            val existing = this.getOne(
+
+            // 查找现有记录
+            val list = this.list(
                 KtQueryWrapper(Stock())
                     .eq(Stock::symbol, stock.symbol)
-                    .eq(Stock::flag, stock.flag)
+                    .eq(StrUtil.isNotBlank(stock.flag), Stock::flag, stock.flag)
+                    .eq(Stock::sourceType, stock.sourceType)
             )
 
-            val result = if (existing != null) {
+            if (list.isNotEmpty() && list.size >= 2) {
+                this.removeById(list[1].id)
+            }
+
+            if (list.isNotEmpty()) {
                 // 更新现有记录，保留ID
-                stock.id = existing.id
+                stock.id = list[0].id
                 this.updateById(stock)
-            } else {
+                stock.id = list[0].id
+            } else if (stock.id == null) {
                 // 创建新记录
                 this.save(stock)
-            }*/
+            }
             bucket.set(JSON.toJSONString(stock))
-          //  emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
+            //  emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
             true
         } catch (e: Exception) {
             logger.error(e) { "Error upserting stock: symbol=${stock.symbol}" }
@@ -130,16 +135,21 @@ open class StockServiceImpl(
     }
 
     override fun getStockById(stockId: Long): Stock {
-        val stock = this.getById(stockId)
-        val bucket = redissonClient.getBucket<String>(STOCK_KEY + stock.flag + stock.symbol)
-        if (bucket.isExists) {
-            val s = bucket.get()
-            val stock1 = JSON.parseObject(s, Stock::class.java)
-            stock1.id = stock.id
-            BeanUtil.copyProperties(stock1, stock)
-            return stock
+        return try {
+            val stock = this.getById(stockId)
+            val bucket = redissonClient.getBucket<String>(STOCK_KEY + stock.flag + stock.symbol)
+            if (bucket.isExists) {
+                val s = bucket.get()
+                val stock1 = JSON.parseObject(s, Stock::class.java)
+                stock1.id = stock.id
+                BeanUtil.copyProperties(stock1, stock)
+                return stock
+            }
+            stock
+        } catch (e: Exception) {
+            logger.error(e) { "Error getting stock by id=$stockId" }
+            throw e
         }
-        return stock
     }
 
     override fun loadStockPid2Redis() {
@@ -149,11 +159,18 @@ open class StockServiceImpl(
         )
         val map = redissonClient.getMap<Long, Long>(RedisKeys.STOCK_PID_KEY)
         for (stock in list) {
-            map.put(stock.pId, stock.id)
+            try {
+                map.put(stock.pId, stock.id)
 
-            val stock1 = this.getStockById(stock.id!!)
-            stock1.id = stock.id
-            this.upsertById(stock1)
+                val stock1 = this.getStockById(stock.id!!)
+
+                stock1.id = stock.id
+                this.upsertById(stock1)
+            } catch (e: Exception) {
+                logger.error(e) { "Error upsertting stock by id=${stock.id}" }
+                continue
+            }
+
         }
     }
 }

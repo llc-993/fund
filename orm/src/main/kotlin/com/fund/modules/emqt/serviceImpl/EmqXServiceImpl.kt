@@ -50,7 +50,7 @@ class EmqXServiceImpl(
      */
     private fun getOrCreateMqttClient(config: EmqxConfig): MqttClient? {
         try {
-            val brokerHost = "127.0.0.1"
+            val brokerHost = "192.168.3.112"
             val brokerPort = config.emqxMqttPort ?: 1883
             val brokerUrl = "tcp://$brokerHost:$brokerPort"
             

@@ -170,7 +170,8 @@ class PositionUserUpdListener(
     private fun processUserPosition(stock: Stock, userId: Long) {
         try {
             // 优先从缓存中获取用户持仓
-            val positions = getUserPositionsFromCache(userId, stock.symbol!!)
+            val stockFlag = stock.flag ?: ""
+            val positions = getUserPositionsFromCache(userId, stockFlag, stock.symbol!!)
 
             if (positions.isEmpty()) {
                 // 缓存中没有，从数据库查询
@@ -213,10 +214,10 @@ class PositionUserUpdListener(
     /**
      * 从缓存中获取用户持仓
      */
-    private fun getUserPositionsFromCache(userId: Long, stockSymbol: String): List<UserPosition> {
+    private fun getUserPositionsFromCache(userId: Long, stockFlag: String, stockSymbol: String): List<UserPosition> {
         try {
-            // 1. 从股票持仓映射中获取持仓ID列表
-            val stockPositionKey = "stock_positions:${stockSymbol}"
+            // 1. 从股票持仓映射中获取持仓ID列表（使用 flag + symbol，与 updatePositionCache 保持一致）
+            val stockPositionKey = "stock_positions:${stockFlag}${stockSymbol}"
             val stockPositionSet = redissonClient.getSet<String>(stockPositionKey)
 
             if (!stockPositionSet.isExists || stockPositionSet.isEmpty()) {
@@ -225,21 +226,16 @@ class PositionUserUpdListener(
 
             val positions = mutableListOf<UserPosition>()
 
-            // 2. 根据持仓ID从缓存中获取完整的持仓对象
+            // 2. 从用户持仓缓存 Map 中根据持仓ID获取完整的持仓对象
+            val positionCacheKey = String.format(USER_POSITION_CACHE_KEY, userId)
+            val positionMap = redissonClient.getMap<String, String>(positionCacheKey)
+
             for (positionIdStr in stockPositionSet) {
-                val positionId = positionIdStr.toLongOrNull() ?: continue
-
-                // 从用户持仓缓存中获取
-                val positionCacheKey = String.format(USER_POSITION_CACHE_KEY, userId)
-                val positionBucket = redissonClient.getBucket<String>(positionCacheKey)
-
-                if (positionBucket.isExists) {
-                    val positionJson = positionBucket.get()
-                    if (positionJson != null) {
-                        val position = JSON.parseObject(positionJson, UserPosition::class.java)
-                        if (position != null && position.stockCode == stockSymbol && position.status == "1") {
-                            positions.add(position)
-                        }
+                val positionJson = positionMap[positionIdStr]
+                if (positionJson != null) {
+                    val position = JSON.parseObject(positionJson, UserPosition::class.java)
+                    if (position != null && position.userId == userId && position.stockCode == stockSymbol && position.status == "1") {
+                        positions.add(position)
                     }
                 }
             }
@@ -257,16 +253,21 @@ class PositionUserUpdListener(
      */
     private fun cacheUserPosition(position: UserPosition) {
         try {
+            val positionId = position.id?.toString() ?: return
+            
+            // 使用 Map 结构存储，支持一个用户多个持仓
             val positionCacheKey = String.format(USER_POSITION_CACHE_KEY, position.userId)
-            val positionBucket = redissonClient.getBucket<String>(positionCacheKey)
+            val positionMap = redissonClient.getMap<String, String>(positionCacheKey)
 
             val positionJson = JSON.toJSONString(position)
-            positionBucket.set(positionJson, 24, java.util.concurrent.TimeUnit.HOURS)
+            positionMap.put(positionId, positionJson)
+            positionMap.expire(24, java.util.concurrent.TimeUnit.HOURS)
 
-            // 同时更新股票持仓映射
-            val stockPositionKey = "stock_positions:${position.stockCode}"
+            // 同时更新股票持仓映射（使用 stockType + stockCode，与 updatePositionCache 保持一致）
+            val stockType = position.stockType ?: ""
+            val stockPositionKey = "stock_positions:${stockType}${position.stockCode}"
             val stockPositionSet = redissonClient.getSet<String>(stockPositionKey)
-            stockPositionSet.add(position.id?.toString() ?: "")
+            stockPositionSet.add(positionId)
 
         } catch (e: Exception) {
             logger.error(e) { "缓存用户持仓失败: userId=${position.userId}, positionId=${position.id}" }

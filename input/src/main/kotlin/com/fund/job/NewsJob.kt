@@ -123,6 +123,8 @@ class NewsJob (
 
         } catch (e: Exception) {
             logger.error(e) { "Error loading news" }
+        } finally {
+            System.gc()
         }
     }
 

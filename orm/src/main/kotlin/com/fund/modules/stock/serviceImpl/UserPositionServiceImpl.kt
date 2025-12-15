@@ -401,7 +401,7 @@ open class UserPositionServiceImpl(
             marginAdd = BigDecimal.ZERO
             positionType = 0 // 默认持仓类型
             positionSn = GeneratorIdUtil.generateId()
-            userId = user.id?.toInt()
+            userId = user.id
             nickName = user.userName
             agentId = user.topUserId?.toInt()
 
@@ -565,18 +565,20 @@ open class UserPositionServiceImpl(
             val userSet = redissonClient.getSet<String>(userSetKey)
             userSet.add(userPosition.userId?.toString() ?: "")
 
-            // 2. 存储完整的用户持仓对象到缓存
+            // 2. 存储完整的用户持仓对象到缓存（使用 Map 结构，支持一个用户多个持仓）
             val positionCacheKey = String.format(RedisKeys.USER_POSITION_CACHE_KEY, userPosition.userId)
-            val positionBucket = redissonClient.getBucket<String>(positionCacheKey)
-
-            // 将用户持仓对象序列化为JSON存储
+            val positionMap = redissonClient.getMap<String, String>(positionCacheKey)
+            
+            // 将用户持仓对象序列化为JSON存储，使用持仓ID作为 field
+            val positionId = userPosition.id?.toString() ?: return
             val positionJson = JSON.toJSONString(userPosition)
-            positionBucket.set(positionJson, 24, java.util.concurrent.TimeUnit.HOURS) // 设置24小时过期
+            positionMap.put(positionId, positionJson)
+            positionMap.expire(24, java.util.concurrent.TimeUnit.HOURS) // 设置24小时过期
 
             // 3. 为每个股票创建用户持仓映射（股票代码 -> 用户持仓ID列表）
             val stockPositionKey = "stock_positions:${stock.flag}${stock.symbol}"
             val stockPositionSet = redissonClient.getSet<String>(stockPositionKey)
-            stockPositionSet.add(userPosition.id?.toString() ?: "")
+            stockPositionSet.add(positionId)
 
             logger.info("更新持仓缓存完成: 股票=${stock.symbol}, 用户=${userPosition.userId}, 持仓ID=${userPosition.id}")
 
@@ -724,20 +726,32 @@ open class UserPositionServiceImpl(
         stock: Stock
     ) {
         try {
-            // 1. 从用户ID集合中移除
-            val userSetKey = String.format(RedisKeys.CHECK_USER_POSITION_KEY, stock.flag + stock.symbol)
-            val userSet = redissonClient.getSet<String>(userSetKey)
-            userSet.remove(userPosition.userId?.toString() ?: "")
-
-            // 2. 删除用户持仓对象缓存
+            val positionId = userPosition.id?.toString() ?: return
+            
+            // 1. 从用户持仓对象缓存 Map 中删除该持仓
             val positionCacheKey = String.format(RedisKeys.USER_POSITION_CACHE_KEY, userPosition.userId)
-            val positionBucket = redissonClient.getBucket<String>(positionCacheKey)
-            positionBucket.delete()
+            val positionMap = redissonClient.getMap<String, String>(positionCacheKey)
+            positionMap.remove(positionId)
 
-            // 3. 从股票持仓映射中移除
+            // 2. 从股票持仓映射中移除
             val stockPositionKey = "stock_positions:${stock.flag}${stock.symbol}"
             val stockPositionSet = redissonClient.getSet<String>(stockPositionKey)
-            stockPositionSet.remove(userPosition.id?.toString() ?: "")
+            stockPositionSet.remove(positionId)
+            
+            // 3. 检查该用户是否还有其他持仓该股票，如果没有则从用户集合中移除
+            // 直接遍历当前用户的持仓Map，检查是否还有其他持仓该股票且状态为"1"的持仓
+            val userSetKey = String.format(RedisKeys.CHECK_USER_POSITION_KEY, stock.flag + stock.symbol)
+            val hasOtherPosition = positionMap.values.any { positionJson ->
+                val otherPosition = JSON.parseObject(positionJson, UserPosition::class.java)
+                otherPosition?.stockCode == userPosition.stockCode 
+                    && otherPosition?.stockType == userPosition.stockType
+                    && otherPosition?.status == "1"
+            }
+            
+            if (!hasOtherPosition) {
+                val userSet = redissonClient.getSet<String>(userSetKey)
+                userSet.remove(userPosition.userId?.toString() ?: "")
+            }
 
             logger.info("清理持仓缓存完成: 股票=${stock.symbol}, 用户=${userPosition.userId}, 持仓ID=${userPosition.id}")
 
@@ -763,7 +777,7 @@ open class UserPositionServiceImpl(
             marginAdd = BigDecimal.ZERO
             positionType = 0 // 默认持仓类型
             positionSn = GeneratorIdUtil.generateId()
-            userId = user.id?.toInt()
+            userId = user.id
             nickName = user.userName
             agentId = user.topUserId?.toInt()
 

@@ -10,9 +10,11 @@ import com.fund.common.Constants
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.RedisKeys
 import com.fund.investing.InvestingClient
 import com.fund.modules.news.model.StockNews
 import com.fund.modules.news.service.StockNewsService
+import com.fund.modules.stock.consumer.PositionUserUpdListener
 import mu.KotlinLogging
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -27,11 +29,12 @@ import org.springframework.stereotype.Component
 import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.TimeUnit
 
 @Component
 class StockJob(
     private var investingClient: InvestingClient,
-    private var stockNewsService: StockNewsService
+    private val positionUserUpdListener: PositionUserUpdListener
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -55,7 +58,7 @@ class StockJob(
     private lateinit var stockDataProcessor: StockDataProcessor
 
 
-     @Scheduled(cron = "1 * * * * ?")
+    @Scheduled(cron = "1 * * * * ?")
     fun loadStocks() {
         logger.info("Loading stocks...")
         val countryMarketStatus = mutableMapOf<String, String>()
@@ -92,7 +95,29 @@ class StockJob(
 
                                 if (stock != null) {
                                     stock.sourceType = "investing"
+
+                                    val map = redissonClient.getMap<Long, Long>(RedisKeys.STOCK_PID_KEY)
+
+
+                                    if (map.containsKey(pId)) {
+                                        val id = map.get(pId)
+                                        stock.id = id
+                                    } else {
+                                        val stock1 = stockService.getOne(
+                                            KtQueryWrapper(Stock())
+                                                .eq(Stock::pId, pId)
+                                                .eq(Stock::symbol, symbol)
+                                                .eq(Stock::flag, stock.flag)
+                                        )
+                                        if (stock1 != null) {
+                                            stock.id = stock1.id
+                                        }
+                                    }
                                     stockService.upsertById(stock)
+
+                                    positionUserUpdListener.processStockUpdateMessage("", JSON.toJSONString(stock))
+                                    TimeUnit.MILLISECONDS.sleep(1)
+
                                     stock.isOpen == "1"
                                 } else {
                                     logger.warn("Failed to process stock data: ${jsonObject.getString("Symbol")}")
@@ -123,6 +148,8 @@ class StockJob(
             countryMarketStatus[countryId.toString()] = if (hasOpenMarket) "1" else "0"
         }
         checkAndRestartWebSocket(countryMarketStatus)
+        stockService.loadStockPid2Redis()
+        System.gc()
     }
 
     private fun parseStockFromJson(jsonObject: JSONObject): Stock {
@@ -193,8 +220,6 @@ class StockJob(
             logger.error(e) { "Error checking market status changes" }
         }
     }
-
-
 
 
 }

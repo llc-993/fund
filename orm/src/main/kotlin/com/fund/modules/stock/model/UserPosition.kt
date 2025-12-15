@@ -47,7 +47,7 @@ class UserPosition : Serializable {
      */
     @TableField("user_id")
     @Schema(description = "用户ID", example = "20001", nullable = true)
-    var userId: Int? = null
+    var userId: Long? = null
 
     /**
      * 用户昵称
