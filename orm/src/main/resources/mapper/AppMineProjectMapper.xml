@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fund.modules.mine.mapper.AppMineProjectMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.fund.modules.mine.model.AppMineProject">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="coin_symbol" property="coinSymbol" />
+        <result column="lock_day" property="lockDay" />
+        <result column="amount_min" property="amountMin" />
+        <result column="amount_max" property="amountMax" />
+        <result column="rate_day_limit" property="rateDayLimit" />
+        <result column="rate_day_max" property="rateDayMax" />
+        <result column="liquidated_rate" property="liquidatedRate" />
+        <result column="enable" property="enable" />
+        <result column="create_time" property="createTime" />
+        <result column="update_by" property="updateBy" />
+        <result column="update_time" property="updateTime" />
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, name, coin_symbol, lock_day, amount_min, amount_max, rate_day_limit, rate_day_max, liquidated_rate, enable, create_time, update_by, update_time
+    </sql>
+
+</mapper>

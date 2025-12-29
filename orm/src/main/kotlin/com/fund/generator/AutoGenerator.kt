@@ -24,7 +24,7 @@ fun main() {
     val port = 3306
     val username = "root"
     val password = "12345678"
-    val schema = "fund"
+    val schema = "fund1"
 
     val projectPath = System.getProperty("user.dir")
     val projectModuleName: String = "/orm"
