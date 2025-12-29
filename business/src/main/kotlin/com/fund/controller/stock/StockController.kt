@@ -4,7 +4,9 @@ import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.annotation.SaIgnore
 import cn.dev33.satoken.stp.StpUtil
 import cn.hutool.core.util.StrUtil
+import com.alibaba.fastjson2.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.common.entity.R
 import com.fund.modules.stock.QueryStockRequest
 import com.fund.modules.stock.StockBuyRequest
@@ -23,6 +25,8 @@ import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletRequest
+import mu.KotlinLogging
+import org.redisson.api.RedissonClient
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PostMapping
@@ -40,8 +44,11 @@ class StockController(
     private val stockService: StockService,
     private val userPositionService: UserPositionService,
     private val userPendingOrderService: UserPendingOrderService,
-    private val stockDataUtil: StockDataUtil
+    private val stockDataUtil: StockDataUtil,
+    private val redissonClient: RedissonClient
 ) {
+
+    private val logger = KotlinLogging.logger {}
 
     @Operation(
         summary = "股票列表",
@@ -56,6 +63,43 @@ class StockController(
     fun list(@ModelAttribute req: QueryStockRequest): R<Any> {
         return stockService.list(req)
     }
+
+    @Operation(
+        summary = "获取所有上涨股票列表",
+        description = "查询所有上涨股票列表"
+    )
+    @ApiResponse(
+        responseCode = "200", description = "查询成功",
+        content = [Content(schema = Schema(implementation = Stock::class))]
+    )
+    @SaIgnore
+    @GetMapping("getRiseStock")
+    fun getRiseStock(): R<Any> {
+        val keys = redissonClient.keys
+        val matchedKeys = keys.getKeysByPattern("$STOCK_KEY*")
+        val list = mutableListOf<Stock>()
+        for (key in matchedKeys) {
+            try {
+                val bucket = redissonClient.getBucket<String>(key)
+                val cachedJson = bucket.get()
+                val cachedStock = JSON.parseObject(cachedJson, Stock::class.java)
+                if (cachedStock.chgPct == null) {
+                    continue
+                }
+                if (cachedStock.chgPct!!.compareTo(BigDecimal.ZERO) > 0) {
+                    list.add(cachedStock)
+                }
+            } catch (e: Exception) {
+                logger.error(e) { "Error in getting stock" }
+                continue
+            }
+        }
+
+        val sortedList = list.sortedWith(compareByDescending<Stock> { it.chgPct }).take(20)
+
+        return R.success(sortedList)
+    }
+
 
     @Operation(
         summary = "股票详情",

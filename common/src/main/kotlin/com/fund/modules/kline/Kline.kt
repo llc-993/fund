@@ -2,10 +2,11 @@ package com.fund.modules.kline
 
 import io.swagger.v3.oas.annotations.media.Schema
 import org.springframework.data.annotation.Id
+import java.io.Serializable
 import java.math.BigDecimal
 
 @Schema(description = "K 线数据点信息")
-class Kline {
+class Kline: Serializable {
 
     @Id
     @Schema(description = "主键ID", example = "1", nullable = true)

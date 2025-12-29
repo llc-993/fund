@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.time.LocalDateTime
 
 
 /**
@@ -101,6 +102,7 @@ open class FinancialProductServiceImpl(
             this.faq = request.faq
             this.platformRiskRate = request.platformRiskRate
             this.dailyRate = request.dailyRate
+            this.createTime = LocalDateTime.now()
         }
 
         // 保存产品

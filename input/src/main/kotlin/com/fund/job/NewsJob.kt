@@ -150,6 +150,25 @@ class NewsJob (
                 ?: detailDoc.select("article div").first()
 
             if (articleDiv != null) {
+                // 提取图片：根据xpath路径 /html/body/div[1]/div[2]/div[2]/div[2]/div[1]/div/div/div[1]/div[6]
+                // 先在整个文档中按路径结构查找，再在articleDiv中查找
+                val imgElement = detailDoc.select("body > div > div > div > div > div > div > div > div:has(img) img").first()
+                    ?: detailDoc.select("div.mb-5.mt-4:has(img) img").first()
+                    ?: detailDoc.select("div.relative:has(img) img").first()
+                    ?: articleDiv.select("div.mb-5.mt-4:has(img) img").first()
+                    ?: articleDiv.select("div.relative:has(img) img").first()
+                    ?: articleDiv.select("div:has(img) img").first()
+                    ?: articleDiv.select("img").first()
+                
+                val imageHtml = imgElement?.attr("src")?.let { imgSrc ->
+                    if (imgSrc.isNotBlank() && (imgSrc.startsWith("http") || imgSrc.startsWith("//"))) {
+                        val fullImgSrc = if (imgSrc.startsWith("//")) "https:$imgSrc" else imgSrc
+                        "<img src=\"$fullImgSrc\" style=\"height: 230px; width: 80%; object-fit: contain; display: block; margin: 0 auto;\">"
+                    } else {
+                        ""
+                    }
+                } ?: ""
+                
                 // 提取所有 p 标签，保留 HTML 结构
                 val paragraphs = articleDiv.select("p")
                 val content = paragraphs.map { it.outerHtml().trim() }
@@ -157,8 +176,14 @@ class NewsJob (
                     .joinToString("<br/>")
 
                 if (content.isNotBlank()) {
-                    logger.debug { "Successfully extracted content with p tags from: $newsLink, paragraphs: ${paragraphs.size}, content length: ${content.length}" }
-                    content
+                    // 将图片插入到所有 p 标签之前
+                    val finalContent = if (imageHtml.isNotBlank()) {
+                        "$imageHtml<br/>$content"
+                    } else {
+                        content
+                    }
+                    logger.debug { "Successfully extracted content with p tags from: $newsLink, paragraphs: ${paragraphs.size}, content length: ${finalContent.length}" }
+                    finalContent
                 } else {
                     // 如果 p 标签为空，尝试提取 div 内的所有 HTML（保留标签）
                     val allHtml = articleDiv.html().trim()

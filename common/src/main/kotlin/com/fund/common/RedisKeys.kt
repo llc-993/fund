@@ -57,4 +57,6 @@ object RedisKeys {
     const val App_EMAIL_TEMPLATE_CONFIG = "app_email_template_config"
 
     const val STOCK_PID_KEY = "stock_pid"
+
+    const val STOCK_INDEX = "stock_index"
 }

@@ -11,6 +11,7 @@ import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.fund.common.RedisKeys
+import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.investing.InvestingClient
 import com.fund.modules.news.model.StockNews
 import com.fund.modules.news.service.StockNewsService
@@ -72,7 +73,7 @@ class StockJob(
             while (page * pageSize < total) {
 
                 val url = String.format(Constants.API_URL_TEMPLATE, countryId, page, pageSize)
-
+                logger.info("请求的链接：$url")
                 val json = investingClient.loadData(url)
 
                 val jsonObject = JSON.parseObject(json)
@@ -91,30 +92,12 @@ class StockJob(
                                 val symbol = jsonObject.getString("Symbol")
 
                                 // 使用适配器处理数据
-                                val stock = stockDataProcessor.processInputStockData(jsonObject, symbol, pId)
+                                val stock = parseStockFromJson(jsonObject)
 
                                 if (stock != null) {
                                     stock.sourceType = "investing"
 
-                                    val map = redissonClient.getMap<Long, Long>(RedisKeys.STOCK_PID_KEY)
-
-
-                                    if (map.containsKey(pId)) {
-                                        val id = map.get(pId)
-                                        stock.id = id
-                                    } else {
-                                        val stock1 = stockService.getOne(
-                                            KtQueryWrapper(Stock())
-                                                .eq(Stock::pId, pId)
-                                                .eq(Stock::symbol, symbol)
-                                                .eq(Stock::flag, stock.flag)
-                                        )
-                                        if (stock1 != null) {
-                                            stock.id = stock1.id
-                                        }
-                                    }
                                     stockService.upsertById(stock)
-
                                     positionUserUpdListener.processStockUpdateMessage("", JSON.toJSONString(stock))
                                     TimeUnit.MILLISECONDS.sleep(1)
 

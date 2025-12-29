@@ -53,31 +53,57 @@ open class StockServiceImpl(
     @Transactional(rollbackFor = [Exception::class])
     override fun upsertById(stock: Stock): Boolean {
         return try {
+            // 先检查 Redis 是否有数据
             val bucket = redissonClient.getBucket<String>(STOCK_KEY + stock.flag + stock.symbol)
+            
+            if (bucket.isExists) {
+                // Redis 有数据，解析获取缓存的 stock
+                val cachedJson = bucket.get()
+                val cachedStock = JSON.parseObject(cachedJson, Stock::class.java)
+                
+                // 保存 cachedStock 的 id，避免被覆盖
+                val cachedId = cachedStock.id
+                
+                // 只复制非空字段，避免覆盖原有数据
+                mergeStockFields(stock, cachedStock)
+                
+                // 恢复 cachedStock 的 id
+                cachedStock.id = cachedId
+                
+                // 更新完整的 cachedStock 到数据库
+                this.updateById(cachedStock)
+                
+                // 将更新后的 cachedStock 复制回 stock，用于后续保存到 Redis
+                BeanUtil.copyProperties(cachedStock, stock)
+            } else {
+                // Redis 没有数据，查找数据库
+                val list = this.list(
+                    KtQueryWrapper(Stock())
+                        .eq(Stock::symbol, stock.symbol)
+                        .eq(StrUtil.isNotBlank(stock.flag), Stock::flag, stock.flag)
+                        .eq(Stock::sourceType, stock.sourceType)
+                )
 
-            // 查找现有记录
-            val list = this.list(
-                KtQueryWrapper(Stock())
-                    .eq(Stock::symbol, stock.symbol)
-                    .eq(StrUtil.isNotBlank(stock.flag), Stock::flag, stock.flag)
-                    .eq(Stock::sourceType, stock.sourceType)
-            )
+                if (list.isNotEmpty() && list.size >= 2) {
+                    this.removeById(list[1].id)
+                }
 
-            if (list.isNotEmpty() && list.size >= 2) {
-                this.removeById(list[1].id)
+                if (list.isNotEmpty()) {
+                    // 数据库有记录，合并数据后更新
+                    val existingStock = list[0]
+                    mergeStockFields(stock, existingStock)
+                    existingStock.id = list[0].id
+                    this.updateById(existingStock)
+                    // 将合并后的数据复制回 stock，用于保存到 Redis
+                    BeanUtil.copyProperties(existingStock, stock)
+                } else if (stock.id == null) {
+                    // 数据库没有记录，新增
+                    this.save(stock)
+                }
             }
-
-            if (list.isNotEmpty()) {
-                // 更新现有记录，保留ID
-                stock.id = list[0].id
-                this.updateById(stock)
-                stock.id = list[0].id
-            } else if (stock.id == null) {
-                // 创建新记录
-                this.save(stock)
-            }
-            bucket.set(JSON.toJSONString(stock))
-            //  emqXService.publish(MqttMsg(Constants.MARKET_THUMB, JSON.toJSONString(stock)))
+            
+            // 序列化完整的 Stock 对象到 Redis（包含 null 值）
+            bucket.set(JSON.toJSONString(stock, com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls))
             true
         } catch (e: Exception) {
             logger.error(e) { "Error upserting stock: symbol=${stock.symbol}" }
@@ -93,7 +119,7 @@ open class StockServiceImpl(
             page, KtQueryWrapper(Stock())
                 .eq(StringUtils.isNotBlank(req.flag), Stock::flag, req.flag)
                 .like(StringUtils.isNotBlank(req.symbol), Stock::symbol, req.symbol)
-                .orderByDesc(Stock::symbol)
+                .orderByDesc(Stock::chg)
         )
 
         for (stock in page1.records) {
@@ -104,7 +130,7 @@ open class StockServiceImpl(
                 stockDataUtil.enrichStockFromStockData(stockData, stock)
             } else {
                 // 如果StockData不存在，尝试从基本Stock缓存获取
-                val bucket = redissonClient.getBucket<String>(STOCK_KEY + stock.flag + stock.id)
+                val bucket = redissonClient.getBucket<String>(STOCK_KEY + stock.flag + stock.symbol)
                 if (bucket.isExists) {
                     val s = bucket.get()
                     val stock1 = JSON.parseObject(s, Stock::class.java)
@@ -137,6 +163,7 @@ open class StockServiceImpl(
     override fun getStockById(stockId: Long): Stock {
         return try {
             val stock = this.getById(stockId)
+
             val bucket = redissonClient.getBucket<String>(STOCK_KEY + stock.flag + stock.symbol)
             if (bucket.isExists) {
                 val s = bucket.get()
@@ -172,5 +199,43 @@ open class StockServiceImpl(
             }
 
         }
+    }
+
+    // 合并股票字段：只更新非空字段，保留原有数据
+    private fun mergeStockFields(source: Stock, target: Stock) {
+        source.name?.let { target.name = it }
+        source.symbol?.let { target.symbol = it }
+        source.flag?.let { target.flag = it }
+        source.isCfd?.let { target.isCfd = it }
+        source.high?.let { target.high = it }
+        source.low?.let { target.low = it }
+        source.last?.let { target.last = it }
+        source.lastPairDecimal?.let { target.lastPairDecimal = it }
+        source.chg?.let { target.chg = it }
+        source.chgPct?.let { target.chgPct = it }
+        source.volume?.let { target.volume = it }
+        source.avgVolume?.let { target.avgVolume = it }
+        source.time?.let { target.time = it }
+        source.isOpen?.let { target.isOpen = it }
+        source.url?.let { target.url = it }
+        source.countryNameTranslated?.let { target.countryNameTranslated = it }
+        source.exchangeId?.let { target.exchangeId = it }
+        source.performanceDay?.let { target.performanceDay = it }
+        source.performanceWeek?.let { target.performanceWeek = it }
+        source.performanceMonth?.let { target.performanceMonth = it }
+        source.performanceYtd?.let { target.performanceYtd = it }
+        source.performanceYear?.let { target.performanceYear = it }
+        source.performance3year?.let { target.performance3year = it }
+        source.technicalHour?.let { target.technicalHour = it }
+        source.technicalDay?.let { target.technicalDay = it }
+        source.technicalWeek?.let { target.technicalWeek = it }
+        source.technicalMonth?.let { target.technicalMonth = it }
+        source.fundamentalMarketCap?.let { target.fundamentalMarketCap = it }
+        source.fundamentalRevenue?.let { target.fundamentalRevenue = it }
+        source.fundamentalRatio?.let { target.fundamentalRatio = it }
+        source.fundamentalBeta?.let { target.fundamentalBeta = it }
+        source.pairType?.let { target.pairType = it }
+        source.pId?.let { target.pId = it }
+        source.sourceType?.let { target.sourceType = it }
     }
 }

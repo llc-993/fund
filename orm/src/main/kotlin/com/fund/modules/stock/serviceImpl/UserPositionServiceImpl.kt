@@ -83,7 +83,7 @@ open class UserPositionServiceImpl(
         if (appUser == null) {
             throw BusinessException("user_not_found")
         }
-        if (appUser.tradable!!) { // 不允许交易
+        if (!appUser.tradable!!) { // 不允许交易
             return R.error(i18nUtil.getMessage("account_is_locked"))
         }
 
@@ -654,7 +654,7 @@ open class UserPositionServiceImpl(
         }
 
         val appUser = appUserService.getById(userId)
-        if (appUser.tradable!!) { // 不允许交易
+        if (!appUser.tradable!!) { // 不允许交易
             return R.error(i18nUtil.getMessage("account_is_locked"))
         }
 
@@ -791,7 +791,7 @@ open class UserPositionServiceImpl(
             buyOrderId = GeneratorIdUtil.generateId()
             buyOrderTime = LocalDateTime.now()
             buyOrderPrice = nowPrice
-            orderDirection = if (req.buyType?.toInt() == 0) "买涨" else "买跌"
+            orderDirection = if (req.buyType?.toInt() == 1) "买涨" else "买跌"
             orderNum = req.buyNum
             orderLever = lever.toInt()
             orderTotalPrice = buyAmt
@@ -1022,7 +1022,7 @@ open class UserPositionServiceImpl(
             return // 如果没有指定买卖类型，跳过验证
         }
 
-        if (buyType == 0) { // 买入
+        if (buyType == 1) { // 买入
             // 买入时止盈价格不能比当前报价低
             if (profitTarget != null && profitTarget.compareTo(nowPrice) < 0) {
                 val errorMsg = i18nUtil.getMessage(

@@ -2,6 +2,7 @@ package com.fund.controller
 
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONArray
+import com.fund.common.entity.R
 import com.fund.investing.InvestingClient
 import com.fund.modules.kline.Kline
 import org.springframework.web.bind.annotation.GetMapping
@@ -24,6 +25,8 @@ class KlineController(
         private val ZONE_ID: ZoneId = ZoneId.systemDefault()
         var URI: String =
             "https://tvc4.investing.com/f7227f007c2f7d041a94f074efa5a021/1763183780/6/6/28/history?symbol=%s&resolution=%s&from=%s&to=%s"
+
+        var CHART_URI = "https://api.investing.com/api/financialdata/%s/historical/chart/?interval=%s&pointscount=%s"
     }
 
     @GetMapping("")
@@ -78,6 +81,32 @@ class KlineController(
         return result
     }
 
+    @GetMapping("/chart")
+    fun getChart(symbol: String, resolution: String, count: Int): List<Kline> {
+        val url = String.format(CHART_URI, symbol, resolution, count)
+        val body = investingClient.loadData(url)
+        val json = JSON.parseObject(body)
+
+        val jSONArray = json.getJSONArray("data")
+        val result = ArrayList<Kline>(jSONArray.size)
+        for (any in jSONArray) {
+            val parseArray = JSON.parseArray(any.toString())
+            val kline = Kline().apply {
+                this.id = parseArray.getLongValue(0)
+                this.dateTimeStr = formatEpoch(parseArray.getLongValue(0))
+                this.open = parseArray.getBigDecimal(1)
+                this.high = parseArray.getBigDecimal(2)
+                this.low = parseArray.getBigDecimal(3)
+                this.close = parseArray.getBigDecimal(4)
+                this.vol = parseArray.getBigDecimal(5)
+            }
+            result.add(kline)
+        }
+
+        return result
+    }
+
+
     private fun JSONArray.getBigDecimal(index: Int): BigDecimal {
         return when (val value = this.get(index)) {
             is BigDecimal -> value
@@ -92,4 +121,5 @@ class KlineController(
             .atZone(ZONE_ID)
             .format(DATE_TIME_FORMATTER)
     }
+
 }

@@ -577,6 +577,6 @@ open class FinancialOrderServiceImpl(
         // 查询并返回用户的所有订单
         return this.list(KtQueryWrapper(FinancialOrder())
             .eq(FinancialOrder::userId, userId)
-            .orderByDesc(FinancialOrder::createTime))
+            .orderByDesc(FinancialOrder::id))
     }
 }

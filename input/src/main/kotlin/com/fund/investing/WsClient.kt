@@ -196,6 +196,7 @@ class WsClient(
                         .eq(Stock::pId, pid)
                         .last(" limit 1 ")
                 )
+                map.put(pid, stock.id)
                 updateStockFromData(stock, stockData)
                 stockService.upsertById(stock)
                 // 发送股票数据更新消息到 Redis 队列

@@ -16,7 +16,7 @@ import java.math.BigDecimal
  * @author 书记
  * @since 2025-08-12
  */
-@TableName("stock")
+@TableName("`stock`")
 class Stock : Serializable {
 
     /**
@@ -58,7 +58,7 @@ class Stock : Serializable {
     /**
      * 最新成交价
      */
-    @TableField("last")
+    @TableField("`last`")
     var last: BigDecimal? = null
 
     /**
@@ -94,7 +94,7 @@ class Stock : Serializable {
     /**
      * 时间戳(Unix)
      */
-    @TableField("time")
+    @TableField("`time`")
     var time: Long? = null
 
     /**
@@ -217,7 +217,7 @@ class Stock : Serializable {
     @TableField("pair_type")
     var pairType: String? = null
 
-    @TableField("p_id")
+    @TableField("`p_id`")
     var pId:Long? = null
 
     @TableField("source_type")
