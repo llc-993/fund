@@ -46,7 +46,7 @@ open class StockSubscriptionServiceImpl(
             return RedisLockService.lockTransaction(key) block@{
 
                 val appUser = appUserService.getById(userId) ?: throw BusinessException("user_null")
-                if (appUser.tradable!!) { // 不允许交易
+                if (!appUser.tradable!!) { // 不允许交易
                     throw BusinessException("account_is_locked")
                 }
                 val ipo = ipoService.getById(req.ipoId) ?: throw BusinessException("ipo_null")

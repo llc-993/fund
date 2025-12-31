@@ -218,29 +218,30 @@ class WsClient(
             stockData.getString("high")?.let { stock.high = it.toBigDecimalOrNull() }
             stockData.getString("low")?.let { stock.low = it.toBigDecimalOrNull() }
 
-            stockData.getString("bid")?.let { bidPrice ->
-                val bidVolume =  RandomUtil.randomInt(3, 30001)
-
-                if (stock.bidDepth.size > 6) {
-                    // 保留最后7个，删除最原始的数据
-                    // 删除最原始的数据，直到大小不超过7
-                    while (stock.bidDepth.size > 7) {
-                        stock.bidDepth.remove(stock.bidDepth.keys.first())
+            // 模拟金融股票的盘口算法：基于当前价格生成多档位买卖盘口
+            val currentPrice = stock.last ?: stockData.getString("last")?.toBigDecimalOrNull()
+            if (currentPrice != null) {
+                generateMarketDepth(stock, currentPrice)
+            } else {
+                // 如果没有当前价格，使用原有的单个bid/ask逻辑
+                stockData.getString("bid")?.let { bidPrice ->
+                    val bidVolume = RandomUtil.randomInt(3, 30001)
+                    if (stock.bidDepth.size > 6) {
+                        while (stock.bidDepth.size > 6) {
+                            stock.bidDepth.remove(stock.bidDepth.keys.first())
+                        }
                     }
+                    stock.bidDepth.put(bidPrice, bidVolume)
                 }
-
-                stock.bidDepth.put(bidPrice, bidVolume)
-            }
-            stockData.getString("ask")?.let { askPrice ->
-                val askVolume = RandomUtil.randomInt(3, 30000)
-                if (stock.askDepth.size > 6) {
-                    // 保留最后7个，删除最原始的数据
-                    // 删除最原始的数据，直到大小不超过7
-                    while (stock.askDepth.size > 7) {
-                        stock.askDepth.remove(stock.askDepth.keys.first())
+                stockData.getString("ask")?.let { askPrice ->
+                    val askVolume = RandomUtil.randomInt(3, 30000)
+                    if (stock.askDepth.size > 6) {
+                        while (stock.askDepth.size > 6) {
+                            stock.askDepth.remove(stock.askDepth.keys.first())
+                        }
                     }
+                    stock.askDepth.put(askPrice, askVolume)
                 }
-                stock.askDepth.put(askPrice, askVolume)
             }
 
             // 更新变化数据
@@ -262,6 +263,85 @@ class WsClient(
 
         } catch (e: Exception) {
             log.error(e) { "Error updating stock ${stock.symbol} with data" }
+        }
+    }
+
+    /**
+     * 模拟金融股票的盘口算法：基于当前价格生成多档位买卖盘口
+     * 生成5档买盘和5档卖盘，每个档位有合理的价差和随机成交量
+     * 
+     * 算法特点：
+     * 1. 根据价格大小动态调整价差（tick size）
+     * 2. 买盘价格低于当前价格，卖盘价格高于当前价格
+     * 3. 每个档位有随机因子微调价格，模拟真实市场
+     * 4. 成交量随档位距离递减，第1档最大，第5档最小
+     */
+    private fun generateMarketDepth(stock: Stock, currentPrice: BigDecimal) {
+        try {
+            // 计算合理的价差（tick size）
+            // 根据价格大小动态调整价差：价格越高，价差越大
+            val (priceScale, scale) = when {
+                currentPrice.compareTo(BigDecimal(1000)) >= 0 -> Pair(BigDecimal("0.1"), 1)   // 高价股：0.1
+                currentPrice.compareTo(BigDecimal(100)) >= 0 -> Pair(BigDecimal("0.01"), 2)   // 中价股：0.01
+                currentPrice.compareTo(BigDecimal(10)) >= 0 -> Pair(BigDecimal("0.001"), 3)    // 中低价股：0.001
+                else -> Pair(BigDecimal("0.0001"), 4)  // 低价股：0.0001
+            }
+            
+            // 生成5档买盘（bidDepth）：价格低于当前价格，从高到低
+            val bidDepth = mutableMapOf<String, Any>()
+            for (i in 1..5) {
+                // 买盘价格 = 当前价格 - (i * 价差) + 随机微调（-30%到+30%的价差范围）
+                val baseOffset = priceScale.multiply(BigDecimal(i))
+                val randomFactor = BigDecimal(RandomUtil.randomDouble(-0.3, 0.3))
+                val priceAdjustment = priceScale.multiply(randomFactor)
+                val bidPrice = currentPrice.subtract(baseOffset)
+                    .add(priceAdjustment)
+                    .setScale(scale, java.math.RoundingMode.HALF_UP)
+                    .coerceAtMost(currentPrice.subtract(priceScale)) // 确保低于当前价格
+                
+                // 随机成交量：越远离当前价格，成交量可能越小
+                val baseVolume = RandomUtil.randomInt(100, 5000)
+                val volumeFactor = (6 - i) / 5.0  // 第1档最大，第5档最小
+                val bidVolume = (baseVolume * volumeFactor).toInt().coerceAtLeast(10)
+                
+                bidDepth[bidPrice.toString()] = bidVolume
+            }
+            
+            // 生成5档卖盘（askDepth）：价格高于当前价格，从低到高
+            val askDepth = mutableMapOf<String, Any>()
+            for (i in 1..5) {
+                // 卖盘价格 = 当前价格 + (i * 价差) + 随机微调（-30%到+30%的价差范围）
+                val baseOffset = priceScale.multiply(BigDecimal(i))
+                val randomFactor = BigDecimal(RandomUtil.randomDouble(-0.3, 0.3))
+                val priceAdjustment = priceScale.multiply(randomFactor)
+                val askPrice = currentPrice.add(baseOffset)
+                    .add(priceAdjustment)
+                    .setScale(scale, java.math.RoundingMode.HALF_UP)
+                    .coerceAtLeast(currentPrice.add(priceScale)) // 确保高于当前价格
+                
+                // 随机成交量：越远离当前价格，成交量可能越小
+                val baseVolume = RandomUtil.randomInt(100, 5000)
+                val volumeFactor = (6 - i) / 5.0  // 第1档最大，第5档最小
+                val askVolume = (baseVolume * volumeFactor).toInt().coerceAtLeast(10)
+                
+                askDepth[askPrice.toString()] = askVolume
+            }
+            
+            // 更新盘口数据，保持最多6个档位（原有逻辑是保留最后7个，这里生成5个，所以直接替换）
+            stock.bidDepth.clear()
+            // 按价格从高到低排序买盘
+            bidDepth.toList()
+                .sortedByDescending { it.first.toBigDecimalOrNull() ?: BigDecimal.ZERO }
+                .forEach { stock.bidDepth[it.first] = it.second }
+            
+            stock.askDepth.clear()
+            // 按价格从低到高排序卖盘
+            askDepth.toList()
+                .sortedBy { it.first.toBigDecimalOrNull() ?: BigDecimal.ZERO }
+                .forEach { stock.askDepth[it.first] = it.second }
+            
+        } catch (e: Exception) {
+            log.error(e) { "Error generating market depth for stock ${stock.symbol}" }
         }
     }
 

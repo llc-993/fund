@@ -78,8 +78,12 @@ open class StockServiceImpl(
                 
                 // 将更新后的 cachedStock 复制回 stock，用于后续保存到 Redis
                 BeanUtil.copyProperties(cachedStock, stock)
-                stock.askDepth = askDepth
-                stock.bidDepth = bidDepth
+                if (askDepth != null && askDepth.isNotEmpty()) {
+                    stock.askDepth = askDepth
+                }
+                if (bidDepth != null && bidDepth.isNotEmpty()) {
+                    stock.bidDepth = bidDepth
+                }
 
             } else {
                 // Redis 没有数据，查找数据库
@@ -108,7 +112,6 @@ open class StockServiceImpl(
                 }
             }
             val s = JSON.toJSONString(stock, com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls)
-            logger.info("upsertById：后的数据是：${s}")
             // 序列化完整的 Stock 对象到 Redis（包含 null 值）
             bucket.set(s)
             true

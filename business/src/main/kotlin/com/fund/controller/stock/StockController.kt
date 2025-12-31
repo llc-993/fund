@@ -253,7 +253,7 @@ class StockController(
                 // 优先使用 stockGid 查询
                 StrUtil.isNotBlank(position.stockGid) && position.stockGid != "null" -> {
                     val stock = stockService.getStockById(position.stockGid!!.toLong())
-                    stock?.last ?: BigDecimal.ZERO
+                    stock.last ?: BigDecimal.ZERO
                 }
                 // 否则使用股票代码、类型、名称组合查询
                 else -> {

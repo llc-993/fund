@@ -57,7 +57,7 @@ open class UserPendingOrderServiceImpl(
     override fun addOrder(req: StockAddOrderRequest, userId: Long): R<Any> {
         // 1. 获取用户信息并验证交易权限
         val appUser = appUserService.getById(userId)
-        if (appUser.tradable!!) { // 用户账户被锁定，不允许交易
+        if (!appUser.tradable!!) { // 用户账户被锁定，不允许交易
             return R.error(i18nUtil.getMessage("account_is_locked"))
         }
 

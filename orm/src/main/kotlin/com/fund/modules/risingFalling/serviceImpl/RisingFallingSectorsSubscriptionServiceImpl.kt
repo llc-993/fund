@@ -67,7 +67,7 @@ open class RisingFallingSectorsSubscriptionServiceImpl(
             return RedisLockService.lockTransaction(key) block@{
 
                 val appUser = appUserService.getById(userId) ?: throw BusinessException("user_null")
-                if (appUser.tradable!!) { // 不允许交易
+                if (!appUser.tradable!!) { // 不允许交易
                     throw BusinessException("account_is_locked")
                 }
                 val risingFallingSectors = risingFallingSectorsService.getById(req.risingFallingSectorsId) ?: throw BusinessException("rising_falling_sectors_null")

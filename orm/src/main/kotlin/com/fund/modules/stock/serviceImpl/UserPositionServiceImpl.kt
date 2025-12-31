@@ -250,7 +250,7 @@ open class UserPositionServiceImpl(
         if (appUser == null) {
             return R.error(i18nUtil.getMessage("user_not_found"))
         }
-        if (appUser.tradable!!) { // 不允许交易
+        if (!appUser.tradable!!) { // 不允许交易
             return R.error(i18nUtil.getMessage("account_is_locked"))
         }
 
