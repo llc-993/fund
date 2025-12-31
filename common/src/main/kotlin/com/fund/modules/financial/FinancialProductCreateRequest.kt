@@ -22,14 +22,14 @@ data class FinancialProductCreateRequest(
     
     @Schema(description = "利率类型：1-活期 2-固定", example = "2")
     val rateType: Byte = 2,
-    
-    @Schema(description = "默认收益率(例如违约/目标年化)", example = "5.5")
+
+    @Schema(description = "默认收益率(例如违约/目标年化)", example = "0.055")
     val defaultRate: BigDecimal? = null,
     
-    @Schema(description = "最低收益率或浮动下限", example = "4.5")
+    @Schema(description = "最低收益率或浮动下限", example = "0.045")
     val minRate: BigDecimal? = null,
     
-    @Schema(description = "最高收益率或浮动上限", example = "6.5")
+    @Schema(description = "最高收益率或浮动上限", example = "0.065")
     val maxRate: BigDecimal? = null,
     
     @Schema(description = "限购类型：0-不限 1-限时 2-限量", example = "0")

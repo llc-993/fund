@@ -224,9 +224,9 @@ class Stock : Serializable {
     var sourceType:String? = null
 
     @TableField(exist = false)
-    var askDepth: MutableMap<String, Any>? = null
+    var askDepth: MutableMap<String, Any> = mutableMapOf()
     @TableField(exist = false)
-    var bidDepth: MutableMap<String, Any>? = null
+    var bidDepth: MutableMap<String, Any> = mutableMapOf()
 
     override fun toString(): String {
         return "Stock(id=$id, name=$name, symbol=$symbol, isCfd=$isCfd, high=$high, low=$low, last=$last, lastPairDecimal=$lastPairDecimal, chg=$chg, chgPct=$chgPct, volume=$volume, avgVolume=$avgVolume, time=$time, isOpen=$isOpen, url=$url, flag=$flag, countryNameTranslated=$countryNameTranslated, exchangeId=$exchangeId, performanceDay=$performanceDay, performanceWeek=$performanceWeek, performanceMonth=$performanceMonth, performanceYtd=$performanceYtd, performanceYear=$performanceYear, performance3year=$performance3year, technicalHour=$technicalHour, technicalDay=$technicalDay, technicalWeek=$technicalWeek, technicalMonth=$technicalMonth, fundamentalMarketCap=$fundamentalMarketCap, fundamentalRevenue=$fundamentalRevenue, fundamentalRatio=$fundamentalRatio, fundamentalBeta=$fundamentalBeta, pairType=$pairType, pId=$pId, sourceType=$sourceType, askDepth=$askDepth, bidDepth=$bidDepth)"

@@ -558,9 +558,9 @@ open class FinancialOrderServiceImpl(
     private fun calculateDailyProfit(order: FinancialOrder): BigDecimal {
         val investAmount = order.investAmount ?: return BigDecimal.ZERO
         val actualRate = order.actualRate ?: order.defaultRate ?: return BigDecimal.ZERO
-        
+
         // 计算日利率 = 年利率 / 365
-        val dailyRate = actualRate.divide(BigDecimal(DAYS_PER_YEAR), CALCULATION_SCALE, RoundingMode.DOWN)
+        val dailyRate = actualRate.divide(BigDecimal(order.investPeriod ?: DAYS_PER_YEAR), CALCULATION_SCALE, RoundingMode.DOWN)
         
         // 计算日收益 = 投资金额 * 日利率
         return investAmount.multiply(dailyRate).setScale(6, RoundingMode.DOWN)

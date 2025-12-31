@@ -6,6 +6,7 @@ import cn.dev33.satoken.stp.StpUtil
 import cn.hutool.core.util.StrUtil
 import com.alibaba.fastjson2.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.RedisKeys.RISE_STOCK
 import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.common.entity.R
 import com.fund.modules.stock.QueryStockRequest
@@ -35,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import java.math.BigDecimal
+import java.util.concurrent.TimeUnit
 
 
 @Tag(name = "股票交易", description = "股票查询、买入、卖出、挂单等相关接口")
@@ -75,6 +77,12 @@ class StockController(
     @SaIgnore
     @GetMapping("getRiseStock")
     fun getRiseStock(): R<Any> {
+        val stockCache = redissonClient.getList<Stock>(RISE_STOCK)
+
+        if (stockCache.isExists) {
+            return R.success(stockCache.readAll())
+        }
+
         val keys = redissonClient.keys
         val matchedKeys = keys.getKeysByPattern("$STOCK_KEY*")
         val list = mutableListOf<Stock>()
@@ -96,6 +104,11 @@ class StockController(
         }
 
         val sortedList = list.sortedWith(compareByDescending<Stock> { it.chgPct }).take(20)
+
+        for (stock in sortedList) {
+            stockCache.add(stock)
+        }
+        stockCache.expire(3, TimeUnit.MINUTES)
 
         return R.success(sortedList)
     }

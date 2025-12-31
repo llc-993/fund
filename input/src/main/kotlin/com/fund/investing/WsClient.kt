@@ -1,5 +1,6 @@
 package com.fund.investing
 
+import cn.hutool.core.util.RandomUtil
 import mu.KotlinLogging
 import okhttp3.*
 import okio.ByteString
@@ -15,6 +16,7 @@ import com.fund.common.RedisKeys.STOCK_MESSAGE_QUEUE
 import com.fund.modules.stock.consumer.PositionUserUpdListener
 import com.fund.modules.stock.service.StockService
 import org.redisson.api.RedissonClient
+import java.math.BigDecimal
 
 @Component
 class WsClient(
@@ -59,7 +61,7 @@ class WsClient(
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                 // log.info { "返回的数据是: $text" }
+                // log.info { "返回的数据是: $text" }
 
                 // 解析返回的数据并更新Stock
                 try {
@@ -107,7 +109,7 @@ class WsClient(
 
         try {
             val subscriptionMessage = buildSubscriptionMessage()
-           //  log.info { "Sending subscription message: $subscriptionMessage" }
+            //  log.info { "Sending subscription message: $subscriptionMessage" }
             webSocket.send(subscriptionMessage)
         } catch (e: Exception) {
             log.error(e) { "Failed to send subscription message" }
@@ -187,6 +189,7 @@ class WsClient(
                 val id = map.get(pid)
                 val stock1 = stockService.getStockById(id!!)
                 updateStockFromData(stock1, stockData)
+                // upsertById 现在会自动保留 bidDepth 和 askDepth
                 stockService.upsertById(stock1)
                 // 发送股票数据更新消息到 Redis 队列
                 sendStockUpdateMessage(stock1)
@@ -198,6 +201,7 @@ class WsClient(
                 )
                 map.put(pid, stock.id)
                 updateStockFromData(stock, stockData)
+                // upsertById 现在会自动保留 bidDepth 和 askDepth
                 stockService.upsertById(stock)
                 // 发送股票数据更新消息到 Redis 队列
                 sendStockUpdateMessage(stock)
@@ -213,8 +217,31 @@ class WsClient(
             stockData.getString("last")?.let { stock.last = it.toBigDecimalOrNull() }
             stockData.getString("high")?.let { stock.high = it.toBigDecimalOrNull() }
             stockData.getString("low")?.let { stock.low = it.toBigDecimalOrNull() }
-            stockData.getString("bid")?.let { /* 可以添加到Stock类中 */ }
-            stockData.getString("ask")?.let { /* 可以添加到Stock类中 */ }
+
+            stockData.getString("bid")?.let { bidPrice ->
+                val bidVolume =  RandomUtil.randomInt(3, 30001)
+
+                if (stock.bidDepth.size > 6) {
+                    // 保留最后7个，删除最原始的数据
+                    // 删除最原始的数据，直到大小不超过7
+                    while (stock.bidDepth.size > 7) {
+                        stock.bidDepth.remove(stock.bidDepth.keys.first())
+                    }
+                }
+
+                stock.bidDepth.put(bidPrice, bidVolume)
+            }
+            stockData.getString("ask")?.let { askPrice ->
+                val askVolume = RandomUtil.randomInt(3, 30000)
+                if (stock.askDepth.size > 6) {
+                    // 保留最后7个，删除最原始的数据
+                    // 删除最原始的数据，直到大小不超过7
+                    while (stock.askDepth.size > 7) {
+                        stock.askDepth.remove(stock.askDepth.keys.first())
+                    }
+                }
+                stock.askDepth.put(askPrice, askVolume)
+            }
 
             // 更新变化数据
             stockData.getString("pc")?.let { stock.chg = it.toBigDecimalOrNull() }
@@ -242,11 +269,34 @@ class WsClient(
         try {
             // 将消息发送到 Redis 队列
             val rTopic = redissonClient.getTopic(STOCK_MESSAGE_QUEUE)
+
+            // 验证 bidDepth 和 askDepth 是否已设置
+            if (stock.bidDepth != null || stock.askDepth != null) {
+                log.debug { "Stock ${stock.symbol} bidDepth: ${stock.bidDepth}, askDepth: ${stock.askDepth}" }
+            }
+
             // 使用 WriteNulls 特性序列化所有字段（包括 null 值），确保推送完整的 Stock 对象
+            // FastJSON2 默认支持 Map 的序列化，但需要确保 Map 不为 null
             val jsonString = JSON.toJSONString(stock, com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls)
+
+            // 检查序列化后的 JSON 是否包含 bidDepth 和 askDepth 字段
+            if (stock.bidDepth != null && !jsonString.contains("\"bidDepth\"")) {
+                log.warn { "bidDepth not found in serialized JSON for ${stock.symbol}. JSON length: ${jsonString.length}" }
+            }
+            if (stock.askDepth != null && !jsonString.contains("\"askDepth\"")) {
+                log.warn { "askDepth not found in serialized JSON for ${stock.symbol}. JSON length: ${jsonString.length}" }
+            }
+
+            // 如果 bidDepth 或 askDepth 存在但未序列化，记录完整的 JSON 用于调试
+            if ((stock.bidDepth != null || stock.askDepth != null) &&
+                (!jsonString.contains("\"bidDepth\"") || !jsonString.contains("\"askDepth\""))
+            ) {
+                log.warn { "Serialized JSON (first 500 chars): ${jsonString.take(500)}" }
+            }
+
             rTopic.publishAsync(jsonString)
-          //  log.info { "接收到的数据是：$jsonString" }
-          //  positionUserUpdListener.processStockUpdateMessage("", jsonString)
+            //  log.info { "接收到的数据是：$jsonString" }
+            //  positionUserUpdListener.processStockUpdateMessage("", jsonString)
             log.debug { "Stock update message sent for ${stock.symbol} (ID: ${stock.pId})" }
         } catch (e: Exception) {
             log.error(e) { "Failed to send stock update message for ${stock.symbol}" }

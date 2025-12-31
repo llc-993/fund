@@ -63,6 +63,9 @@ open class StockServiceImpl(
                 
                 // 保存 cachedStock 的 id，避免被覆盖
                 val cachedId = cachedStock.id
+
+                val askDepth = stock.askDepth
+                val bidDepth = stock.bidDepth
                 
                 // 只复制非空字段，避免覆盖原有数据
                 mergeStockFields(stock, cachedStock)
@@ -75,6 +78,9 @@ open class StockServiceImpl(
                 
                 // 将更新后的 cachedStock 复制回 stock，用于后续保存到 Redis
                 BeanUtil.copyProperties(cachedStock, stock)
+                stock.askDepth = askDepth
+                stock.bidDepth = bidDepth
+
             } else {
                 // Redis 没有数据，查找数据库
                 val list = this.list(
@@ -101,9 +107,10 @@ open class StockServiceImpl(
                     this.save(stock)
                 }
             }
-            
+            val s = JSON.toJSONString(stock, com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls)
+            logger.info("upsertById：后的数据是：${s}")
             // 序列化完整的 Stock 对象到 Redis（包含 null 值）
-            bucket.set(JSON.toJSONString(stock, com.alibaba.fastjson2.JSONWriter.Feature.WriteNulls))
+            bucket.set(s)
             true
         } catch (e: Exception) {
             logger.error(e) { "Error upserting stock: symbol=${stock.symbol}" }

@@ -38,6 +38,13 @@ open class FinancialProductServiceImpl(
     companion object {
         private const val PRODUCT_STATUS_OFFLINE: Byte = 0
         private const val PRODUCT_STATUS_ONLINE: Byte = 1
+        
+        /**
+         * 转换百分比：如果值大于1，则除以100
+         */
+        private fun convertPercentage(rate: BigDecimal?): BigDecimal? {
+            return rate?.takeIf { it > BigDecimal.ONE }?.divide(BigDecimal(100), 8, java.math.RoundingMode.HALF_UP) ?: rate
+        }
     }
 
     override fun pageQuery(
@@ -72,17 +79,18 @@ open class FinancialProductServiceImpl(
             throw BusinessException("产品编码已存在")
         }
 
+
         // 创建新产品（默认下架状态）
         val product = FinancialProduct().apply {
             this.productCode = request.productCode
             this.title = request.title
             this.iconUrl = request.iconUrl
-            this.status = PRODUCT_STATUS_OFFLINE // 默认下架状态
+            this.status = PRODUCT_STATUS_ONLINE // 默认上架状态
             this.days = request.days
             this.rateType = request.rateType
-            this.defaultRate = request.defaultRate
-            this.minRate = request.minRate
-            this.maxRate = request.maxRate
+            this.defaultRate = convertPercentage(request.defaultRate)
+            this.minRate = convertPercentage(request.minRate)
+            this.maxRate = convertPercentage(request.maxRate)
             this.timeLimit = request.timeLimit
             this.limitMinAmount = request.limitMinAmount
             this.limitMaxAmount = request.limitMaxAmount
@@ -95,13 +103,13 @@ open class FinancialProductServiceImpl(
             this.totalInvestAmount = request.totalInvestAmount
             this.purchasedAmount = BigDecimal.ZERO
             this.remainAmount = request.totalInvestAmount
-            this.avgRate = request.defaultRate
+            this.avgRate = convertPercentage(request.defaultRate)
             this.buyPurchase = 0L
             this.remark = request.remark
             this.productIntro = request.productIntro
             this.faq = request.faq
             this.platformRiskRate = request.platformRiskRate
-            this.dailyRate = request.dailyRate
+            this.dailyRate = convertPercentage(request.dailyRate)
             this.createTime = LocalDateTime.now()
         }
 
@@ -128,9 +136,9 @@ open class FinancialProductServiceImpl(
         request.iconUrl?.let { product.iconUrl = it }
         request.days?.let { product.days = it }
         request.rateType?.let { product.rateType = it }
-        request.defaultRate?.let { product.defaultRate = it }
-        request.minRate?.let { product.minRate = it }
-        request.maxRate?.let { product.maxRate = it }
+        request.defaultRate?.let { product.defaultRate = convertPercentage(it) }
+        request.minRate?.let { product.minRate = convertPercentage(it) }
+        request.maxRate?.let { product.maxRate = convertPercentage(it) }
         request.timeLimit?.let { product.timeLimit = it }
         request.limitMinAmount?.let { product.limitMinAmount = it }
         request.limitMaxAmount?.let { product.limitMaxAmount = it }
@@ -145,7 +153,7 @@ open class FinancialProductServiceImpl(
             product.remainAmount = it.subtract(product.purchasedAmount ?: BigDecimal.ZERO)
         }
         request.platformRiskRate?.let { product.platformRiskRate = it }
-        request.dailyRate?.let { product.dailyRate = it }
+        request.dailyRate?.let { product.dailyRate = convertPercentage(it) }
         request.productIntro?.let { product.productIntro = it }
         request.faq?.let { product.faq = it }
         request.remark?.let { product.remark = it }

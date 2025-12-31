@@ -59,4 +59,6 @@ object RedisKeys {
     const val STOCK_PID_KEY = "stock_pid"
 
     const val STOCK_INDEX = "stock_index"
+
+    const val RISE_STOCK = "rise_stock"
 }
