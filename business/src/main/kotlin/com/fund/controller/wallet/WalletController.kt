@@ -60,7 +60,7 @@ class WalletController(
     )
     @SaCheckLogin
     @GetMapping("walletOperationList")
-    fun walletOperationList(@SwaggerRequestBody(description = "修改密码信息", required = true) @RequestBody req: PageReq): R<Any> {
+    fun walletOperationList(@SwaggerRequestBody(description = "修改密码信息", required = true) req: PageReq): R<Any> {
         val page = Page<AppWalletOperationLog>(req.pageNum, req.pageSize)
 
         val page1 = appWalletOperationLogService.page(

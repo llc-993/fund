@@ -45,5 +45,5 @@ class AdminRisingFallingSectorsAddRequest : Serializable {
     var endSellTime: LocalDateTime? = null
 
     @Schema(description = "密码", example = "password123", nullable = true)
-    var passWord: String? = null
+    var password: String? = null
 }

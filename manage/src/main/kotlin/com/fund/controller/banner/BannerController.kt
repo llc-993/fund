@@ -3,6 +3,7 @@ package com.fund.controller.banner
 import cn.dev33.satoken.annotation.SaCheckLogin
 import cn.dev33.satoken.stp.StpUtil
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.entity.IdReq
 import com.fund.common.entity.R
 import com.fund.exception.BusinessException
 import com.fund.modules.banner.model.AppBanner
@@ -84,11 +85,9 @@ class BannerController(
     @SaCheckLogin
     @PostMapping("/update")
     fun update(
-        @Parameter(description = "Banner 主键ID", required = true, example = "1")
-        @PathVariable id: Long,
         @RequestBody @Validated banner: AppBanner
     ): R<AppBanner> {
-        val existing = appBannerService.getById(id) ?: throw BusinessException("banner_not_found")
+        val existing = appBannerService.getById(banner.id) ?: throw BusinessException("banner_not_found")
         val operator = currentOperator()
 
         banner.id = existing.id
@@ -106,12 +105,12 @@ class BannerController(
     @Operation(summary = "删除 Banner", description = "根据 ID 删除 Banner")
     @ApiResponse(responseCode = "200", description = "删除成功")
     @SaCheckLogin
-    @PostMapping("/del")
+    @PostMapping("/del/")
     fun delete(
         @Parameter(description = "Banner 主键ID", required = true, example = "1")
-        @PathVariable id: Long
+        @RequestBody req: IdReq
     ): R<Unit> {
-        if (!appBannerService.removeById(id)) {
+        if (!appBannerService.removeById(req.id)) {
             throw BusinessException("banner_not_found")
         }
         return R.success()

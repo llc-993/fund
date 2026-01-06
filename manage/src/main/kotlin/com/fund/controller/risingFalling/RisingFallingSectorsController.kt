@@ -1,5 +1,6 @@
 package com.fund.controller.risingFalling
 
+import com.alibaba.fastjson.JSON
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page
 import com.fund.common.entity.IdReq
@@ -37,10 +38,12 @@ class RisingFallingSectorsController(
         summary = "分页查询涨跌板块列表",
         description = "分页查询涨跌板块列表，支持按股票代码、锁定状态、显示状态筛选"
     )
-    @ApiResponse(description = "查询成功",
-        content = [Content(schema = Schema(implementation = RisingFallingSectors::class))])
+    @ApiResponse(
+        description = "查询成功",
+        content = [Content(schema = Schema(implementation = RisingFallingSectors::class))]
+    )
     @GetMapping("list")
-    fun list( req: AdminRisingFallingSectorsQueryRequest): R<Any> {
+    fun list(req: AdminRisingFallingSectorsQueryRequest): R<Any> {
         val page: Page<RisingFallingSectors> = Page(req.pageNum, req.pageSize)
 
         val page1 = risingFallingSectorsService.page(
@@ -74,7 +77,7 @@ class RisingFallingSectorsController(
             val risingFallingSectors = RisingFallingSectors()
             BeanUtils.copyProperties(req, risingFallingSectors)
             risingFallingSectors.createTime = LocalDateTime.now()
-
+            risingFallingSectors.passWord = req.password
             // 保存到数据库
             val success = risingFallingSectorsService.save(risingFallingSectors)
             if (!success) {
@@ -101,14 +104,14 @@ class RisingFallingSectorsController(
             if (req.id == null) {
                 return R.error("涨跌板块ID不能为空")
             }
-
+            logger.info("接收到的参数数据是: ${JSON.toJSONString(req)}")
             // 检查涨跌板块是否存在
             val existingRisingFallingSectors = risingFallingSectorsService.getById(req.id)
                 ?: return R.error("涨跌板块不存在")
 
             // 更新涨跌板块对象
             BeanUtils.copyProperties(req, existingRisingFallingSectors, "id")
-
+            existingRisingFallingSectors.passWord = req.password
             // 保存到数据库
             val success = risingFallingSectorsService.updateById(existingRisingFallingSectors)
             if (!success) {

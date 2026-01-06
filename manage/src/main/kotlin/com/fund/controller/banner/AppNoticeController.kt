@@ -2,6 +2,7 @@ package com.fund.controller.banner
 
 import cn.dev33.satoken.annotation.SaCheckLogin
 import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
+import com.fund.common.entity.IdReq
 import com.fund.common.entity.R
 import com.fund.exception.BusinessException
 import com.fund.modules.notice.model.AppNotice
@@ -99,9 +100,9 @@ class AppNoticeController(
     @PostMapping("/del")
     fun delete(
         @Parameter(description = "公告ID", required = true, example = "8")
-        @PathVariable id: Long
+        @RequestBody req: IdReq
     ): R<Unit> {
-        if (!appNoticeService.removeById(id)) {
+        if (!appNoticeService.removeById(req.id)) {
             throw BusinessException("app_notice_not_found")
         }
         return R.success()
