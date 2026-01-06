@@ -90,6 +90,7 @@ open class StockSubscriptionServiceImpl(
                 subscription.userId = userId
                 subscription.topUserId = appUser.topUserId
                 subscription.applyNums = applyNums.toBigDecimal()
+                subscription.symbol = ipo.symbol
                 subscription.buyPrice = ipo.price ?: BigDecimal.ZERO
                 subscription.status = 1
                 subscription.createTime = LocalDateTime.now()
