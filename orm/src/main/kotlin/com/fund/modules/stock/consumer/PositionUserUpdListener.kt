@@ -11,6 +11,7 @@ import com.fund.common.RedisKeys.USER_POSITION_CACHE_KEY
 import com.fund.modules.emqt.co.MqttMsg
 import com.fund.modules.emqt.service.EmqXService
 import com.fund.modules.kline.event.KlineEvent
+import com.fund.modules.quotation.service.UserQuotationControlService
 import com.fund.modules.stock.model.Stock
 import com.fund.modules.stock.model.UserPosition
 import com.fund.modules.stock.model.UserPendingOrder
@@ -47,6 +48,7 @@ class PositionUserUpdListener(
     private val klineRingBuffer: RingBuffer<KlineEvent>,
     private val i18nUtil: I18nUtil,
     private val emqXService: EmqXService,
+    private val quotationControlService: UserQuotationControlService,
 ) : InitializingBean {
 
     private val logger = KotlinLogging.logger {}
@@ -123,9 +125,7 @@ class PositionUserUpdListener(
 
             // 发布 Stock 数据到 Disruptor 进行 K线处理
             // publishToDisruptor(stock)
-            if (stock.symbol.equals("ZYDU")) {
-                logger.info { "接收到的数据是：${message}" }
-            }
+
             // 检查是否有用户持仓该股票
             val cacheKey = String.format(CHECK_USER_POSITION_KEY, stock.flag + stock.symbol)
             val userSet = redissonClient.getSet<String>(cacheKey)
@@ -173,6 +173,9 @@ class PositionUserUpdListener(
             val stockFlag = stock.flag ?: ""
             val positions = getUserPositionsFromCache(userId, stockFlag, stock.symbol!!)
 
+            // 获取用户调控配置，生成调整后的价格
+            val adjustedStock = getAdjustedStockForUser(stock, userId)
+
             if (positions.isEmpty()) {
                 // 缓存中没有，从数据库查询
                 val dbPositions = userPositionService.list(
@@ -189,25 +192,50 @@ class PositionUserUpdListener(
                 // 将数据库查询结果添加到缓存
                 for (position in dbPositions) {
                     cacheUserPosition(position)
-                    // 处理持仓
+                    // 处理持仓（使用调整后的价格）
                     val key = RedisKeys.PROCESS_USER_POSITION_LOCK_KEY + position.id
                     RedisLockService.lockTransaction(key) {
-                        updatePositionProfitLoss(position, stock)
-                        checkProfitStopTarget(position, stock)
+                        updatePositionProfitLoss(position, adjustedStock)
+                        checkProfitStopTarget(position, adjustedStock)
                     }
                 }
             } else {
-                // 从缓存中获取到持仓，直接处理
+                // 从缓存中获取到持仓，直接处理（使用调整后的价格）
                 for (position in positions) {
                     val key = RedisKeys.PROCESS_USER_POSITION_LOCK_KEY + position.id
                     RedisLockService.lockTransaction(key) {
-                        updatePositionProfitLoss(position, stock)
-                        checkProfitStopTarget(position, stock)
+                        updatePositionProfitLoss(position, adjustedStock)
+                        checkProfitStopTarget(position, adjustedStock)
                     }
                 }
             }
         } catch (e: Exception) {
             logger.error(e) { "处理用户持仓失败: userId=$userId, stockId=${stock.id}" }
+        }
+    }
+
+    /**
+     * 根据用户调控配置获取调整后的股票价格
+     */
+    private fun getAdjustedStockForUser(stock: Stock, userId: Long): Stock {
+        val control = quotationControlService.getActiveControl(userId, stock.symbol!!, stock.flag!!)
+        if (control?.floating == null || control.floating == BigDecimal.ZERO) {
+            return stock
+        }
+        // 创建调整后的stock副本
+        return Stock().apply {
+            this.id = stock.id
+            this.symbol = stock.symbol
+            this.flag = stock.flag
+            this.name = stock.name
+            this.pId = stock.pId
+            this.last = stock.last?.add(control.floating) // 调整价格
+            this.high = stock.high
+            this.low = stock.low
+            this.chg = stock.chg
+            this.chgPct = stock.chgPct
+            this.volume = stock.volume
+            this.time = stock.time
         }
     }
 

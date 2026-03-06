@@ -33,4 +33,4 @@ spring:
       port: 6379
       password: Aq23-hjPwFB3mBDNFp3W1
     mongodb:
-      uri: mongodb://localhost:27017/fund
+      uri: mongodb://192.168.3.112:27017/fund

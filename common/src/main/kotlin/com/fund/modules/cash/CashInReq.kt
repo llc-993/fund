@@ -17,5 +17,5 @@ class CashInReq {
     var imgUrl: String? = null
 
     @Schema(description = "充值币种", required = true, example="USD、INR、CNY")
-    var depositCode: String? = null
+    var depositCode: String = "INR"
 }

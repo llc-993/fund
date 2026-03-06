@@ -26,6 +26,7 @@ data class Kline(
     val close: BigDecimal, // 收盘价
     val volume: BigDecimal, // 成交量
     
-    val createTime: Long = System.currentTimeMillis() // 创建时间
+    val createTime: Long = System.currentTimeMillis(), // 创建时间
 
+    val endTime: Long = 0L // 这条k线结束时间
 )

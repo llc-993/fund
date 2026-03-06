@@ -61,7 +61,7 @@ class WsClient(
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
-                // log.info { "返回的数据是: $text" }
+              //   log.info { "返回的数据是: $text" }
 
                 // 解析返回的数据并更新Stock
                 try {
@@ -204,19 +204,22 @@ class WsClient(
                 // upsertById 现在会自动保留 bidDepth 和 askDepth
                 stockService.upsertById(stock)
                 // 发送股票数据更新消息到 Redis 队列
-                sendStockUpdateMessage(stock)
+               // sendStockUpdateMessage(stock)
             }
         } catch (e: Exception) {
             log.error(e) { "Error parsing stock data: $message" }
         }
     }
 
+    // 移除逗号后转换为BigDecimal
+    private fun String.toCleanBigDecimal() = this.replace(",", "").toBigDecimalOrNull()
+
     private fun updateStockFromData(stock: Stock, stockData: com.alibaba.fastjson2.JSONObject) {
         try {
             // 更新价格相关数据
-            stockData.getString("last")?.let { stock.last = it.toBigDecimalOrNull() }
-            stockData.getString("high")?.let { stock.high = it.toBigDecimalOrNull() }
-            stockData.getString("low")?.let { stock.low = it.toBigDecimalOrNull() }
+            stockData.getString("last")?.let { stock.last = it.toCleanBigDecimal() }
+            stockData.getString("high")?.let { stock.high = it.toCleanBigDecimal() }
+            stockData.getString("low")?.let { stock.low = it.toCleanBigDecimal() }
 
             // 模拟金融股票的盘口算法：基于当前价格生成多档位买卖盘口
             val currentPrice = stock.last ?: stockData.getString("last")?.toBigDecimalOrNull()
@@ -245,18 +248,18 @@ class WsClient(
             }
 
             // 更新变化数据
-            stockData.getString("pc")?.let { stock.chg = it.toBigDecimalOrNull() }
-            stockData.getString("pcp")?.let { stock.chgPct = it.removeSuffix("%").toBigDecimalOrNull() }
+            stockData.getString("pc")?.let { stock.chg = it.toCleanBigDecimal() }
+            stockData.getString("pcp")?.let { stock.chgPct = it.removeSuffix("%").toCleanBigDecimal() }
 
             // 更新成交量
-            stockData.getString("turnover")?.let { stock.volume = it.toLongOrNull() }
+            stockData.getString("turnover")?.let { stock.volume = it.replace(",", "").toLongOrNull() }
             stockData.getLong("turnover_numeric")?.let { /* 可以添加到Stock类中 */ }
 
             // 更新时间
             stockData.getLong("timestamp")?.let { stock.time = it }
 
             // 更新其他字段
-            stockData.getString("last_close")?.let { stock.last = it.toBigDecimalOrNull() }
+            stockData.getString("last_close")?.let { stock.last = it.toCleanBigDecimal() }
             stockData.getString("time")?.let { /* 可以添加到Stock类中 */ }
             stock.id = stock.id!!
             log.debug { "Stock ${stock.symbol} updated successfully" }

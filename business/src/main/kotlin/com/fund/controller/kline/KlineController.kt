@@ -1,10 +1,12 @@
 package com.fund.controller.kline
 
+import cn.dev33.satoken.stp.StpUtil
 import cn.hutool.http.HttpUtil
 import com.fund.common.entity.R
 import com.fund.common.enums.KlineEnum
 import com.fund.exception.BusinessException
 import com.fund.modules.kline.Kline
+import com.fund.modules.kline.service.KlineService
 import com.fund.modules.stock.service.StockService
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
@@ -21,7 +23,8 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @RequestMapping("/kline")
 class KlineController(
-    private val stockService: StockService
+    private val stockService: StockService,
+    private val klineService: KlineService
 ) {
     private val log = KotlinLogging.logger {}
     companion object {
@@ -78,5 +81,27 @@ class KlineController(
      */
     private fun normalizeToSeconds(value: Long): Long {
         return if (value >= 1_000_000_000_000L) value / 1000 else value
+    }
+
+    @Operation(summary = "查询本地K线数据", description = "从本地MongoDB查询K线，自动应用用户调控价格")
+    @GetMapping("/local")
+    fun localHistory(
+        @Parameter(description = "股票ID", required = true) stockId: Long,
+        @Parameter(description = "K线周期", required = true) interval: String,
+        @Parameter(description = "开始时间戳", required = true) from: Long,
+        @Parameter(description = "结束时间戳", required = true) to: Long
+    ): R<Any> {
+        val stock = stockService.getStockById(stockId) ?: throw BusinessException("stock_not_found")
+        // 获取当前登录用户ID（如果已登录）
+        val userId = try { StpUtil.getLoginIdAsLong() } catch (e: Exception) { null }
+        val klines = klineService.getKlinesByTimeRangeForUser(
+            symbol = stock.symbol!!,
+            market = stock.flag!!,
+            interval = interval,
+            startTime = normalizeToSeconds(from) * 1000,
+            endTime = normalizeToSeconds(to) * 1000,
+            userId = userId
+        )
+        return R.success(klines)
     }
 }

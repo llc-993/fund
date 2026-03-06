@@ -58,8 +58,8 @@ class EmqXServiceImpl(
      */
     private fun getOrCreateMqttClient(config: EmqxConfig): MqttClient? {
 
-        val brokerHost = "192.168.3.112"
-        val brokerPort = config.emqxMqttPort ?: 1883
+        val brokerHost = config.emqxApiHost ?: "192.168.3.112"
+        val brokerPort = 1883
         val brokerUrl = "tcp://$brokerHost:$brokerPort"
 
         val client = mqttClients.computeIfAbsent(brokerUrl) {
@@ -130,7 +130,9 @@ class EmqXServiceImpl(
 
     override fun publish(msg: MqttMsg) {
         try {
-            coroutineScope.launch { doPublish(msg) }
+            coroutineScope.launch {
+               // doPublish(msg)
+            }
         } catch (e: Exception) {
             log.error(e) { "启动发布协程失败" }
         }
@@ -146,7 +148,7 @@ class EmqXServiceImpl(
                 return
             }
             val config: EmqxConfig = configService.getConfig(EmqxConfig::class.java)
-            val apiHost: String = config.emqxApiHost!!
+            val apiHost: String = "http://" + config.emqxApiHost!!
             val apiPort: Int = config.emqxApiPort!!
             val apiKey: String = config.emqxApiKey!!
             val apiSecret: String = config.emqxApiSecret!!

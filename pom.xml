@@ -22,7 +22,7 @@
         <module>manage</module>
         <module>input2</module>
         <module>input</module>
-
+        <module>input3</module>
     </modules>
 
     <properties>

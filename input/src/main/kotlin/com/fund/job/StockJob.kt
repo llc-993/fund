@@ -1,7 +1,10 @@
 package com.fund.job
 
+// https://api.investing.com/api/financialdata/8883/historical/chart/?interval=PT15M&pointscount=160
+// https://tvc4.investing.com/1fac091226d4dbe226e4b1ae3f802bc2/1770012769/6/6/28/history?symbol=8883&resolution=M&from=836892789&to=1770012849
+// https://widget2.sentryd.com/widget/sentry/api/Pricing
+// https://widget2.sentryd.com/widget/api/instruments/latest/EUR_USD,USD_JPY,GBP_USD,USD_CHF,USD_CAD,AUD_USD,NZD_USD,EUR_CAD,EUR_CHF,EUR_GBP,EUR_JPY,EUR_AUD,GBP_JPY,USD_CNH,USD_ILS,USD_MXN,USD_TRY,XAU_USD?ts=1770014637527
 
-import cn.hutool.core.io.FileUtil
 import com.fund.investing.WsStarter
 import com.fund.modules.stock.adapter.StockDataProcessor
 import com.fund.modules.stock.model.Stock
@@ -9,17 +12,9 @@ import com.fund.modules.stock.service.StockService
 import com.fund.common.Constants
 import com.alibaba.fastjson2.JSON
 import com.alibaba.fastjson2.JSONObject
-import com.baomidou.mybatisplus.extension.kotlin.KtQueryWrapper
-import com.fund.common.RedisKeys
-import com.fund.common.RedisKeys.STOCK_KEY
 import com.fund.investing.InvestingClient
-import com.fund.modules.news.model.StockNews
-import com.fund.modules.news.service.StockNewsService
 import com.fund.modules.stock.consumer.PositionUserUpdListener
 import mu.KotlinLogging
-import org.jsoup.Jsoup
-import org.jsoup.nodes.Document
-import org.jsoup.nodes.Element
 import org.redisson.api.RedissonClient
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -27,8 +22,6 @@ import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
-import java.nio.charset.Charset
-import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.TimeUnit
 
@@ -59,7 +52,7 @@ class StockJob(
     private lateinit var stockDataProcessor: StockDataProcessor
 
 
-    @Scheduled(cron = "1 * * * * ?")
+   // @Scheduled(cron = "1 * * * * ?")
     fun loadStocks() {
         logger.info("Loading stocks...")
         val countryMarketStatus = mutableMapOf<String, String>()
