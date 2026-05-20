@@ -131,10 +131,6 @@ CREATE TABLE `app_config` (
 -- Records of app_config
 -- ----------------------------
 BEGIN;
-INSERT INTO `app_config` (`id`, `code`, `value`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (35, 's3AccessKeyId', 'AKIAZVMTU25IEXSRTOM5', NULL, 'not', '2023-11-17 12:44:27', NULL, '2025-05-30 10:39:04');
-INSERT INTO `app_config` (`id`, `code`, `value`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (36, 's3AccessKeySecret', '6wNR8RWF8tORi2Tarl5BQoppHgUflK0CW+dCO+J0', NULL, 'not', '2023-11-17 12:44:27', NULL, '2025-05-30 10:39:04');
-INSERT INTO `app_config` (`id`, `code`, `value`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (37, 's3Endpoint', 'ap-east-1.amazonaws.com', NULL, 'not', '2023-11-17 12:44:27', NULL, '2025-05-30 10:39:04');
-INSERT INTO `app_config` (`id`, `code`, `value`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (38, 's3BucketName', 'brush-001', NULL, 'not', '2023-11-17 12:44:27', NULL, '2025-05-30 10:39:04');
 INSERT INTO `app_config` (`id`, `code`, `value`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (39, 's3UploadMaxSize', '100', NULL, 'not', '2023-11-17 12:44:27', NULL, '2025-05-30 10:39:04');
 INSERT INTO `app_config` (`id`, `code`, `value`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (79, 'emqxEnable', 'true', NULL, 'not', '2025-03-15 03:27:38', NULL, '2025-03-15 03:27:38');
 INSERT INTO `app_config` (`id`, `code`, `value`, `remark`, `create_by`, `create_time`, `update_by`, `update_time`) VALUES (80, 'emqxApiHost', '192.168.3.112', NULL, 'not', '2025-03-15 03:27:38', NULL, '2026-02-02 16:16:57');
