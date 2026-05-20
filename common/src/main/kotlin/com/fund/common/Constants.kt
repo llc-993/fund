@@ -12,10 +12,7 @@ object Constants {
 
     // 国家货币符号
     val MARKET_COIN_MAP = mapOf<String, String>(
-        "CN" to "CNY",
-        "US" to "USD",
-        "IN" to "INR",
-        "DE" to "EUR",
+        "HK" to "HKD"
     )
 
     const val MARKET_THUMB = "/topic/market/thumb"

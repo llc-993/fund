@@ -85,7 +85,7 @@ open class AppUserCashInOrderServiceImpl(
             val amount = order.applyAmount ?: throw BusinessException("充值金额不存在")
             val currencyCode = req.depositCode?.takeIf { it.isNotBlank() } 
                 ?: order.depositCode?.takeIf { it.isNotBlank() } 
-                ?: "CNY"
+                ?: "HKD"
             
             val success = appUserWalletV2Service.addAvailableBalance(
                 userId = userId,

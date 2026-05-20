@@ -10,10 +10,11 @@ import com.fund.modules.wallet.model.AppUserWalletV2
 import com.fund.modules.wallet.service.AppUserWalletV2Service
 import com.fund.modules.wallet.service.AppWalletOperationLogService
 import com.fund.utils.GeneratorIdUtil.generateId
+import com.fund.utils.RedisLockService
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.time.LocalDateTime
 
 /**
@@ -30,6 +31,11 @@ open class AppUserWalletV2ServiceImpl(
 ) : ServiceImpl<AppUserWalletV2Mapper, AppUserWalletV2>(), AppUserWalletV2Service {
 
     private val logger = KotlinLogging.logger {}
+    private val walletLockPrefix = "lock:wallet:v2:"
+
+    private fun walletLockKey(userId: Long, walletType: Int, currencyCode: String): String {
+        return "$walletLockPrefix$userId:$walletType:$currencyCode"
+    }
 
     override fun createWallet(userId: Long, topUserId: Long?, walletType: Int , currencyCode: String): AppUserWalletV2 {
         val wallet = AppUserWalletV2().apply {
@@ -40,6 +46,10 @@ open class AppUserWalletV2ServiceImpl(
             this.availableBalance = BigDecimal.ZERO
             this.frozenBalance = BigDecimal.ZERO
             this.totalBalance = BigDecimal.ZERO
+            this.aiQuantFreeze = BigDecimal.ZERO
+            this.aiQuantTotalInvest = BigDecimal.ZERO
+            this.aiQuantTotalProfit = BigDecimal.ZERO
+            this.aiQuantTotalFee = BigDecimal.ZERO
             this.createTime = LocalDateTime.now()
             this.updateTime = LocalDateTime.now()
             this.creditScore = 100
@@ -48,7 +58,7 @@ open class AppUserWalletV2ServiceImpl(
         }
         
         if (!this.save(wallet)) {
-            throw BusinessException("创建钱包失败")
+            throw BusinessException("wallet_create_failed")
         }
         
         return wallet
@@ -64,162 +74,314 @@ open class AppUserWalletV2ServiceImpl(
         )
     }
 
-    @Transactional(rollbackFor = [Exception::class])
     override fun addAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
-            ?: throw BusinessException("钱包不存在")
-        
-        val beforeBalance = wallet.availableBalance ?: BigDecimal.ZERO
-        val afterBalance = beforeBalance.add(amount)
-        
-        // 更新余额
-        wallet.availableBalance = afterBalance
-        wallet.totalBalance = afterBalance.add(wallet.frozenBalance ?: BigDecimal.ZERO)
-        
-        if (!this.updateById(wallet)) {
-            throw BusinessException("更新余额失败")
+        val lockKey = walletLockKey(userId, walletType, currencyCode)
+        return RedisLockService.lockTransaction(lockKey) {
+            val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+                ?: throw BusinessException("wallet_not_found")
+
+            val beforeBalance = wallet.availableBalance ?: BigDecimal.ZERO
+            val afterBalance = beforeBalance.add(amount)
+
+            // 更新余额
+            wallet.availableBalance = afterBalance
+            wallet.totalBalance = afterBalance.add(wallet.frozenBalance ?: BigDecimal.ZERO)
+
+            if (!this.updateById(wallet)) {
+                throw BusinessException("wallet_update_balance_failed")
+            }
+
+            // 记录操作日志
+            appWalletOperationLogService.logOperation(
+                userId = userId,
+                walletType = walletType,
+                operationType = operationType,
+                amount = amount,
+                beforeBalance = beforeBalance,
+                afterBalance = afterBalance,
+                status = 1,
+                remark = remark + """
+                    ,币种:$currencyCode
+                """.trimIndent()
+            )
+
+            true
         }
-        
-        // 记录操作日志
-        appWalletOperationLogService.logOperation(
-            userId = userId,
-            walletType = walletType,
-            operationType = operationType,
-            amount = amount,
-            beforeBalance = beforeBalance,
-            afterBalance = afterBalance,
-            status = 1,
-            remark = remark + """
-                ,币种:$currencyCode
-            """.trimIndent()
-        )
-        
-        return true
     }
 
-    @Transactional(rollbackFor = [Exception::class])
     override fun subtractAvailableBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
-            ?: throw BusinessException("钱包不存在")
-        
-        val beforeBalance = wallet.availableBalance ?: BigDecimal.ZERO
-        if (beforeBalance.compareTo(amount) < 0) {
-            throw BusinessException("余额不足")
+        val lockKey = walletLockKey(userId, walletType, currencyCode)
+        return RedisLockService.lockTransaction(lockKey) {
+            val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+                ?: throw BusinessException("wallet_not_found")
+
+            val beforeBalance = wallet.availableBalance ?: BigDecimal.ZERO
+            if (beforeBalance.compareTo(amount) < 0) {
+                throw BusinessException("wallet_insufficient_balance")
+            }
+
+            val afterBalance = beforeBalance.subtract(amount)
+
+            // 更新余额
+            wallet.availableBalance = afterBalance
+            wallet.totalBalance = afterBalance.add(wallet.frozenBalance ?: BigDecimal.ZERO)
+
+            if (!this.updateById(wallet)) {
+                throw BusinessException("wallet_update_balance_failed")
+            }
+
+            // 记录操作日志
+            appWalletOperationLogService.logOperation(
+                userId = userId,
+                walletType = walletType,
+                operationType = operationType,
+                amount = amount.negate(),
+                beforeBalance = beforeBalance,
+                afterBalance = afterBalance,
+                status = 1,
+                remark = remark + """
+                    ,币种:$currencyCode
+                """.trimIndent()
+            )
+
+            true
         }
-        
-        val afterBalance = beforeBalance.subtract(amount)
-        
-        // 更新余额
-        wallet.availableBalance = afterBalance
-        wallet.totalBalance = afterBalance.add(wallet.frozenBalance ?: BigDecimal.ZERO)
-        
-        if (!this.updateById(wallet)) {
-            throw BusinessException("更新余额失败")
-        }
-        
-        // 记录操作日志
-        appWalletOperationLogService.logOperation(
-            userId = userId,
-            walletType = walletType,
-            operationType = operationType,
-            amount = amount.negate(),
-            beforeBalance = beforeBalance,
-            afterBalance = afterBalance,
-            status = 1,
-            remark = remark + """
-                ,币种:$currencyCode
-            """.trimIndent()
-        )
-        
-        return true
     }
 
-    @Transactional(rollbackFor = [Exception::class])
     override fun freezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
-            ?: throw BusinessException("钱包不存在")
-        
-        val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
-        val frozenBalance = wallet.frozenBalance ?: BigDecimal.ZERO
-        
-        if (availableBalance.compareTo(amount) < 0) {
-            throw BusinessException("可用余额不足")
+        val lockKey = walletLockKey(userId, walletType, currencyCode)
+        return RedisLockService.lockTransaction(lockKey) {
+            val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+                ?: throw BusinessException("wallet_not_found")
+
+            val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
+            val frozenBalance = wallet.frozenBalance ?: BigDecimal.ZERO
+
+            if (availableBalance.compareTo(amount) < 0) {
+                throw BusinessException("wallet_insufficient_available_balance")
+            }
+
+            val newAvailableBalance = availableBalance.subtract(amount)
+            val newFrozenBalance = frozenBalance.add(amount)
+
+            // 更新余额
+            wallet.availableBalance = newAvailableBalance
+            wallet.frozenBalance = newFrozenBalance
+            wallet.totalBalance = newAvailableBalance.add(newFrozenBalance)
+
+            if (!this.updateById(wallet)) {
+                throw BusinessException("wallet_freeze_failed")
+            }
+
+            // 记录操作日志
+            appWalletOperationLogService.logOperation(
+                userId = userId,
+                walletType = walletType,
+                operationType = operationType,
+                amount = amount,
+                beforeBalance = availableBalance,
+                afterBalance = newAvailableBalance,
+                status = 1,
+                remark = remark + """
+                    ,币种:$currencyCode
+                """.trimIndent()
+            )
+
+            true
         }
-        
-        val newAvailableBalance = availableBalance.subtract(amount)
-        val newFrozenBalance = frozenBalance.add(amount)
-        
-        // 更新余额
-        wallet.availableBalance = newAvailableBalance
-        wallet.frozenBalance = newFrozenBalance
-        wallet.totalBalance = newAvailableBalance.add(newFrozenBalance)
-        
-        if (!this.updateById(wallet)) {
-            throw BusinessException("冻结余额失败")
-        }
-        
-        // 记录操作日志
-        appWalletOperationLogService.logOperation(
-            userId = userId,
-            walletType = walletType,
-            operationType = operationType,
-            amount = amount,
-            beforeBalance = availableBalance,
-            afterBalance = newAvailableBalance,
-            status = 1,
-            remark = remark + """
-                ,币种:$currencyCode
-            """.trimIndent()
-        )
-        
-        return true
     }
 
-    @Transactional(rollbackFor = [Exception::class])
     override fun unfreezeBalance(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal, operationType: GoldChangeEnum, remark: String?): Boolean {
-        val wallet = findWalletByUserAndType(userId, walletType, currencyCode) 
-            ?: throw BusinessException("钱包不存在")
-        
-        val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
-        val frozenBalance = wallet.frozenBalance ?: BigDecimal.ZERO
-        
-        if (frozenBalance.compareTo(amount) < 0) {
-            throw BusinessException("冻结余额不足")
+        val lockKey = walletLockKey(userId, walletType, currencyCode)
+        return RedisLockService.lockTransaction(lockKey) {
+            val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+                ?: throw BusinessException("wallet_not_found")
+
+            val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
+            val frozenBalance = wallet.frozenBalance ?: BigDecimal.ZERO
+
+            if (frozenBalance.compareTo(amount) < 0) {
+                throw BusinessException("wallet_insufficient_freeze_balance")
+            }
+
+            val newAvailableBalance = availableBalance.add(amount)
+            val newFrozenBalance = frozenBalance.subtract(amount)
+
+            // 更新余额
+            wallet.availableBalance = newAvailableBalance
+            wallet.frozenBalance = newFrozenBalance
+            wallet.totalBalance = newAvailableBalance.add(newFrozenBalance)
+
+            if (!this.updateById(wallet)) {
+                throw BusinessException("wallet_unfreeze_failed")
+            }
+
+            // 记录操作日志
+            appWalletOperationLogService.logOperation(
+                userId = userId,
+                walletType = walletType,
+                operationType = operationType,
+                amount = amount,
+                beforeBalance = availableBalance,
+                afterBalance = newAvailableBalance,
+                status = 1,
+                remark = remark + """
+                    ,币种:$currencyCode
+                """.trimIndent()
+            )
+
+            true
         }
-        
-        val newAvailableBalance = availableBalance.add(amount)
-        val newFrozenBalance = frozenBalance.subtract(amount)
-        
-        // 更新余额
-        wallet.availableBalance = newAvailableBalance
-        wallet.frozenBalance = newFrozenBalance
-        wallet.totalBalance = newAvailableBalance.add(newFrozenBalance)
-        
-        if (!this.updateById(wallet)) {
-            throw BusinessException("解冻余额失败")
-        }
-        
-        // 记录操作日志
-        appWalletOperationLogService.logOperation(
-            userId = userId,
-            walletType = walletType,
-            operationType = operationType,
-            amount = amount,
-            beforeBalance = availableBalance,
-            afterBalance = newAvailableBalance,
-            status = 1,
-            remark = remark + """
-                ,币种:$currencyCode
-            """.trimIndent()
-        )
-        
-        return true
     }
 
     override fun checkBalanceSufficient(userId: Long, walletType: Int, currencyCode: String, amount: BigDecimal): Boolean {
         val wallet = findWalletByUserAndType(userId, walletType, currencyCode) ?: return false
         val availableBalance = wallet.availableBalance ?: BigDecimal.ZERO
         return availableBalance.compareTo(amount) >= 0
+    }
+
+    override fun freezeAiQuantPrincipal(
+        userId: Long,
+        walletType: Int,
+        currencyCode: String,
+        amount: BigDecimal,
+        operationType: GoldChangeEnum,
+        remark: String?,
+        relatedCycleId: Long?
+    ): Boolean {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw BusinessException("wallet_freeze_amount_must_be_positive")
+        }
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+            ?: throw BusinessException("wallet_not_found")
+        val available = wallet.availableBalance ?: BigDecimal.ZERO
+        if (available.compareTo(amount) < 0) {
+            throw BusinessException("wallet_insufficient_available_balance")
+        }
+        val freezeBefore = wallet.aiQuantFreeze ?: BigDecimal.ZERO
+        val newAvailable = available.subtract(amount).setScale(16, RoundingMode.HALF_UP)
+        val newAiFreeze = freezeBefore.add(amount).setScale(16, RoundingMode.HALF_UP)
+        wallet.availableBalance = newAvailable
+        wallet.aiQuantFreeze = newAiFreeze
+        wallet.totalBalance = newAvailable.add(wallet.frozenBalance ?: BigDecimal.ZERO)
+        if (!updateById(wallet)) {
+            throw BusinessException("ai_quant_freeze_failed")
+        }
+        appWalletOperationLogService.logOperation(
+            userId = userId,
+            walletType = walletType,
+            operationType = operationType,
+            amount = amount.negate(),
+            beforeBalance = available,
+            afterBalance = newAvailable,
+            relatedId = relatedCycleId,
+            relatedType = "ai_quant_cycle",
+            status = 1,
+            remark = (remark ?: "") + ",币种:$currencyCode,ai_quant_freeze:$freezeBefore->$newAiFreeze"
+        )
+        return true
+    }
+
+    override fun releaseAiQuantPrincipal(
+        userId: Long,
+        walletType: Int,
+        currencyCode: String,
+        amount: BigDecimal,
+        operationType: GoldChangeEnum,
+        remark: String?,
+        relatedCycleId: Long?
+    ): Boolean {
+        if (amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw BusinessException("wallet_release_amount_must_be_positive")
+        }
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+            ?: throw BusinessException("wallet_not_found")
+        val available = wallet.availableBalance ?: BigDecimal.ZERO
+        val freeze = wallet.aiQuantFreeze ?: BigDecimal.ZERO
+        if (freeze.compareTo(amount) < 0) {
+            throw BusinessException("ai_quant_insufficient_freeze_principal")
+        }
+        val newAvailable = available.add(amount).setScale(16, RoundingMode.HALF_UP)
+        val newFreeze = freeze.subtract(amount).setScale(16, RoundingMode.HALF_UP)
+        wallet.availableBalance = newAvailable
+        wallet.aiQuantFreeze = newFreeze
+        wallet.totalBalance = newAvailable.add(wallet.frozenBalance ?: BigDecimal.ZERO)
+        if (!updateById(wallet)) {
+            throw BusinessException("ai_quant_release_failed")
+        }
+        appWalletOperationLogService.logOperation(
+            userId = userId,
+            walletType = walletType,
+            operationType = operationType,
+            amount = amount,
+            beforeBalance = available,
+            afterBalance = newAvailable,
+            relatedId = relatedCycleId,
+            relatedType = "ai_quant_cycle",
+            status = 1,
+            remark = (remark ?: "") + ",币种:$currencyCode,ai_quant_freeze:$freeze->$newFreeze"
+        )
+        return true
+    }
+
+    override fun settleAiQuantProfit(
+        userId: Long,
+        walletType: Int,
+        currencyCode: String,
+        amount: BigDecimal,
+        operationType: GoldChangeEnum,
+        remark: String?,
+        relatedCycleId: Long?
+    ): Boolean {
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+            ?: throw BusinessException("wallet_not_found")
+        val available = wallet.availableBalance ?: BigDecimal.ZERO
+        val newAvailable = available.add(amount).setScale(16, RoundingMode.HALF_UP)
+        if (newAvailable.compareTo(BigDecimal.ZERO) < 0) {
+            throw BusinessException("wallet_insufficient_available_balance")
+        }
+        wallet.availableBalance = newAvailable
+        wallet.totalBalance = newAvailable.add(wallet.frozenBalance ?: BigDecimal.ZERO)
+        if (!updateById(wallet)) {
+            throw BusinessException("ai_quant_settle_failed")
+        }
+        appWalletOperationLogService.logOperation(
+            userId = userId,
+            walletType = walletType,
+            operationType = operationType,
+            amount = amount,
+            beforeBalance = available,
+            afterBalance = newAvailable,
+            relatedId = relatedCycleId,
+            relatedType = "ai_quant_cycle",
+            status = 1,
+            remark = (remark ?: "") + ",币种:$currencyCode"
+        )
+        return true
+    }
+
+    override fun accumulateAiQuantStats(
+        userId: Long,
+        walletType: Int,
+        currencyCode: String,
+        netProfitDelta: BigDecimal,
+        feeDelta: BigDecimal,
+        investDelta: BigDecimal,
+    ): Boolean {
+        val wallet = findWalletByUserAndType(userId, walletType, currencyCode)
+            ?: throw BusinessException("wallet_not_found")
+        val profitWas = wallet.aiQuantTotalProfit ?: BigDecimal.ZERO
+        val feeWas = wallet.aiQuantTotalFee ?: BigDecimal.ZERO
+        wallet.aiQuantTotalProfit = profitWas.add(netProfitDelta).setScale(16, RoundingMode.HALF_UP)
+        wallet.aiQuantTotalFee = feeWas.add(feeDelta).setScale(16, RoundingMode.HALF_UP)
+        if (investDelta.signum() != 0) {
+            val investWas = wallet.aiQuantTotalInvest ?: BigDecimal.ZERO
+            wallet.aiQuantTotalInvest = investWas.add(investDelta).setScale(16, RoundingMode.HALF_UP)
+        }
+        if (!updateById(wallet)) {
+            throw BusinessException("ai_quant_stats_update_failed")
+        }
+        return true
     }
 
     override fun getCoinByStockFlag(stockFlag: String?): String {

@@ -30,6 +30,33 @@ enum class GoldChangeEnum(var code: Int, var `enumName`: String, var prefix: Str
     FINANCIAL_EXPIRE(672, "理财到期", "fe"), // 理财到期
     FINANCIAL_REDEEM(673, "理财赎回", "fr"), // 理财赎回
     FINANCIAL_FORCE_REDEEM(674, "理财强制赎回", "ffr"), // 理财强制赎回
+
+    /** AI量化预约冻结本金（可用减少，量化冻结增加） */
+    AI_QUANT_RESERVE_FREEZE(680, "AI量化预约冻结", "aqrf"),
+
+    /** AI量化预约驳回或核定差额解冻（可用增加，量化冻结减少） */
+    AI_QUANT_RESERVE_REJECT(681, "AI量化预约解冻", "aqrr"),
+
+    /** AI量化周期完成释放本金（可用增加，量化冻结减少） */
+    AI_QUANT_PRINCIPAL_RELEASE(682, "AI量化本金释放", "aqpr"),
+
+    /** AI量化周期盈亏结算（正负均可，作用于可用余额） */
+    AI_QUANT_PROFIT_SETTLE(683, "AI量化盈亏结算", "aqps"),
+
+    /** AI量化盈利手续费扣减（从可用余额扣减） */
+    AI_QUANT_FEE_DEDUCT(684, "AI量化手续费扣减", "aqfd"),
+
+    /** 积存金买入扣本金（可用减少） */
+    GOLD_ACC_BUY(701, "积存金买入", "gab"),
+
+    /** 积存金买入手续费扣减（可用减少） */
+    GOLD_ACC_BUY_FEE(702, "积存金买入手续费", "gabf"),
+
+    /** 积存金卖出回款（可用增加，含本金回收与价差） */
+    GOLD_ACC_SELL(703, "积存金卖出", "gas"),
+
+    /** 积存金卖出手续费扣减（可用减少） */
+    GOLD_ACC_SELL_FEE(704, "积存金卖出手续费", "gasf"),
     ;
 
     companion object {

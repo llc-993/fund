@@ -118,6 +118,26 @@ class AppUserWalletV2 : Serializable {
     @Schema(description = "备注信息", example = "系统自动创建", nullable = true)
     var remark: String? = null
 
+    /** AI量化冻结本金 */
+    @TableField("ai_quant_freeze")
+    @Schema(description = "AI量化冻结本金", nullable = true)
+    var aiQuantFreeze: BigDecimal? = null
+
+    /** AI量化累计投入本金 */
+    @TableField("ai_quant_total_invest")
+    @Schema(description = "AI量化累计投入本金", nullable = true)
+    var aiQuantTotalInvest: BigDecimal? = null
+
+    /** AI量化累计净收益 */
+    @TableField("ai_quant_total_profit")
+    @Schema(description = "AI量化累计净收益", nullable = true)
+    var aiQuantTotalProfit: BigDecimal? = null
+
+    /** AI量化累计手续费 */
+    @TableField("ai_quant_total_fee")
+    @Schema(description = "AI量化累计手续费", nullable = true)
+    var aiQuantTotalFee: BigDecimal? = null
+
     @TableField(exist = false)
     var flag: String? = null
 

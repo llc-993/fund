@@ -51,6 +51,12 @@ object RedisKeys {
     // 理财产品申购锁
     const val LOCK_FINANCIAL_PURCHASE = "lock:financial:purchase:"
 
+    /** AI量化周期用户锁，后缀 userId */
+    const val LOCK_AI_QUANT_CYCLE = "lock:ai_quant:cycle:"
+
+    /** AI量化订单/周期写锁，后缀 cycleId */
+    const val LOCK_AI_QUANT_ORDER = "lock:ai_quant:order:"
+
     // 顶级代理与用户id映射
     const val TOP_AGENT_MAP_CACHE_KEY = "top_agent_maps"
 
@@ -61,4 +67,19 @@ object RedisKeys {
     const val STOCK_INDEX = "stock_index"
 
     const val RISE_STOCK = "rise_stock"
+
+    /** 积存金用户单渠道交易锁，后缀 userId:channelId */
+    const val LOCK_GOLD_TRADE = "lock:gold:trade:"
+
+    /** 积存金渠道行情写入锁，后缀 channelId */
+    const val LOCK_GOLD_QUOTE = "lock:gold:quote:"
+
+    /** 积存金 K 线写入锁，后缀 channelCode:interval */
+    const val LOCK_GOLD_KLINE = "lock:gold:kline:"
+
+    /** 积存金渠道实时金价缓存键，后缀 channelId（JSON 字符串） */
+    const val CACHE_GOLD_QUOTE = "cache:gold:quote:"
+
+    /** 积存金每日定时任务全局锁（避免多实例重复跑） */
+    const val LOCK_GOLD_DAILY_JOB = "lock:gold:daily:job"
 }
